@@ -1,16 +1,73 @@
-# z-composer
-A WYSIWYG ZPL template designer specifically built for dynamic thermal receipts, invoices, and packing slips. Move beyond static labels.
+# React + TypeScript + Vite
 
-Z-Composer is a modern React-based tool designed to replace legacy Dot Matrix template editors. Unlike standard label designers that work with fixed heights, Z-Composer utilizes a Header-Body-Footer architecture to generate ZPL (Zebra Programming Language) code for variable-length documents.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Key Features:
+Currently, two official plugins are available:
 
-Stacked Canvas: Dedicated sections for Header (Fixed), Body (Loop/Repeater), and Footer (Fixed).
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-Dynamic Data Binding: Drag-and-drop elements and bind them to dynamic data sources (e.g., Product.Name, Invoice.Total) or set static text.
+## React Compiler
 
-Smart Truncation: Built-in logic for middle-truncation of long text fields.
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-Live Preview: Real-time rendering via Labelary API.
+## Expanding the ESLint configuration
 
-ZPL Generation: Automatic calculation of label length (^LL) based on line item count.
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
+
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
+
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
