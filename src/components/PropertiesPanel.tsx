@@ -3,7 +3,7 @@ import { Label } from './ui/Label';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
 import { Select } from './ui/Select';
-import { generateZPL } from '../lib/zplGenerator';
+import { generateZPL, generateElementZPL } from '../lib/zplGenerator';
 import { GLOBAL_DATA_SOURCES, ALL_DATA_SOURCES } from '../lib/dataSources';
 
 export const PropertiesPanel = () => {
@@ -89,6 +89,13 @@ export const PropertiesPanel = () => {
             onChange={(e) => setSectionHeight('footer', Math.min(500, Number(e.target.value)))}
           />
         </div>
+
+        <div className="pt-4 border-t mt-4 space-y-2">
+          <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Preview Full ZPL</p>
+          <pre className="text-[9px] bg-gray-50 p-2 border rounded overflow-x-auto text-gray-600 font-mono h-32">
+            {generateZPL(header, body, footer, 1, false, canvasWidth)}
+          </pre>
+        </div>
       </div>
     );
   }
@@ -99,7 +106,18 @@ export const PropertiesPanel = () => {
 
   if (!element) return <div className="p-4">Element not found</div>;
 
-  const zplCode = generateZPL(header, body, footer, 1, false, canvasWidth);
+  // Generate ZPL for this specific element only
+  // We use 0 offset because we just want to see the command itself, relative to canvas (or 0,0?)
+  // Actually, keeping its absolute position (y) is better for context.
+  // But wait, if it's in body, y is relative to section start.
+  // The generateElementZPL takes offsetYMm.
+  // If we want to show "what this element generates", we should probably use its actual context?
+  // Or just 0 to keep it simple?
+  // Let's use 0 for now as it shows the ^FO command with current x,y.
+  // Wait, y in canvas state is pixels relative to section top.
+  // generateElementZPL adds offsetYMm (converted to dots) to y (converted to dots).
+  // So passing 0 is fine, it will show ^FOx,y where y is section-relative.
+  const zplCode = generateElementZPL(element, false, 0);
 
   const handleChange = (key: string, value: any) => {
     console.log(`Updating element ${selectedElementId} in ${selectedSection}: ${key} =`, value);
