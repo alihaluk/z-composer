@@ -52,7 +52,7 @@ export const Sidebar = () => {
           <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Visual Elements</h3>
           <SidebarItem type="image" label="Tenant Logo" icon={Image} extraData={{ imageKey: 'TenantLogo' }} />
           <SidebarItem type="image" label="Gib Logo" icon={Image} extraData={{ imageKey: 'GibLogo' }} />
-          <SidebarItem type="image" label="Gib QR Code" icon={QrCode} extraData={{ imageKey: 'GibQRCode' }} />
+          <SidebarItem type="barcode" label="Gib QR Code" icon={QrCode} extraData={{ barcodeType: 'qr', dataSource: 'GibInfo', isDynamic: true, width: 80, height: 80 }} />
         </div>
       </div>
 
