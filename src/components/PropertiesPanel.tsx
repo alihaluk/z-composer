@@ -189,9 +189,22 @@ export const PropertiesPanel = () => {
           <Label htmlFor="prop-source">Data Source</Label>
           <Select id="prop-source" value={element.dataSource || ''} onChange={(e) => handleChange('dataSource', e.target.value)}>
             <option value="">Select Source...</option>
-            {sectionDataSources.map(ds => (
-              <option key={ds.id} value={ds.id}>{ds.name} ({ds.id})</option>
-            ))}
+            {Object.entries(
+              sectionDataSources.reduce((groups, ds) => {
+                const parts = ds.id.split('.');
+                const groupName = parts.length > 1 ? parts[0] : 'General';
+                if (!groups[groupName]) groups[groupName] = [];
+                groups[groupName].push(ds);
+                return groups;
+              }, {} as Record<string, typeof sectionDataSources>)
+            ).sort((a, b) => a[0].localeCompare(b[0])) // Sort groups alphabetically
+              .map(([group, sources]) => (
+                <optgroup key={group} label={group}>
+                  {sources.map(ds => (
+                    <option key={ds.id} value={ds.id}>{ds.name}</option>
+                  ))}
+                </optgroup>
+              ))}
           </Select>
         </div>
       ) : (
