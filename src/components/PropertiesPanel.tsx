@@ -106,9 +106,26 @@ export const PropertiesPanel = () => {
     updateElement(selectedSection!, selectedElementId!, { [key]: value });
   };
 
-  const sectionDataSources = selectedSection === 'body'
+  let sectionDataSources = selectedSection === 'body'
     ? ALL_DATA_SOURCES
     : GLOBAL_DATA_SOURCES;
+
+  // Filter based on element type and specific requirements
+  if (element.type === 'barcode') {
+    if (element.barcodeType === 'qr') {
+      // User Request: QR Code -> GibInfo
+      sectionDataSources = sectionDataSources.filter(ds => ds.id === 'GibInfo');
+    } else {
+      // User Request: Code 128 -> Product Barcode (or similar identifiers)
+      // We filter for fields that look like barcodes or codes
+      sectionDataSources = sectionDataSources.filter(ds =>
+        ds.id === 'Barcode' ||
+        ds.id === 'Product.Sku' ||
+        ds.id === 'DocNumber' ||
+        ds.id === 'ETTN'
+      );
+    }
+  }
 
   return (
     <div className="p-4 space-y-4">
