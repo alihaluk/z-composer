@@ -3,8 +3,8 @@ import { CanvasSection } from './CanvasSection';
 import { MM_TO_PX } from '../lib/constants';
 
 export const Canvas = () => {
-  const { header, body, footer } = useStore();
-  const widthMm = 104; // 104mm is standard 4 inch
+  const { header, body, footer, canvasWidth } = useStore();
+  const widthMm = canvasWidth;
   const widthPx = widthMm * MM_TO_PX;
 
   return (

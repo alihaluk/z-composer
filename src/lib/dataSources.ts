@@ -1,0 +1,145 @@
+export interface DataSource {
+    id: string;
+    name: string;
+    mockValue: string;
+}
+
+
+export const GLOBAL_DATA_SOURCES: DataSource[] = [
+    { id: 'Customer.Code', name: 'Customer Code', mockValue: 'C-001' },
+    { id: 'Customer.Name', name: 'Customer Name', mockValue: 'John Doe' },
+    { id: 'Customer.Group.Name', name: 'Customer Group Name', mockValue: 'VIP Customers' },
+    { id: 'Customer.OrganizationName', name: 'Customer Organization Name', mockValue: 'ACME Corp' },
+    { id: 'Customer.OrganizationCode', name: 'Customer Organization Code', mockValue: 'ORG-123' },
+    { id: 'Customer.Risk', name: 'Customer Risk', mockValue: 'Low' },
+    { id: 'Customer.TaxOffice', name: 'Customer Tax Office', mockValue: 'Tax Office A' },
+    { id: 'Customer.TaxNumber', name: 'Customer Tax Number', mockValue: '1234567890' },
+    { id: 'Customer.EdiCode', name: 'Customer Edi Code', mockValue: 'EDI-999' },
+    { id: 'Customer.Title', name: 'Customer Title', mockValue: 'Manager' },
+    { id: 'Representative.Code', name: 'Representative Code', mockValue: 'R-007' },
+    { id: 'Representative.Name', name: 'Representative Name', mockValue: 'Jane Smith' },
+    { id: 'Representative.Group.Name', name: 'Representative Group Name', mockValue: 'Sales Team' },
+    { id: 'Representative.OrganizationName', name: 'Representative Organization Name', mockValue: 'Sales Org' },
+    { id: 'Representative.OrganizationCode', name: 'Representative Organization Code', mockValue: 'SORG-01' },
+    { id: 'PaymentPlan.Name', name: 'Payment Plan Name', mockValue: 'Net 30' },
+    { id: 'PaymentPlan.Code', name: 'Payment Plan Code', mockValue: 'P30' },
+    { id: 'DocNumber', name: 'Doc Number', mockValue: 'INV-2024-001' },
+    { id: 'ShippingDate', name: 'Shipping Date', mockValue: '2024-02-10' },
+    { id: 'Comment', name: 'Comment', mockValue: 'Fragile items' },
+    { id: 'ShippingAddress.Street1', name: 'Shipping Address Street1', mockValue: '123 Main St' },
+    { id: 'ShippingAddress.Street2', name: 'Shipping Address Street2', mockValue: 'Suite 100' },
+    { id: 'ShippingAddress.ShortName', name: 'Shipping Address Short Name', mockValue: 'Warehouse 1' },
+    { id: 'ShippingAddress.District', name: 'Shipping Address District', mockValue: 'Central' },
+    { id: 'ShippingAddress.City', name: 'Shipping Address City', mockValue: 'Istanbul' },
+    { id: 'DiscountPercent', name: 'Discount Percent', mockValue: '5.00' },
+    { id: 'VatIncludeTotal', name: 'Vat Include Total', mockValue: '118.00' },
+    { id: 'VatTotal', name: 'Vat Total', mockValue: '18.00' },
+    { id: 'NetTotal', name: 'Net Total', mockValue: '100.00' },
+    { id: 'Discount', name: 'Discount', mockValue: '5.00' },
+    { id: 'Total', name: 'Total', mockValue: '113.00' },
+    { id: 'DocDate', name: 'Doc Date', mockValue: '2024-02-08' },
+    { id: 'Currency', name: 'Currency', mockValue: 'USD' },
+    { id: 'DocumentMapName', name: 'Document Map Name', mockValue: 'Default Map' },
+    { id: 'BillCustomer.EdiCode', name: 'Bill Customer Edi Code', mockValue: 'BEDI-123' },
+    { id: 'BillCustomer.Name', name: 'Bill Customer Name', mockValue: 'Bill Corp' },
+    { id: 'BillCustomer.TaxOffice', name: 'Bill Customer Tax Office', mockValue: 'Tax Office B' },
+    { id: 'BillCustomer.TaxNumber', name: 'Bill Customer Tax Number', mockValue: '0987654321' },
+    { id: 'BillCustomer.Code', name: 'Bill Customer Code', mockValue: 'BC-001' },
+    { id: 'BillCustomer.Street1', name: 'Bill Customer Street1', mockValue: '456 Bill St' },
+    { id: 'BillCustomer.Title', name: 'Bill Customer Title', mockValue: 'Headquarters' },
+    { id: 'CustomerPreviousBalance', name: 'Customer Previous Balance', mockValue: '500.00' },
+    { id: 'CustomerCurrentBalance', name: 'Customer Current Balance', mockValue: '613.00' },
+    { id: 'LastTransportWayBillVehiclePlate', name: 'Last Transport Way Bill Vehicle Plate', mockValue: '34ABC123' },
+    // New fields for Invoice Template
+    { id: 'Tenant.Name', name: 'Tenant Name', mockValue: 'ALDOY GIDA PAZARLAMA SAN VE TIC LTD STI' },
+    { id: 'Tenant.Address', name: 'Tenant Address', mockValue: 'KARAYOLLARI MAH. 567 SK. NO:12 ISTANBUL' },
+    { id: 'Tenant.TaxOffice', name: 'Tenant Tax Office', mockValue: 'GAZIOSMANPASA' },
+    { id: 'Tenant.TaxNumber', name: 'Tenant Tax Number', mockValue: '1700293317' },
+    { id: 'Tenant.Phone', name: 'Tenant Phone', mockValue: '(212) 649-78-74' },
+    { id: 'DocTime', name: 'Doc Time', mockValue: '14:37' },
+    { id: 'PaymentDueDate', name: 'Payment Due Date', mockValue: '26-02-2026' },
+    { id: 'ETTN', name: 'ETTN', mockValue: 'e7f6c3-...' },
+    { id: 'PaymentType', name: 'Payment Type', mockValue: 'Pesin' },
+    { id: 'GibInfo', name: 'Gib Info (QR)', mockValue: 'VKN:1234567890...' },
+];
+
+export const ROW_DATA_SOURCES: DataSource[] = [
+    { id: 'LineNumber', name: 'Line Number', mockValue: '1' },
+    { id: 'Quantity', name: 'Quantity', mockValue: '5' },
+    { id: 'UnitMultiplier', name: 'Unit Multiplier', mockValue: '1' },
+    { id: 'Product.Name', name: 'Product Name', mockValue: 'Product A' },
+    { id: 'Product.Sku', name: 'Product Sku', mockValue: 'SKU-001' },
+    { id: 'Product.Vat', name: 'Product Vat', mockValue: '18' },
+    { id: 'Product.Group.Name', name: 'Product Group Name', mockValue: 'Electronics' },
+    { id: 'Product.Brand.Name', name: 'Product Brand Name', mockValue: 'Sony' },
+    { id: 'Price', name: 'Price', mockValue: '10.00' },
+    { id: 'UnitName', name: 'Unit Name', mockValue: 'Pieces' },
+    { id: 'Unit.Name', name: 'Unit Name (Alt)', mockValue: 'Pcs' },
+    { id: 'VatPercent', name: 'Vat Percent', mockValue: '18' },
+    { id: 'VatTotal', name: 'Vat Total', mockValue: '1.80' },
+    { id: 'Amount', name: 'Amount', mockValue: '10.00' },
+    { id: 'Discount', name: 'Discount', mockValue: '0.00' },
+    { id: 'DiscountPercent', name: 'Discount Percent', mockValue: '0.00' },
+    { id: 'VatIncludeTotal', name: 'Vat Include Total', mockValue: '11.80' },
+    { id: 'Total', name: 'Total', mockValue: '11.80' },
+    { id: 'NetTotal', name: 'Net Total', mockValue: '10.00' },
+    { id: 'DiscountIndex', name: 'Discount Index', mockValue: '0' },
+    { id: 'UnitWeight', name: 'Unit Weight', mockValue: '0.5' },
+    { id: 'Barcode', name: 'Barcode', mockValue: '123456789012' },
+];
+
+export const ALL_DATA_SOURCES = [...GLOBAL_DATA_SOURCES, ...ROW_DATA_SOURCES];
+
+export const MOCK_GLOBAL_DATA = GLOBAL_DATA_SOURCES.reduce((acc, ds) => {
+    acc[ds.id] = ds.mockValue;
+    return acc;
+}, {} as Record<string, string>);
+
+export const MOCK_DATA_ROWS = [
+    {
+        'LineNumber': '1',
+        'UnitMultiplier': '1',
+        'Product.Name': 'Laptop',
+        'Product.Sku': 'LT-01',
+        'Product.Vat': '18',
+        'Product.Group.Name': 'Computers',
+        'Product.Brand.Name': 'Dell',
+        'Price': '1200.00',
+        'UnitName': 'Pcs',
+        'Unit.Name': 'Pcs',
+        'VatPercent': '18',
+        'VatTotal': '216.00',
+        'Amount': '1200.00',
+        'Discount': '0.00',
+        'DiscountPercent': '0',
+        'VatIncludeTotal': '1416.00',
+        'Total': '1416.00',
+        'NetTotal': '1200.00',
+        'DiscountIndex': '0',
+        'UnitWeight': '2.1',
+        'Barcode': '111111111111'
+    },
+    {
+        'LineNumber': '2',
+        'UnitMultiplier': '1',
+        'Product.Name': 'Mouse',
+        'Product.Sku': 'MS-02',
+        'Product.Vat': '18',
+        'Product.Group.Name': 'Accessories',
+        'Product.Brand.Name': 'Logitech',
+        'Price': '25.00',
+        'UnitName': 'Pcs',
+        'Unit.Name': 'Pcs',
+        'VatPercent': '18',
+        'VatTotal': '4.50',
+        'Amount': '25.00',
+        'Discount': '0.00',
+        'DiscountPercent': '0',
+        'VatIncludeTotal': '29.50',
+        'Total': '29.50',
+        'NetTotal': '25.00',
+        'DiscountIndex': '0',
+        'UnitWeight': '0.1',
+        'Barcode': '222222222222'
+    }
+];

@@ -10,31 +10,37 @@ export const PreviewModal = () => {
     const [loading, setLoading] = useState(false);
     const [zplCode, setZplCode] = useState('');
 
-    const { header, body, footer } = useStore();
+    const { header, body, footer, canvasWidth } = useStore();
 
     const handlePreview = async () => {
         setIsOpen(true);
         setLoading(true);
         setImageUrl(null);
 
-        // Generate ZPL with 3 mock items
-        const zpl = generateZPL(header, body, footer, 3);
-        setZplCode(zpl);
+        // 1. Generate marker-based ZPL for the code display (Template)
+        const markerZpl = generateZPL(header, body, footer, 1, false, canvasWidth);
+        setZplCode(markerZpl);
+
+        // 2. Generate mock-based ZPL for the visual preview (Labelary)
+        // User requested to show Property Names in preview as well for now
+        const previewZpl = generateZPL(header, body, footer, 3, false, canvasWidth);
 
         const totalHeightMm = header.height + (body.height * 3) + footer.height;
         const heightInch = Math.max(1, totalHeightMm / 25.4);
+        const widthInch = Math.max(1, canvasWidth / 25.4);
 
         try {
-            // Use Labelary API
+            // Use Labelary API - POST with correct Content-Type for raw ZPL
             // 8dpmm = 203 dpi
-            const url = `https://api.labelary.com/v1/printers/8dpmm/labels/4x${heightInch.toFixed(2)}/0/`;
+            const url = `https://api.labelary.com/v1/printers/8dpmm/labels/${widthInch.toFixed(2)}x${heightInch.toFixed(2)}/0/`;
 
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
-                    'Accept': 'image/png', // Explicitly ask for PNG
+                    'Accept': 'image/png',
+                    'Content-Type': 'application/x-www-form-urlencoded'
                 },
-                body: zpl
+                body: previewZpl
             });
 
             if (response.ok) {
@@ -42,9 +48,12 @@ export const PreviewModal = () => {
                 setImageUrl(URL.createObjectURL(blob));
             } else {
                 console.error("Labelary API error:", await response.text());
+                // Fallback to GET if POST fails (sometimes useful for certain proxies/envs)
+                const encodedZpl = encodeURIComponent(previewZpl);
+                setImageUrl(`http://api.labelary.com/v1/printers/8dpmm/labels/4x${heightInch.toFixed(2)}/0/${encodedZpl}`);
             }
         } catch (e) {
-            console.error("Preview fetch error:", e);
+            console.error("Preview error:", e);
         } finally {
             setLoading(false);
         }

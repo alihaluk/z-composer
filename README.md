@@ -1,73 +1,35 @@
-# React + TypeScript + Vite
+# Z-Composer (Invoice Designer)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based visual designer for creating ZPL (Zebra Programming Language) invoice templates.
 
-Currently, two official plugins are available:
+![Project Status](https://img.shields.io/badge/Status-Phase%201%20Complete-green)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features (Phase 1)
+- **Visual Drag & Drop**: Add Text, Box, Barcode, Image elements.
+- **Dynamic Data Binding**: Bind elements to `[Product.Name]`, `[Total]`, etc.
+- **Canvas Zoom**: Scale the workspace (25% - 300%) for precise editing.
+- **Specific Invoice Layout**: Pre-built template matching GIB requirements (Logos, Totals, QR).
+- **ZPL Preview**: Instant visual preview using Labelary API.
+- **Customizable**: Adjust canvas width (mm), font sizes, rotation, and more.
 
-## React Compiler
+## Installation
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Integration
+See [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md) for details on how to embed this component into your web application.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Roadmap
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Phase 2: Advanced Features
+- [ ] **Line Print Mode**: Support for text-based dot matrix printers (ESC/POS).
+- [ ] **Custom Image Upload**: Allow users to upload images and convert to ZPL hex (`^GF`).
+- [ ] **Templates Management**: Save/Load different templates from local storage or API.
+- [ ] **Undo/Redo**: History management for actions.
+
+### Backlog
+- [ ] Multi-page support
+- [ ] Advanced Barcode properties (width ratio, check digit)

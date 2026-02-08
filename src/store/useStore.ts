@@ -14,6 +14,11 @@ interface AppState {
   removeElement: (section: SectionName, id: string) => void;
   selectElement: (id: string | null, section: SectionName | null) => void;
   setSectionHeight: (section: SectionName, height: number) => void;
+  clearCanvas: () => void;
+  canvasWidth: number;
+  setCanvasWidth: (width: number) => void;
+  zoomLevel: number;
+  setZoomLevel: (zoom: number) => void;
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -22,6 +27,7 @@ export const useStore = create<AppState>((set) => ({
   footer: { height: 20, elements: [] },
   selectedElementId: null,
   selectedSection: null,
+  canvasWidth: 104, // Default 104mm (4 inch)
 
   addElement: (section, element) =>
     set((state) => ({
@@ -55,6 +61,19 @@ export const useStore = create<AppState>((set) => ({
 
   setSectionHeight: (section, height) =>
     set((state) => ({
-      [section]: { ...state[section], height },
+      [section]: { ...state[section], height: Math.max(1, Math.min(500, height)) },
     })),
+
+  clearCanvas: () => set({
+    header: { height: 40, elements: [] },
+    body: { height: 10, elements: [] },
+    footer: { height: 20, elements: [] },
+    selectedElementId: null,
+    selectedSection: null
+  }),
+
+  setCanvasWidth: (width) => set({ canvasWidth: Math.max(10, Math.min(104, width)) }),
+
+  zoomLevel: 1.25, // Default slightly zoomed in as requested
+  setZoomLevel: (zoom) => set({ zoomLevel: Math.max(0.25, Math.min(3, zoom)) }),
 }));
