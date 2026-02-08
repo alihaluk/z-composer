@@ -24,9 +24,11 @@ See [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md) for details on how to embed t
 
 ## Roadmap
 
-### Phase 2: Advanced Features
-- [ ] **Line Print Mode**: Support for text-based dot matrix printers (ESC/POS).
+### Phase 2: Advanced Features & Refinements
+- [ ] **Line Print Mode**: Support for Zebra Line Print Mode (Text-only output).
 - [ ] **Custom Image Upload**: Allow users to upload images and convert to ZPL hex (`^GF`).
+- [ ] **Refine ZPL Preview**: Context-aware preview (Element vs Document).
+- [ ] **Enhanced Drag & Drop**: Fix zoom coordinate issues and implement element snapping.
 - [ ] **Templates Management**: Save/Load different templates from local storage or API.
 - [ ] **Undo/Redo**: History management for actions.
 
