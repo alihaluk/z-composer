@@ -10,7 +10,7 @@ interface DraggableElementProps {
 }
 
 export const DraggableElement = ({ element, section }: DraggableElementProps) => {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: element.id,
     data: {
       type: 'element',
@@ -21,11 +21,14 @@ export const DraggableElement = ({ element, section }: DraggableElementProps) =>
 
   const selectElement = useStore((state) => state.selectElement);
   const selectedElementId = useStore((state) => state.selectedElementId);
+  const zoomLevel = useStore((state) => state.zoomLevel);
   const isSelected = selectedElementId === element.id;
 
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  } : undefined;
+  // We do NOT apply transform here because we use DragOverlay.
+  // Applying transform would move the original element (scaled weirdly inside the zoom container)
+  // causing a double-vision effect where the original lags behind the overlay.
+  // Instead, we let the original stay put (dimmed) and the overlay follows the cursor.
+  const style = undefined;
 
   const getDisplayContent = () => {
     if (element.type === 'barcode') return null;
@@ -53,8 +56,13 @@ export const DraggableElement = ({ element, section }: DraggableElementProps) =>
     const startHeight = element.height || 0;
 
     const onPointerMove = (moveEvent: PointerEvent) => {
-      const deltaX = moveEvent.clientX - startX;
-      const deltaY = moveEvent.clientY - startY;
+      // Calculate delta in screen pixels
+      const rawDeltaX = moveEvent.clientX - startX;
+      const rawDeltaY = moveEvent.clientY - startY;
+
+      // Adjust for zoom level to get internal units
+      const deltaX = rawDeltaX / zoomLevel;
+      const deltaY = rawDeltaY / zoomLevel;
 
       const newWidth = Math.max(10, startWidth + deltaX);
       const newHeight = Math.max(10, startHeight + deltaY);
@@ -88,7 +96,7 @@ export const DraggableElement = ({ element, section }: DraggableElementProps) =>
       className={cn(
         "cursor-move border border-transparent hover:border-blue-300 select-none overflow-visible group", // overflow-visible for handle
         isSelected && "border-blue-500 bg-blue-50/50",
-        isDragging && "opacity-50",
+        isDragging && "opacity-20", // Make original very faint so overlay is primary focus
         element.type === 'text' && "whitespace-nowrap"
       )}
       onClick={(e) => {

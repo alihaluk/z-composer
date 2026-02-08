@@ -1,5 +1,6 @@
 import { useDraggable } from '@dnd-kit/core';
-import { Type, Square, Barcode, Image, QrCode } from 'lucide-react';
+import { useEffect } from 'react';
+import { Type, Square, Barcode, Image, QrCode, RotateCcw, RotateCw } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { PreviewModal } from './PreviewModal';
 
@@ -37,9 +38,85 @@ export const SidebarItem = ({ type, label, icon: Icon, extraData }: SidebarItemP
 };
 
 export const Sidebar = () => {
+  const { clearCanvas, header, body, footer, canvasWidth, setTemplate } = useStore();
+
+  const undo = () => useStore.temporal?.getState().undo();
+  const redo = () => useStore.temporal?.getState().redo();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const saveTemplate = () => {
+    const template = {
+      header,
+      body,
+      footer,
+      canvasWidth,
+      version: 1,
+      createdAt: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `z-composer-template-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleLoadTemplate = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const template = JSON.parse(content);
+
+        // Basic validation
+        if (!template.header || !template.body || !template.footer) {
+          alert('Invalid template file format');
+          return;
+        }
+
+        setTemplate(template);
+      } catch (error) {
+        console.error('Failed to parse template:', error);
+        alert('Failed to load template');
+      }
+      // Reset input
+      event.target.value = '';
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="p-4 flex flex-col h-full">
-      <h2 className="text-lg font-bold mb-4 text-gray-800">Toolbox</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-bold text-gray-800">Toolbox</h2>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => undo()} title="Undo (Ctrl+Z)">
+            <RotateCcw size={14} />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => redo()} title="Redo (Ctrl+Shift+Z)">
+            <RotateCw size={14} />
+          </Button>
+        </div>
+      </div>
       <div className="space-y-4">
         <div>
           <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Basic Elements</h3>
@@ -61,6 +138,26 @@ export const Sidebar = () => {
       </div>
 
       <div className="pt-4 border-t mt-auto space-y-2">
+        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">File Operations</h3>
+        <div className="grid grid-cols-3 gap-2">
+          <Button variant="outline" className="text-xs h-8 px-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={clearCanvas}>
+            Clear
+          </Button>
+          <Button variant="outline" className="text-xs h-8 px-0" onClick={saveTemplate}>
+            Save
+          </Button>
+          <Button variant="outline" className="text-xs h-8 px-0" onClick={() => document.getElementById('load-template-input')?.click()}>
+            Load
+          </Button>
+          <input
+            type="file"
+            id="load-template-input"
+            className="hidden"
+            accept=".json"
+            onChange={handleLoadTemplate}
+          />
+        </div>
+
         <Button variant="outline" className="w-full text-xs" onClick={() => {
           loadInvoiceTemplate();
         }}>

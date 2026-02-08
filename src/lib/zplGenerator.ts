@@ -157,3 +157,79 @@ export function generateZPL(
     zpl += '^XZ';
     return zpl;
 }
+
+export function generateLinePrint(
+    header: SectionState,
+    body: SectionState,
+    footer: SectionState,
+    mockItems: number = 3,
+    useMockData: boolean = false
+): string {
+    let output = '=== LINE PRINT MODE (TEXT PREVIEW) ===\n\n';
+
+    // Helper to extract text from elements, sorted by Y then X
+    const processSection = (elements: CanvasElement[], offsetY: number = 0, rowData?: any) => {
+        // Filter out non-text elements (like lines/boxes, unless they have content?)
+        // Images and Barcodes are usually not "Line Print" compatible in raw text mode, 
+        // but we can show their content/alt text.
+
+        const sorted = [...elements].sort((a, b) => {
+            if (Math.abs(a.y - b.y) > 5) return a.y - b.y; // Y priority (5px threshold)
+            return a.x - b.x; // X priority
+        });
+
+        const lines: string[] = [];
+        let currentY = -1;
+        let lineBuffer: string[] = [];
+
+        sorted.forEach(el => {
+            if (el.type === 'box') return; // Skip boxes
+
+            let content = el.content || '';
+
+            // Resolve dynamic data
+            if (el.isDynamic && el.dataSource) {
+                if (useMockData) {
+                    const ds = el.dataSource;
+                    if (rowData && rowData[ds]) content = rowData[ds];
+                    else if (MOCK_GLOBAL_DATA[ds]) content = MOCK_GLOBAL_DATA[ds];
+                    else content = `[${ds}]`;
+                } else {
+                    content = `[${el.dataSource}]`;
+                }
+            } else if (el.type === 'image') {
+                content = `[IMAGE: ${el.imageKey || 'TenantLogo'}]`;
+            } else if (el.type === 'barcode') {
+                content = `[BARCODE: ${content || el.dataSource}]`;
+            }
+
+            // Simple line grouping by Y
+            if (currentY !== -1 && Math.abs(el.y - currentY) > 10) {
+                lines.push(lineBuffer.join('\t'));
+                lineBuffer = [];
+            }
+            currentY = el.y;
+            lineBuffer.push(content);
+        });
+        if (lineBuffer.length > 0) lines.push(lineBuffer.join('\t'));
+
+        return lines.join('\n');
+    };
+
+    output += '--- HEADER ---\n';
+    output += processSection(header.elements) + '\n\n';
+
+    output += '--- BODY ---\n';
+    const itemsToRender = useMockData ? mockItems : 1;
+    for (let i = 0; i < itemsToRender; i++) {
+        const mockRowData = useMockData ? MOCK_DATA_ROWS[i % MOCK_DATA_ROWS.length] : undefined;
+        output += `[Row ${i + 1}]\n`;
+        output += processSection(body.elements, 0, mockRowData) + '\n';
+    }
+    output += '\n';
+
+    output += '--- FOOTER ---\n';
+    output += processSection(footer.elements) + '\n';
+
+    return output;
+}

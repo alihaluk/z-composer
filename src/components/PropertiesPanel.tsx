@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Label } from './ui/Label';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
 import { Select } from './ui/Select';
-import { generateZPL, generateElementZPL } from '../lib/zplGenerator';
+import { generateZPL, generateElementZPL, generateLinePrint } from '../lib/zplGenerator';
 import { GLOBAL_DATA_SOURCES, ALL_DATA_SOURCES } from '../lib/dataSources';
 
 export const PropertiesPanel = () => {
@@ -22,6 +23,8 @@ export const PropertiesPanel = () => {
     zoomLevel,
     setZoomLevel
   } = useStore();
+
+  const [previewMode, setPreviewMode] = useState<'zpl' | 'text'>('zpl');
 
   if (!selectedElementId || !selectedSection) {
     // Show Canvas Properties
@@ -91,9 +94,28 @@ export const PropertiesPanel = () => {
         </div>
 
         <div className="pt-4 border-t mt-4 space-y-2">
-          <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Preview Full ZPL</p>
-          <pre className="text-[9px] bg-gray-50 p-2 border rounded overflow-x-auto text-gray-600 font-mono h-32">
-            {generateZPL(header, body, footer, 1, false, canvasWidth)}
+          <div className="flex justify-between items-center mb-1">
+            <p className="text-[10px] text-gray-400 uppercase font-bold">Preview Full Output</p>
+            <div className="flex gap-1 bg-gray-100 p-0.5 rounded">
+              <button
+                onClick={() => setPreviewMode('zpl')}
+                className={`text-[9px] px-2 py-0.5 rounded ${previewMode === 'zpl' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}
+              >
+                ZPL
+              </button>
+              <button
+                onClick={() => setPreviewMode('text')}
+                className={`text-[9px] px-2 py-0.5 rounded ${previewMode === 'text' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}
+              >
+                TEXT
+              </button>
+            </div>
+          </div>
+          <pre className="text-[9px] bg-gray-50 p-2 border rounded overflow-x-auto text-gray-600 font-mono h-48">
+            {previewMode === 'zpl'
+              ? generateZPL(header, body, footer, 1, false, canvasWidth)
+              : generateLinePrint(header, body, footer, 1, false)
+            }
           </pre>
         </div>
       </div>
