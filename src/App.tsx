@@ -142,18 +142,23 @@ function App() {
             const y = snap(Math.max(0, relativeY));
 
             const newElement: CanvasElement = {
-                id: generateId(),
-                type: activeData.toolType,
-                x,
-                y,
-                isDynamic: activeData.toolType === 'image' && activeData.imageKey === 'GibQRCode',
+                // Default props first
+                isDynamic: false,
                 content: activeData.toolType === 'text' ? 'New Text' : activeData.toolType === 'barcode' ? '12345678' : undefined,
-                imageKey: activeData.imageKey,
                 width: activeData.toolType === 'box' ? 100 : activeData.toolType === 'barcode' ? 150 : activeData.toolType === 'image' ? 60 : 100,
                 height: activeData.toolType === 'box' ? 50 : activeData.toolType === 'barcode' ? 60 : activeData.toolType === 'image' ? 60 : 50,
                 fontSize: 12,
                 barcodeType: activeData.toolType === 'barcode' ? 'code128' : undefined,
                 showLabel: activeData.toolType === 'barcode' ? true : undefined,
+
+                // Spread activeData to override defaults (e.g. for Gib QR Code)
+                ...activeData,
+
+                // Critical fields - these MUST come last to ensure they are not overwritten
+                id: generateId(),
+                type: activeData.toolType,
+                x,
+                y
             };
 
             console.log(`Adding new ${newElement.type} to ${sectionName} at ${x},${y}`);
