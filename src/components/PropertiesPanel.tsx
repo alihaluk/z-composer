@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Label } from './ui/Label';
 import { Input } from './ui/Input';
@@ -22,10 +21,25 @@ export const PropertiesPanel = () => {
     canvasWidth,
     setCanvasWidth,
     zoomLevel,
-    setZoomLevel
+    setZoomLevel,
+    previewMode,
+    setPreviewMode
   } = useStore();
 
-  const [previewMode, setPreviewMode] = useState<'zpl' | 'text'>('zpl');
+  const renderZPLPreview = (zpl: string) => {
+    // Simple highlighter
+    const parts = zpl.split(/(\^[A-Z0-9]+)/g);
+    return (
+      <span className="font-mono text-[9px]">
+        {parts.map((part, i) => {
+           if (part.startsWith('^')) {
+               return <span key={i} className="text-blue-600 font-bold">{part}</span>;
+           }
+           return <span key={i} className="text-gray-600">{part}</span>;
+        })}
+      </span>
+    );
+  };
 
   if (!selectedElementId || !selectedSection) {
     // Show Canvas Properties
@@ -112,10 +126,10 @@ export const PropertiesPanel = () => {
               </button>
             </div>
           </div>
-          <pre className="text-[9px] bg-gray-50 p-2 border rounded overflow-x-auto text-gray-600 font-mono h-48">
+          <pre className="text-[9px] bg-gray-50 p-2 border rounded overflow-x-auto h-48 whitespace-pre-wrap break-all">
             {previewMode === 'zpl'
-              ? generateZPL(header, body, footer, 1, false, canvasWidth)
-              : generateLinePrint(header, body, footer, 1, false)
+              ? renderZPLPreview(generateZPL(header, body, footer, 1, false, canvasWidth))
+              : generateLinePrint(header, body, footer, 1, false, canvasWidth)
             }
           </pre>
         </div>
@@ -136,7 +150,7 @@ export const PropertiesPanel = () => {
     : zplCode;
 
   const handleChange = (key: string, value: any) => {
-    console.log(`Updating element ${selectedElementId} in ${selectedSection}: ${key} =`, value);
+    // console.log(`Updating element ${selectedElementId} in ${selectedSection}: ${key} =`, value);
     updateElement(selectedSection!, selectedElementId!, { [key]: value });
   };
 
@@ -390,8 +404,8 @@ export const PropertiesPanel = () => {
         {zplCode && (
           <div className="mt-2">
             <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Preview ZPL (Element Only)</p>
-            <pre className="text-[9px] bg-gray-50 p-2 border rounded overflow-x-auto text-gray-600 font-mono">
-              {zplCodePreview}
+            <pre className="text-[9px] bg-gray-50 p-2 border rounded overflow-x-auto h-32 whitespace-pre-wrap break-all">
+              {renderZPLPreview(zplCodePreview)}
             </pre>
           </div>
         )}

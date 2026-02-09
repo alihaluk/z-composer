@@ -3,7 +3,7 @@ import { Layout } from './components/Layout';
 import { Sidebar } from './components/Sidebar';
 import { Canvas } from './components/Canvas';
 import { PropertiesPanel } from './components/PropertiesPanel';
-import { DndContext, type DragEndEvent, type DragStartEvent, DragOverlay, useSensor, useSensors, MouseSensor, TouchSensor, pointerWithin } from '@dnd-kit/core';
+import { DndContext, type DragEndEvent, type DragStartEvent, DragOverlay, useSensor, useSensors, MouseSensor, TouchSensor, pointerWithin, type DragMoveEvent, type Modifier } from '@dnd-kit/core';
 import { useStore } from './store/useStore';
 import { type SectionName, type CanvasElement } from './types';
 import { MM_TO_PX } from './lib/constants';
@@ -14,7 +14,6 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 const SNAP_SIZE = 10;
 const snap = (val: number) => Math.round(val / SNAP_SIZE) * SNAP_SIZE;
 
-const GUIDE_OFFSET_LEFT = 0;
 
 function App() {
     const { addElement, updateElement, removeElement, selectElement, canvasWidth, zoomLevel, header, body, footer } = useStore();
@@ -31,12 +30,9 @@ function App() {
     const CENTER_X = CANVAS_WIDTH_PX / 2;
     const SNAP_THRESHOLD = 5;
 
-
-
-
     const [alignmentGuides, setAlignmentGuides] = useState<Array<{ type: 'vertical' | 'horizontal', position: number }>>([]);
 
-    // Memoize snap points when drag starts to avoid recalculation
+    // Memoize snap points when drag starts
     const [snapPoints, setSnapPoints] = useState<{ x: number[], y: number[], centerX: number[], centerY: number[] }>({ x: [], y: [], centerX: [], centerY: [] });
 
     const handleDragStart = (event: DragStartEvent) => {
@@ -83,11 +79,8 @@ function App() {
         setSnapPoints({ x: xPoints, centerX: centerPoints, y: yPoints, centerY: centerYPoints });
     };
 
-    // Interactive snap logic in handleDragMove is easier for "guides" but "modifier" is needed for actual position.
-    // Let's implement a custom modifier that we pass to DndContext.
 
-
-    const handleDragMove = (event: any) => {
+    const handleDragMove = (event: DragMoveEvent) => {
         const { active, delta } = event;
         // Logic to update Visual Guides based on same math
 
@@ -105,12 +98,14 @@ function App() {
 
         const newGuides: typeof alignmentGuides = [];
 
-        // Re-run similar proximity check just for visualization
+        // Center Snapping Guide
         for (const pt of snapPoints.centerX) {
             if (Math.abs(currentCenter - pt) < SNAP_THRESHOLD) {
                 newGuides.push({ type: 'vertical', position: pt });
             }
         }
+
+        // Edge Snapping Guides
         if (newGuides.length === 0) {
             for (const pt of snapPoints.x) {
                 if (Math.abs(currentLeft - pt) < SNAP_THRESHOLD) {
@@ -137,50 +132,28 @@ function App() {
 
         if (!over) return;
 
-        // ... rest of logic uses new snapModifier's effective result?
-        // Dnd-kit DragEndEvent.delta includes the modifier's changes!
-        // So we just rely on `delta`.
-
         const activeData = active.data.current;
         const overData = over.data.current;
 
         if (!activeData || !overData) return;
 
-        // ... existing handleDragEnd logic ...
-
-
         // 1. Dragging Tool to Section (Create New)
         if (activeData.type === 'tool' && overData.type === 'section') {
             const sectionName = overData.name as SectionName;
-            const overRect = over.rect; // This rect is in screen coordinates, effectively zoomed
+            const overRect = over.rect;
 
-            // We need relative position within the container. 
-            // The container is scaled. 
-            // event.active.rect.current.translated might be useful?
-            // Simpler: use the delta approach if we had a start point, but here we drop.
-
-            // Mouse event client coordinates
-            // dnd-kit doesn't give mouse event easily in DragEndEvent except via activatorEvent
-            // but `delta` is reliable.
-            // Problem: We don't know the exact "internal" drop coordinate easily from just `delta` if we don't know start.
-
-            // Actually, `over.rect` gives the screen bounding box of the droppable section.
-            // `event.active.rect.current.translated` gives screen bounding box of dragged item.
-            // `dropX relative to section` = (draggedItem.left - section.left) / zoomLevel.
-
-            // Let's use the rectangles provided by dnd-kit
+            // Calculate dropped position relative to the scaled section
             const activeRect = event.active.rect.current.translated;
-            if (!activeRect) return; // Should allow null check
+            if (!activeRect) return;
 
             const relativeX = (activeRect.left - overRect.left) / zoomLevel;
             const relativeY = (activeRect.top - overRect.top) / zoomLevel;
 
-            // Should we snap create too? Maybe later. For now keep existing snap.
             const x = snap(Math.max(0, relativeX));
             const y = snap(Math.max(0, relativeY));
 
             const newElement: CanvasElement = {
-                // Default props first
+                // Default props
                 isDynamic: false,
                 content: activeData.toolType === 'text' ? 'New Text' : activeData.toolType === 'barcode' ? '12345678' : undefined,
                 width: activeData.toolType === 'box' ? 100 : activeData.toolType === 'barcode' ? 150 : activeData.toolType === 'image' ? 60 : 100,
@@ -189,17 +162,14 @@ function App() {
                 barcodeType: activeData.toolType === 'barcode' ? 'code128' : undefined,
                 showLabel: activeData.toolType === 'barcode' ? true : undefined,
 
-                // Spread activeData to override defaults (e.g. for Gib QR Code)
                 ...activeData,
 
-                // Critical fields - these MUST come last to ensure they are not overwritten
                 id: generateId(),
                 type: activeData.toolType,
                 x,
                 y
             };
 
-            console.log(`Adding new ${newElement.type} to ${sectionName} at ${x},${y}`);
             addElement(sectionName, newElement);
             selectElement(newElement.id, sectionName);
         }
@@ -211,24 +181,14 @@ function App() {
             const targetSection = overData.name as SectionName;
 
             // Calculate final snapped position
-            // delta is screen pixels. 
-            // internalDelta = delta / zoomLevel
-
             const internalDeltaX = delta.x / zoomLevel;
             const internalDeltaY = delta.y / zoomLevel;
-
-            console.log('Math Trace:', {
-                elementX: element.x,
-                deltaX: delta.x,
-                zoomLevel,
-                internalDeltaX,
-                startNewX: element.x + internalDeltaX
-            });
 
             let newX = element.x + internalDeltaX;
             const elementWidth = element.width || 0;
             const centerX = newX + (elementWidth / 2);
 
+            // Apply Center Snapping
             if (Math.abs(centerX - CENTER_X) < SNAP_THRESHOLD) {
                 newX = CENTER_X - (elementWidth / 2);
             } else {
@@ -237,28 +197,29 @@ function App() {
 
             const newY = snap(Math.max(0, element.y + internalDeltaY));
 
-            // If moving within same section
             if (currentSection === targetSection) {
                 updateElement(currentSection, element.id, { x: newX, y: newY });
             }
-            // If moving to different section
             else if (overData.type === 'section') {
                 removeElement(currentSection, element.id);
-
                 const newElement = {
                     ...element,
-                    x: newX, // Use calculated X
-                    y: 10
+                    x: newX,
+                    y: Math.max(0, newY) // Ensure positive Y in new section
                 };
                 addElement(targetSection, newElement);
             }
         }
     };
 
+    // Custom Modifier to constrain movement or snap live?
+    // For now, we rely on Visual Guides + End Snap.
+    const modifiers: Modifier[] = [];
+
     return (
         <DndContext
             sensors={sensors}
-            modifiers={[]}
+            modifiers={modifiers}
             collisionDetection={pointerWithin}
             onDragStart={handleDragStart}
             onDragMove={handleDragMove}
@@ -269,25 +230,7 @@ function App() {
                 propertiesPanel={<PropertiesPanel />}
             >
                 <div className="flex flex-col items-center py-8 min-h-full relative bg-gray-100 overflow-auto">
-                    {alignmentGuides.map((guide, i) => (
-                        <div
-                            key={i}
-                            className="absolute top-0 bottom-0 border-l border-red-500 border-dashed z-50 pointer-events-none"
-                            style={{
-                                left: GUIDE_OFFSET_LEFT + (guide.position * zoomLevel),
-                                // We need to calculate absolute left based on the Canvas position in the container.
-                                // The Canvas is centered.
-                                // It works via flex items-center.
-                                // Actually, simpler: Put these guides INSIDE the scaled container!
-                                // Then just `left: guide.position`.
-                            }}
-                        />
-                    ))}
-
-                    {/*
-                        Zoom Implementation:
-                     */}
-
+                    {/* Zoom Container */}
                     <div style={{
                         width: CANVAS_WIDTH_PX * zoomLevel,
                         minHeight: '100%',
@@ -302,7 +245,7 @@ function App() {
                             transformOrigin: 'top center',
                             position: 'relative'
                         }}>
-                            {/* Guides Rendered INSIDE the scale context */}
+                            {/* Alignment Guides */}
                             {alignmentGuides.map((guide, i) => (
                                 <div
                                     key={i}
@@ -312,10 +255,10 @@ function App() {
                                         }`}
                                     style={guide.type === 'vertical' ? {
                                         left: guide.position, // Absolute Internal X
-                                        borderLeftWidth: '1px' // Force 1px visible line
+                                        borderLeftWidth: '1px'
                                     } : {
                                         top: guide.position, // Absolute Internal Y
-                                        borderTopWidth: '1px' // Force 1px visible line
+                                        borderTopWidth: '1px'
                                     }}
                                 />
                             ))}
@@ -328,50 +271,12 @@ function App() {
             <DragOverlay dropAnimation={null} className="pointer-events-none">
                 {activeId && dragData ? (
                     dragData.type === 'tool' ? (
-                        // Tool Drag: No scaling, keep it UI-sized
                         <div className="flex items-center gap-2 p-3 bg-white border rounded shadow opacity-90 cursor-grabbing w-32">
                             <span className="capitalize">{dragData.toolType}</span>
                         </div>
                     ) : (
-                        // Element Drag: 
-                        // dnd-kit positions the overlay matching the activator's client rect.
-                        // Since the activator (canvas element) is ALREADY scaled on screen, dnd-kit captures that scaled size.
-                        // If we apply scale() AGAIN here, we get double scaling (e.g. 2x * 2x = 4x).
-                        // So we should NOT scale here if we want 1:1 match with what the user sees on canvas.
-                        // We strictly set width/height to match the element's internal size, but dnd-kit might stretch it?
-                        // Actually, if we just render the content at 100% scale (internal), and let dnd-kit's size matching work?
-                        // Providing explicit width/height (unscaled) + Scale transform?
-                        // Providing explicit width/height (SCALED) + No transform?
-
-                        // Best approach: Render unscaled content, but apply scale transform to match canvas zoom.
-                        // BUT wait, if dnd-kit sees 200px activator, it might size the overlay wrapper to 200px.
-                        // If we put a 100px div inside and scale(2), it fills the 200px wrapper. 
-                        // This seems correct logic, BUT user says "too zoomed".
-
-                        // Let's try REMOVING scale and just sizing it to matches element dimensions * zoomLevel explicitly?
-                        // Or just standard rendering?
-
-                        // Hypothesis: The user sees "too zoomed" because the overlay is huge.
-                        // If I remove scale, it might be small (100px) on a 200px hole.
-
-                        // Let's try to match the Canvas logic exactly.
-                        // Canvas: <div style={{ transform: scale(zoom) }}> <Element /> </div>
-                        // Overlay: <div style={{ transform: scale(zoom) }}> <Element /> </div>
-                        // this SHOULD be right.
-
-                        // Maybe the `transformOrigin` is wrong?
-                        // If dnd-kit aligns top-left of overlay with top-left of element.
-                        // And we scale from top-left. It should match.
-
-                        // WHAT IF: dnd-kit modifier or something is interfering?
-                        // Or `dragData` is stale?
-
-                        // Let's try a different strategy:
-                        // No scale transform.
-                        // Just set width/height to `element.width * zoomLevel` and `element.height * zoomLevel`.
-                        // Render content using that size.
-                        // This eliminates CSS transform ambiguity.
-
+                        // Render Element Overlay
+                        // We scale the content manually to match the visual size on canvas
                         <div style={{
                             width: (dragData.element?.width || 0) * zoomLevel,
                             height: (dragData.element?.height || 0) * zoomLevel,
@@ -380,7 +285,9 @@ function App() {
                                 {dragData.element?.type === 'box' ? (
                                     <div className="w-full h-full border-2 border-black bg-black/5" />
                                 ) : dragData.element?.type === 'image' ? (
-                                    <span className="text-[10px] text-gray-500 font-bold">IMAGE</span>
+                                    dragData.element?.imageBase64 ?
+                                     <img src={dragData.element.imageBase64} className="w-full h-full object-contain opacity-50"/> :
+                                     <span className="text-[10px] text-gray-500 font-bold">IMAGE</span>
                                 ) : (
                                     <span style={{ fontSize: `${(dragData.element?.fontSize || 12) * zoomLevel}px` }}>
                                         {dragData.element?.content || dragData.element?.dataSource || 'Element'}

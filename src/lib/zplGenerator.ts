@@ -169,68 +169,122 @@ export function generateLinePrint(
     body: SectionState,
     footer: SectionState,
     mockItems: number = 3,
-    useMockData: boolean = false
+    useMockData: boolean = false,
+    canvasWidthMm: number = 104
 ): string {
-    let output = '=== LINE PRINT MODE (TEXT PREVIEW) ===\n\n';
+    let output = '=== LINE PRINT MODE (FIXED WIDTH PREVIEW) ===\n';
+    output += `Paper Width: ${canvasWidthMm}mm (Approx 80 chars)\n\n`;
 
-    // Helper to extract text from elements, sorted by Y then X
-    const processSection = (elements: CanvasElement[], _offsetY: number = 0, rowData?: any) => {
-        // Filter out non-text elements (like lines/boxes, unless they have content?)
-        // Images and Barcodes are usually not "Line Print" compatible in raw text mode, 
-        // but we can show their content/alt text.
+    // Assumptions for Line Print
+    // 1 char approx 2.5mm width? No, standard is 10-12 CPI.
+    // Let's assume 10 CPI -> 10 chars per inch -> 1 char per 2.54mm.
+    // 104mm / 2.54 = ~40 chars.
+    // Wait, 832 dots / 203dpi = 4 inches. 4 * 10 = 40 chars? That's quite narrow.
+    // Usually receipt printers (80mm) fit 42-48 columns (Font A) or 56-64 columns (Font B).
+    // Let's assume a standard 48 column width for 80mm paper, or scale based on canvasWidth.
+    // If 80mm -> 48 cols, then 1mm = 0.6 cols.
+    // canvasWidth * 0.6 = totalCols.
+    const COLS_PER_MM = 0.6;
 
-        const sorted = [...elements].sort((a, b) => {
-            if (Math.abs(a.y - b.y) > 5) return a.y - b.y; // Y priority (5px threshold)
-            return a.x - b.x; // X priority
-        });
-
-        const lines: string[] = [];
-        let currentY = -1;
-        let lineBuffer: string[] = [];
-
-        sorted.forEach(el => {
-            if (el.type === 'box') return; // Skip boxes
-
-            let content = el.content || '';
-
-            // Resolve dynamic data
-            if (el.isDynamic && el.dataSource) {
-                if (useMockData) {
-                    const ds = el.dataSource;
-                    if (rowData && rowData[ds]) content = rowData[ds];
-                    else if (MOCK_GLOBAL_DATA[ds]) content = MOCK_GLOBAL_DATA[ds];
-                    else content = `[${ds}]`;
-                } else {
-                    content = `[${el.dataSource}]`;
+    // Helper to render a section line-by-line using spatial layout
+    const processSection = (elements: CanvasElement[], rowData?: any) => {
+        // 1. Resolve content first
+        const resolvedElements = elements.map(el => {
+            let content = '';
+            if (el.type === 'box') {
+                // Horizontal lines can be simulated
+                if ((el.height || 0) < 5 && (el.width || 0) > 20) content = '-'.repeat(Math.floor((el.width || 0) * MM_TO_PX / 10)); // Rough guess
+            } else if (el.type === 'text') {
+                 content = el.content || '';
+                if (el.isDynamic && el.dataSource) {
+                    if (useMockData) {
+                        const ds = el.dataSource;
+                        if (rowData && rowData[ds]) content = rowData[ds];
+                        else if (MOCK_GLOBAL_DATA[ds]) content = MOCK_GLOBAL_DATA[ds];
+                        else content = `[${ds}]`;
+                    } else {
+                        content = `[${el.dataSource}]`;
+                    }
                 }
-            } else if (el.type === 'image') {
-                content = el.zplImage ? '[IMAGE: CUSTOM]' : `[IMAGE: ${el.imageKey || 'TenantLogo'}]`;
-            } else if (el.type === 'barcode') {
-                content = `[BARCODE: ${content || el.dataSource}]`;
+            } else if (el.type === 'barcode' || el.type === 'image') {
+                return null; // Skip graphics in line print
             }
 
-            // Simple line grouping by Y
-            if (currentY !== -1 && Math.abs(el.y - currentY) > 10) {
-                lines.push(lineBuffer.join('\t'));
-                lineBuffer = [];
+            if (!content) return null;
+
+            // Convert X (px) to Column Index
+            // px -> mm -> col
+            const xMm = el.x / MM_TO_PX; // px / (3.78) is wrong. MM_TO_PX is approx 3.78 (96dpi/25.4).
+            // constant MM_TO_PX is typically 3.7795...
+            const colIndex = Math.floor(xMm * COLS_PER_MM);
+
+            return {
+                y: el.y,
+                x: el.x,
+                col: colIndex,
+                content
+            };
+        }).filter(Boolean) as { y: number, x: number, col: number, content: string }[];
+
+        // 2. Group by Y (Line)
+        // We cluster elements that are within ~4mm Y-distance of each other
+        const lines: { y: number, items: typeof resolvedElements }[] = [];
+
+        // Sort by Y first
+        resolvedElements.sort((a, b) => a.y - b.y);
+
+        resolvedElements.forEach(item => {
+            // Find existing line group?
+            const existingLine = lines.find(l => Math.abs(l.y - item.y) < 15); // 15px threshold (~4mm)
+            if (existingLine) {
+                existingLine.items.push(item);
+            } else {
+                lines.push({ y: item.y, items: [item] });
             }
-            currentY = el.y;
-            lineBuffer.push(content);
         });
-        if (lineBuffer.length > 0) lines.push(lineBuffer.join('\t'));
 
-        return lines.join('\n');
+        // 3. Render each line
+        let sectionOutput = '';
+
+        lines.forEach(line => {
+            // Sort items by X (Column)
+            line.items.sort((a, b) => a.col - b.col);
+
+            let lineStr = '';
+            let currentCol = 0;
+
+            line.items.forEach(item => {
+                // Add padding
+                if (item.col > currentCol) {
+                    lineStr += ' '.repeat(item.col - currentCol);
+                    currentCol = item.col;
+                }
+
+                // If overlap (col < currentCol), we assume space or overwrite?
+                // Just append a space if overlaps to ensure separation
+                if (item.col < currentCol) {
+                     lineStr += ' ';
+                     currentCol++;
+                }
+
+                lineStr += item.content;
+                currentCol += item.content.length;
+            });
+            sectionOutput += lineStr + '\n';
+        });
+
+        return sectionOutput;
     };
 
     output += '--- HEADER ---\n';
-    output += processSection(header.elements) + '\n\n';
+    output += processSection(header.elements) + '\n';
 
     output += '--- BODY ---\n';
     const itemsToRender = useMockData ? mockItems : 1;
     for (let i = 0; i < itemsToRender; i++) {
         const mockRowData = useMockData ? MOCK_DATA_ROWS[i % MOCK_DATA_ROWS.length] : undefined;
-        output += `[Row ${i + 1}]\n`;
-        output += processSection(body.elements, 0, mockRowData) + '\n';
+        // output += `[Row ${i + 1}]\n`;
+        output += processSection(body.elements, mockRowData);
     }
     output += '\n';
 
