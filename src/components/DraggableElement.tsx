@@ -28,7 +28,6 @@ export const DraggableElement = ({ element, section }: DraggableElementProps) =>
   // Applying transform would move the original element (scaled weirdly inside the zoom container)
   // causing a double-vision effect where the original lags behind the overlay.
   // Instead, we let the original stay put (dimmed) and the overlay follows the cursor.
-  const style = undefined;
 
   const getDisplayContent = () => {
     if (element.type === 'barcode') return null;
@@ -84,7 +83,6 @@ export const DraggableElement = ({ element, section }: DraggableElementProps) =>
     <div
       ref={setNodeRef}
       style={{
-        ...style,
         position: 'absolute',
         left: element.x,
         top: element.y,
@@ -114,13 +112,19 @@ export const DraggableElement = ({ element, section }: DraggableElementProps) =>
           </span>
         </div>
       ) : element.type === 'image' ? (
-        <div className="flex flex-col items-center justify-center h-full w-full bg-slate-50 border border-slate-300 rounded overflow-hidden">
-          <div className="flex items-center justify-center flex-1 bg-white w-full">
-            <span className="text-[10px] text-gray-400 p-1 text-center font-bold">IMAGE</span>
-          </div>
-          <div className="bg-slate-700 text-white w-full py-0.5 px-1">
-            <p className="text-[9px] truncate text-center">{element.imageKey || 'None'}</p>
-          </div>
+        <div className="flex flex-col items-center justify-center h-full w-full bg-slate-50 border border-slate-300 rounded overflow-hidden relative">
+          {element.imageBase64 ? (
+            <img src={element.imageBase64} alt="Custom" className="w-full h-full object-contain pointer-events-none" />
+          ) : (
+            <>
+              <div className="flex items-center justify-center flex-1 bg-white w-full">
+                <span className="text-[10px] text-gray-400 p-1 text-center font-bold">IMAGE</span>
+              </div>
+              <div className="bg-slate-700 text-white w-full py-0.5 px-1">
+                <p className="text-[9px] truncate text-center">{element.imageKey || 'None'}</p>
+              </div>
+            </>
+          )}
         </div>
       ) : element.type === 'box' ? (
         <div className="w-full h-full border-2 border-black bg-black/5" />

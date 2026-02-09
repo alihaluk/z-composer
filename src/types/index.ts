@@ -17,6 +17,12 @@ export interface CanvasElement {
   maxChars?: number;
   barcodeType?: 'code128' | 'qr';
   showLabel?: boolean;
+  zplImage?: {
+    hex: string;
+    totalBytes: number;
+    bytesPerRow: number;
+  };
+  imageBase64?: string;
 }
 
 export interface SectionState {

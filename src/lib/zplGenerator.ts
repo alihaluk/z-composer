@@ -76,10 +76,16 @@ export function generateElementZPL(
     } else if (el.type === 'image') {
         const wDots = pxToDots(el.width || 60);
         const hDots = pxToDots(el.height || 60);
-        // Marker for mobile parser: [IMAGE:Key]
-        // We use a comment or a specific field to make it parseable
-        command += `^GB${wDots},${hDots},1^FS`; // Draw a thin box as placeholder
-        command += `^FO${xDots},${yDots}^A0N,15,15^FD[IMG:${el.imageKey || 'NONE'}]^FS`;
+
+        if (el.zplImage && el.zplImage.hex) {
+             const { hex, totalBytes, bytesPerRow } = el.zplImage;
+             command += `^GFA,${totalBytes},${totalBytes},${bytesPerRow},${hex}^FS`;
+        } else {
+            // Marker for mobile parser: [IMAGE:Key]
+            // We use a comment or a specific field to make it parseable
+            command += `^GB${wDots},${hDots},1^FS`; // Draw a thin box as placeholder
+            command += `^FO${xDots},${yDots}^A0N,15,15^FD[IMG:${el.imageKey || 'NONE'}]^FS`;
+        }
     } else {
         // Text
         const orientation = getOrientation(el.rotation);
@@ -168,7 +174,7 @@ export function generateLinePrint(
     let output = '=== LINE PRINT MODE (TEXT PREVIEW) ===\n\n';
 
     // Helper to extract text from elements, sorted by Y then X
-    const processSection = (elements: CanvasElement[], offsetY: number = 0, rowData?: any) => {
+    const processSection = (elements: CanvasElement[], _offsetY: number = 0, rowData?: any) => {
         // Filter out non-text elements (like lines/boxes, unless they have content?)
         // Images and Barcodes are usually not "Line Print" compatible in raw text mode, 
         // but we can show their content/alt text.
@@ -198,7 +204,7 @@ export function generateLinePrint(
                     content = `[${el.dataSource}]`;
                 }
             } else if (el.type === 'image') {
-                content = `[IMAGE: ${el.imageKey || 'TenantLogo'}]`;
+                content = el.zplImage ? '[IMAGE: CUSTOM]' : `[IMAGE: ${el.imageKey || 'TenantLogo'}]`;
             } else if (el.type === 'barcode') {
                 content = `[BARCODE: ${content || el.dataSource}]`;
             }
