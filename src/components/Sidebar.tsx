@@ -41,7 +41,7 @@ export const SidebarItem = ({ type, label, icon: Icon, extraData }: SidebarItemP
 };
 
 export const Sidebar = () => {
-  const { clearCanvas, header, body, footer, canvasWidth, setTemplate, savedTemplates, saveTemplate, loadTemplate, deleteTemplate } = useStore();
+  const { clearCanvas, header, body, footer, canvasWidth, setTemplate, savedTemplates, saveTemplate, loadTemplate, deleteTemplate, currentTemplateName } = useStore();
   const [templateName, setTemplateName] = useState('');
 
   const undo = () => useStore.temporal?.getState().undo();
@@ -62,23 +62,30 @@ export const Sidebar = () => {
   }, []);
 
   const handleSaveFile = () => {
-    const template = {
-      header,
-      body,
-      footer,
-      canvasWidth,
-      version: 1,
-      createdAt: new Date().toISOString()
-    };
-    const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `z-composer-template-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      const template = {
+        header,
+        body,
+        footer,
+        canvasWidth,
+        version: 1,
+        createdAt: new Date().toISOString()
+      };
+      const jsonString = JSON.stringify(template, null, 2);
+      // Use application/octet-stream to force download
+      const blob = new Blob([jsonString], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `z-composer-template-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export template. Check console for details.');
+    }
   };
 
   const handleLoadFile = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,6 +121,14 @@ export const Sidebar = () => {
     setTemplateName('');
   };
 
+  const handleUpdateTemplate = () => {
+    if (currentTemplateName) {
+      saveTemplate(currentTemplateName);
+      // Optional: Visual feedback
+      // alert('Template updated!');
+    }
+  };
+
   return (
     <div className="p-4 flex flex-col h-full overflow-y-auto">
       <div className="flex justify-between items-center mb-4">
@@ -143,29 +158,48 @@ export const Sidebar = () => {
         </div>
       </div>
 
-       <div className="pt-4 border-t mt-4 space-y-2">
+      <div className="pt-4 border-t mt-4 space-y-2">
         <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Saved Templates</h3>
-        <div className="flex gap-2">
-            <input
-                className="flex-1 text-xs border rounded px-2 h-8"
-                placeholder="Template Name..."
-                value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
-            />
-            <Button size="sm" variant="outline" className="h-8" onClick={handleSaveLocal} title="Save">
-                <Save size={14} />
+
+        {/* Update Button for Current Template */}
+        {currentTemplateName && (
+          <div className="mb-2">
+            <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white h-7 text-xs" onClick={handleUpdateTemplate}>
+              Update "{currentTemplateName}"
             </Button>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <input
+            className="flex-1 text-xs border rounded px-2 h-8"
+            placeholder="New Template Name..."
+            value={templateName}
+            onChange={(e) => setTemplateName(e.target.value)}
+          />
+          <Button size="sm" variant="outline" className="h-8" onClick={handleSaveLocal} title="Save New">
+            <Save size={14} />
+          </Button>
         </div>
         <div className="max-h-32 overflow-y-auto space-y-1 mt-2">
-            {savedTemplates.length === 0 && <p className="text-[10px] text-gray-400">No saved templates</p>}
-            {savedTemplates.map(t => (
-                <div key={t.name} className="flex justify-between items-center text-xs bg-gray-50 p-1 rounded group">
-                    <span className="truncate flex-1 cursor-pointer hover:text-blue-600" onClick={() => loadTemplate(t.name)}>{t.name}</span>
-                    <button className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteTemplate(t.name)}>
-                        <Trash size={12} />
-                    </button>
-                </div>
-            ))}
+          {savedTemplates.length === 0 && <p className="text-[10px] text-gray-400">No saved templates</p>}
+          {savedTemplates.map(t => (
+            <div
+              key={t.name}
+              className={cn(
+                "flex justify-between items-center text-xs p-1 rounded group",
+                currentTemplateName === t.name ? "bg-blue-50 border border-blue-100" : "bg-gray-50 border border-transparent"
+              )}
+            >
+              <span className="truncate flex-1 cursor-pointer hover:text-blue-600" onClick={() => loadTemplate(t.name)}>
+                {t.name}
+                {currentTemplateName === t.name && <span className="ml-1 text-[9px] text-blue-400">(active)</span>}
+              </span>
+              <button className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteTemplate(t.name)}>
+                <Trash size={12} />
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -173,15 +207,15 @@ export const Sidebar = () => {
       <div className="pt-4 border-t mt-auto space-y-2">
         <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">File Operations</h3>
         <div className="mb-2">
-             <Button variant="ghost" className="w-full text-[10px] text-gray-400 h-6" onClick={() => {
-                for(let i=0; i<50; i++) {
-                    const id = Math.random().toString(36).substr(2, 9);
-                    useStore.getState().addElement('body', {
-                        id, type: 'text', x: (i%5)*20, y: Math.floor(i/5)*10,
-                        content: `Item ${i}`, fontSize: 8, isDynamic: false, width: 40, height: 10
-                    });
-                }
-             }}>Add 50 Elements (Test)</Button>
+          <Button variant="ghost" className="w-full text-[10px] text-gray-400 h-6" onClick={() => {
+            for (let i = 0; i < 50; i++) {
+              const id = Math.random().toString(36).substr(2, 9);
+              useStore.getState().addElement('body', {
+                id, type: 'text', x: (i % 5) * 20, y: Math.floor(i / 5) * 10,
+                content: `Item ${i}`, fontSize: 8, isDynamic: false, width: 40, height: 10
+              });
+            }
+          }}>Add 50 Elements (Test)</Button>
         </div>
         <div className="grid grid-cols-3 gap-2">
           <Button variant="outline" className="text-xs h-8 px-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={clearCanvas}>

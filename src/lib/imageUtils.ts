@@ -7,10 +7,9 @@ export interface ZPLImageResult {
   height: number;
 }
 
-export const imageToZPL = (file: File, maxWidth: number = 200, maxHeight: number = 200): Promise<ZPLImageResult> => {
+export const imageToZPL = (fileOrUrl: File | string, maxWidth: number = 200, maxHeight: number = 200): Promise<ZPLImageResult> => {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
+    const processImage = (src: string) => {
       const img = new Image();
       img.onload = () => {
         // Calculate new dimensions keeping aspect ratio
@@ -81,15 +80,24 @@ export const imageToZPL = (file: File, maxWidth: number = 200, maxHeight: number
           zplHex: hexString,
           totalBytes,
           bytesPerRow,
-          base64: reader.result as string,
+          base64: typeof fileOrUrl === 'string' ? fileOrUrl : src,
           width,
           height
         });
       };
       img.onerror = reject;
-      img.src = e.target?.result as string;
+      img.src = src;
     };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+
+    if (typeof fileOrUrl === 'string') {
+      processImage(fileOrUrl);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        processImage(e.target?.result as string);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(fileOrUrl);
+    }
   });
 };

@@ -24,6 +24,8 @@ interface AppState {
   previewMode: 'zpl' | 'text';
   setPreviewMode: (mode: 'zpl' | 'text') => void;
 
+  currentTemplateName: string | null;
+
   // Templates
   savedTemplates: SavedTemplate[];
   saveTemplate: (name: string) => void;
@@ -55,6 +57,7 @@ export const useStore = create<AppState>()(
       canvasWidth: 104, // Default 104mm (4 inch)
       previewMode: 'zpl',
       savedTemplates: JSON.parse(localStorage.getItem('zcomposer_templates') || '[]'),
+      currentTemplateName: null,
 
       setPreviewMode: (mode) => set({ previewMode: mode }),
 
@@ -67,14 +70,17 @@ export const useStore = create<AppState>()(
         };
         const updatedTemplates = [...savedTemplates.filter(t => t.name !== name), newTemplate];
         localStorage.setItem('zcomposer_templates', JSON.stringify(updatedTemplates));
-        set({ savedTemplates: updatedTemplates });
+        set({ savedTemplates: updatedTemplates, currentTemplateName: name });
       },
 
       deleteTemplate: (name) => {
-        const { savedTemplates } = get();
+        const { savedTemplates, currentTemplateName } = get();
         const updatedTemplates = savedTemplates.filter(t => t.name !== name);
         localStorage.setItem('zcomposer_templates', JSON.stringify(updatedTemplates));
-        set({ savedTemplates: updatedTemplates });
+        set({
+          savedTemplates: updatedTemplates,
+          currentTemplateName: currentTemplateName === name ? null : currentTemplateName
+        });
       },
 
       loadTemplate: (name) => {
@@ -82,12 +88,13 @@ export const useStore = create<AppState>()(
         const template = savedTemplates.find(t => t.name === name);
         if (template) {
           set({
-             header: template.data.header,
-             body: template.data.body,
-             footer: template.data.footer,
-             canvasWidth: template.data.canvasWidth,
-             selectedElementId: null,
-             selectedSection: null
+            header: template.data.header,
+            body: template.data.body,
+            footer: template.data.footer,
+            canvasWidth: template.data.canvasWidth,
+            selectedElementId: null,
+            selectedSection: null,
+            currentTemplateName: name
           });
         }
       },
@@ -132,7 +139,8 @@ export const useStore = create<AppState>()(
         body: { height: 10, elements: [] },
         footer: { height: 20, elements: [] },
         selectedElementId: null,
-        selectedSection: null
+        selectedSection: null,
+        currentTemplateName: null
       }),
 
       setCanvasWidth: (width) => set({ canvasWidth: Math.max(10, Math.min(104, width)) }),
@@ -145,9 +153,10 @@ export const useStore = create<AppState>()(
         body: template.body,
         footer: template.footer,
         canvasWidth: template.canvasWidth || 104,
-        // Reset selection
+        // Reset selection and template name
         selectedElementId: null,
-        selectedSection: null
+        selectedSection: null,
+        currentTemplateName: null
       }),
     }),
     {

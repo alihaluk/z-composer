@@ -3,6 +3,7 @@ import { Label } from './ui/Label';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
 import { Select } from './ui/Select';
+import { MM_TO_PX } from '../lib/constants';
 import { generateZPL, generateElementZPL, generateLinePrint } from '../lib/zplGenerator';
 import { GLOBAL_DATA_SOURCES, ALL_DATA_SOURCES } from '../lib/dataSources';
 import { imageToZPL } from '../lib/imageUtils';
@@ -32,10 +33,10 @@ export const PropertiesPanel = () => {
     return (
       <span className="font-mono text-[9px]">
         {parts.map((part, i) => {
-           if (part.startsWith('^')) {
-               return <span key={i} className="text-blue-600 font-bold">{part}</span>;
-           }
-           return <span key={i} className="text-gray-600">{part}</span>;
+          if (part.startsWith('^')) {
+            return <span key={i} className="text-blue-600 font-bold">{part}</span>;
+          }
+          return <span key={i} className="text-gray-600">{part}</span>;
         })}
       </span>
     );
@@ -150,8 +151,33 @@ export const PropertiesPanel = () => {
     : zplCode;
 
   const handleChange = (key: string, value: any) => {
-    // console.log(`Updating element ${selectedElementId} in ${selectedSection}: ${key} =`, value);
     updateElement(selectedSection!, selectedElementId!, { [key]: value });
+
+    // If resizing an image, re-process the ZPL data to match new dimensions
+    if (element.type === 'image' && element.imageBase64 && (key === 'width' || key === 'height')) {
+      const newWidth = key === 'width' ? value : element.width;
+      const newHeight = key === 'height' ? value : element.height;
+
+      // Convert screen pixels (value) back to physical mm, then to ZPL dots
+      // widthPx / MM_TO_PX = widthMm
+      // widthMm * DOTS_PER_MM = widthDots
+      const DOTS_PER_MM = 8;
+      const widthDots = Math.round((newWidth / MM_TO_PX) * DOTS_PER_MM);
+      const heightDots = Math.round((newHeight / MM_TO_PX) * DOTS_PER_MM);
+
+      // We use a small timeout to debounce/avoid blocking UI if typing fast, 
+      // though for input onBlur it's fine.
+      imageToZPL(element.imageBase64, widthDots, heightDots).then(result => {
+        updateElement(selectedSection!, selectedElementId!, {
+          zplImage: {
+            hex: result.zplHex,
+            totalBytes: result.totalBytes,
+            bytesPerRow: result.bytesPerRow
+          },
+          // We don't update width/height here to avoid loops, as we just used them as input
+        });
+      }).catch(err => console.error("Failed to re-process resized image", err));
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,6 +189,14 @@ export const PropertiesPanel = () => {
       // We limit to 800x800 for reasonable ZPL size
       const result = await imageToZPL(file, 800, 800);
 
+      // Calculate scaled dimensions (mm -> px)
+      // ZPL is 8 dots/mm. result.width is in dots.
+      // widthMm = result.width / 8
+      // widthPx = widthMm * MM_TO_PX
+      const DOTS_PER_MM = 8;
+      const scaledWidth = (result.width / DOTS_PER_MM) * MM_TO_PX;
+      const scaledHeight = (result.height / DOTS_PER_MM) * MM_TO_PX;
+
       updateElement(selectedSection!, selectedElementId!, {
         imageBase64: result.base64,
         zplImage: {
@@ -172,9 +206,9 @@ export const PropertiesPanel = () => {
         },
         // Clear preset key if setting custom
         imageKey: undefined,
-        // Update dimensions to match result
-        width: result.width,
-        height: result.height
+        // Update dimensions to match result (scaled to screen px)
+        width: scaledWidth,
+        height: scaledHeight
       });
 
       // Reset input value to allow re-upload of same file
@@ -280,16 +314,16 @@ export const PropertiesPanel = () => {
           </div>
 
           <div className="pt-2 border-t mt-2">
-             <Label className="mb-2 block">Custom Image Upload</Label>
-             <Input type="file" accept="image/*" onChange={handleImageUpload} className="text-xs" />
-             <p className="text-[10px] text-gray-400 mt-1">Uploads will be converted to ZPL Hex automatically.</p>
+            <Label className="mb-2 block">Custom Image Upload</Label>
+            <Input type="file" accept="image/*" onChange={handleImageUpload} className="text-xs" />
+            <p className="text-[10px] text-gray-400 mt-1">Uploads will be converted to ZPL Hex automatically.</p>
 
-             {element.imageBase64 && (
-                <div className="mt-2 border p-2 rounded bg-white">
-                   <p className="text-[10px] text-gray-500 mb-1">Current Image:</p>
-                   <img src={element.imageBase64} alt="Preview" className="max-w-full h-auto max-h-32 object-contain mx-auto"/>
-                </div>
-             )}
+            {element.imageBase64 && (
+              <div className="mt-2 border p-2 rounded bg-white">
+                <p className="text-[10px] text-gray-500 mb-1">Current Image:</p>
+                <img src={element.imageBase64} alt="Preview" className="max-w-full h-auto max-h-32 object-contain mx-auto" />
+              </div>
+            )}
           </div>
         </div>
       ) : element.isDynamic ? (
