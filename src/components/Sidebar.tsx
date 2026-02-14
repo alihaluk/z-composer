@@ -1,8 +1,11 @@
 import { useDraggable } from '@dnd-kit/core';
-import { useEffect } from 'react';
-import { Type, Square, Barcode, Image, QrCode, RotateCcw, RotateCw } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Type, Square, Barcode, Image, QrCode, RotateCcw, RotateCw, Save, Trash } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { PreviewModal } from './PreviewModal';
+import { useStore } from '../store/useStore';
+import { Button } from './ui/Button';
+import { MM_TO_PX } from '../lib/constants';
 
 interface SidebarItemProps {
   type: string;
@@ -38,7 +41,8 @@ export const SidebarItem = ({ type, label, icon: Icon, extraData }: SidebarItemP
 };
 
 export const Sidebar = () => {
-  const { clearCanvas, header, body, footer, canvasWidth, setTemplate } = useStore();
+  const { clearCanvas, header, body, footer, canvasWidth, setTemplate, savedTemplates, saveTemplate, loadTemplate, deleteTemplate } = useStore();
+  const [templateName, setTemplateName] = useState('');
 
   const undo = () => useStore.temporal?.getState().undo();
   const redo = () => useStore.temporal?.getState().redo();
@@ -57,7 +61,7 @@ export const Sidebar = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const saveTemplate = () => {
+  const handleSaveFile = () => {
     const template = {
       header,
       body,
@@ -77,7 +81,7 @@ export const Sidebar = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleLoadTemplate = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLoadFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -104,8 +108,14 @@ export const Sidebar = () => {
     reader.readAsText(file);
   };
 
+  const handleSaveLocal = () => {
+    if (!templateName.trim()) return alert('Please enter a template name');
+    saveTemplate(templateName);
+    setTemplateName('');
+  };
+
   return (
-    <div className="p-4 flex flex-col h-full">
+    <div className="p-4 flex flex-col h-full overflow-y-auto">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold text-gray-800">Toolbox</h2>
         <div className="flex gap-1">
@@ -133,35 +143,69 @@ export const Sidebar = () => {
         </div>
       </div>
 
-      <div className="mt-8 text-xs text-gray-500 flex-1">
-        <p>Drag items to the canvas.</p>
+       <div className="pt-4 border-t mt-4 space-y-2">
+        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Saved Templates</h3>
+        <div className="flex gap-2">
+            <input
+                className="flex-1 text-xs border rounded px-2 h-8"
+                placeholder="Template Name..."
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+            />
+            <Button size="sm" variant="outline" className="h-8" onClick={handleSaveLocal} title="Save">
+                <Save size={14} />
+            </Button>
+        </div>
+        <div className="max-h-32 overflow-y-auto space-y-1 mt-2">
+            {savedTemplates.length === 0 && <p className="text-[10px] text-gray-400">No saved templates</p>}
+            {savedTemplates.map(t => (
+                <div key={t.name} className="flex justify-between items-center text-xs bg-gray-50 p-1 rounded group">
+                    <span className="truncate flex-1 cursor-pointer hover:text-blue-600" onClick={() => loadTemplate(t.name)}>{t.name}</span>
+                    <button className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteTemplate(t.name)}>
+                        <Trash size={12} />
+                    </button>
+                </div>
+            ))}
+        </div>
       </div>
+
 
       <div className="pt-4 border-t mt-auto space-y-2">
         <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">File Operations</h3>
+        <div className="mb-2">
+             <Button variant="ghost" className="w-full text-[10px] text-gray-400 h-6" onClick={() => {
+                for(let i=0; i<50; i++) {
+                    const id = Math.random().toString(36).substr(2, 9);
+                    useStore.getState().addElement('body', {
+                        id, type: 'text', x: (i%5)*20, y: Math.floor(i/5)*10,
+                        content: `Item ${i}`, fontSize: 8, isDynamic: false, width: 40, height: 10
+                    });
+                }
+             }}>Add 50 Elements (Test)</Button>
+        </div>
         <div className="grid grid-cols-3 gap-2">
           <Button variant="outline" className="text-xs h-8 px-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={clearCanvas}>
             Clear
           </Button>
-          <Button variant="outline" className="text-xs h-8 px-0" onClick={saveTemplate}>
-            Save
+          <Button variant="outline" className="text-xs h-8 px-0" onClick={handleSaveFile} title="Download JSON">
+            Export
           </Button>
-          <Button variant="outline" className="text-xs h-8 px-0" onClick={() => document.getElementById('load-template-input')?.click()}>
-            Load
+          <Button variant="outline" className="text-xs h-8 px-0" onClick={() => document.getElementById('load-template-input')?.click()} title="Upload JSON">
+            Import
           </Button>
           <input
             type="file"
             id="load-template-input"
             className="hidden"
             accept=".json"
-            onChange={handleLoadTemplate}
+            onChange={handleLoadFile}
           />
         </div>
 
         <Button variant="outline" className="w-full text-xs" onClick={() => {
           loadInvoiceTemplate();
         }}>
-          Load Invoice Template
+          Load Preset Invoice
         </Button>
         <PreviewModal />
       </div>
@@ -170,9 +214,9 @@ export const Sidebar = () => {
 };
 
 // Helper to load template
-import { useStore } from '../store/useStore';
-import { Button } from './ui/Button';
-import { MM_TO_PX } from '../lib/constants';
+// import { useStore } from '../store/useStore'; // Already imported at top
+// import { Button } from './ui/Button'; // Already imported
+// import { MM_TO_PX } from '../lib/constants'; // Already imported
 
 const loadInvoiceTemplate = () => {
   const { addElement, clearCanvas, setSectionHeight, canvasWidth } = useStore.getState();

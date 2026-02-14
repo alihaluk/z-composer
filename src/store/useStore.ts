@@ -2,12 +2,33 @@ import { create } from 'zustand';
 import { temporal } from 'zundo';
 import { type CanvasElement, type SectionName, type SectionState } from '../types';
 
+interface SavedTemplate {
+  name: string;
+  data: {
+    header: SectionState;
+    body: SectionState;
+    footer: SectionState;
+    canvasWidth: number;
+  };
+  createdAt: string;
+}
+
 interface AppState {
   header: SectionState;
   body: SectionState;
   footer: SectionState;
   selectedElementId: string | null;
   selectedSection: SectionName | null;
+
+  // Preview State
+  previewMode: 'zpl' | 'text';
+  setPreviewMode: (mode: 'zpl' | 'text') => void;
+
+  // Templates
+  savedTemplates: SavedTemplate[];
+  saveTemplate: (name: string) => void;
+  deleteTemplate: (name: string) => void;
+  loadTemplate: (name: string) => void;
 
   // Actions
   addElement: (section: SectionName, element: CanvasElement) => void;
@@ -25,13 +46,51 @@ interface AppState {
 
 export const useStore = create<AppState>()(
   temporal(
-    (set) => ({
+    (set, get) => ({
       header: { height: 40, elements: [] },
       body: { height: 10, elements: [] },
       footer: { height: 20, elements: [] },
       selectedElementId: null,
       selectedSection: null,
       canvasWidth: 104, // Default 104mm (4 inch)
+      previewMode: 'zpl',
+      savedTemplates: JSON.parse(localStorage.getItem('zcomposer_templates') || '[]'),
+
+      setPreviewMode: (mode) => set({ previewMode: mode }),
+
+      saveTemplate: (name) => {
+        const { header, body, footer, canvasWidth, savedTemplates } = get();
+        const newTemplate: SavedTemplate = {
+          name,
+          data: { header, body, footer, canvasWidth },
+          createdAt: new Date().toISOString()
+        };
+        const updatedTemplates = [...savedTemplates.filter(t => t.name !== name), newTemplate];
+        localStorage.setItem('zcomposer_templates', JSON.stringify(updatedTemplates));
+        set({ savedTemplates: updatedTemplates });
+      },
+
+      deleteTemplate: (name) => {
+        const { savedTemplates } = get();
+        const updatedTemplates = savedTemplates.filter(t => t.name !== name);
+        localStorage.setItem('zcomposer_templates', JSON.stringify(updatedTemplates));
+        set({ savedTemplates: updatedTemplates });
+      },
+
+      loadTemplate: (name) => {
+        const { savedTemplates } = get();
+        const template = savedTemplates.find(t => t.name === name);
+        if (template) {
+          set({
+             header: template.data.header,
+             body: template.data.body,
+             footer: template.data.footer,
+             canvasWidth: template.data.canvasWidth,
+             selectedElementId: null,
+             selectedSection: null
+          });
+        }
+      },
 
       addElement: (section, element) =>
         set((state) => ({
@@ -93,8 +152,8 @@ export const useStore = create<AppState>()(
     }),
     {
       partialize: (state) => {
-        const { header, body, footer, canvasWidth } = state;
-        return { header, body, footer, canvasWidth };
+        const { header, body, footer, canvasWidth, previewMode } = state;
+        return { header, body, footer, canvasWidth, previewMode };
       },
       limit: 50
     }

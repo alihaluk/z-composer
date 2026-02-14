@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Label } from './ui/Label';
 import { Input } from './ui/Input';
@@ -6,6 +5,7 @@ import { Button } from './ui/Button';
 import { Select } from './ui/Select';
 import { generateZPL, generateElementZPL, generateLinePrint } from '../lib/zplGenerator';
 import { GLOBAL_DATA_SOURCES, ALL_DATA_SOURCES } from '../lib/dataSources';
+import { imageToZPL } from '../lib/imageUtils';
 
 export const PropertiesPanel = () => {
   const {
@@ -21,10 +21,25 @@ export const PropertiesPanel = () => {
     canvasWidth,
     setCanvasWidth,
     zoomLevel,
-    setZoomLevel
+    setZoomLevel,
+    previewMode,
+    setPreviewMode
   } = useStore();
 
-  const [previewMode, setPreviewMode] = useState<'zpl' | 'text'>('zpl');
+  const renderZPLPreview = (zpl: string) => {
+    // Simple highlighter
+    const parts = zpl.split(/(\^[A-Z0-9]+)/g);
+    return (
+      <span className="font-mono text-[9px]">
+        {parts.map((part, i) => {
+           if (part.startsWith('^')) {
+               return <span key={i} className="text-blue-600 font-bold">{part}</span>;
+           }
+           return <span key={i} className="text-gray-600">{part}</span>;
+        })}
+      </span>
+    );
+  };
 
   if (!selectedElementId || !selectedSection) {
     // Show Canvas Properties
@@ -111,10 +126,10 @@ export const PropertiesPanel = () => {
               </button>
             </div>
           </div>
-          <pre className="text-[9px] bg-gray-50 p-2 border rounded overflow-x-auto text-gray-600 font-mono h-48">
+          <pre className="text-[9px] bg-gray-50 p-2 border rounded overflow-x-auto h-48 whitespace-pre-wrap break-all">
             {previewMode === 'zpl'
-              ? generateZPL(header, body, footer, 1, false, canvasWidth)
-              : generateLinePrint(header, body, footer, 1, false)
+              ? renderZPLPreview(generateZPL(header, body, footer, 1, false, canvasWidth))
+              : generateLinePrint(header, body, footer, 1, false, canvasWidth)
             }
           </pre>
         </div>
@@ -129,22 +144,60 @@ export const PropertiesPanel = () => {
   if (!element) return <div className="p-4">Element not found</div>;
 
   // Generate ZPL for this specific element only
-  // We use 0 offset because we just want to see the command itself, relative to canvas (or 0,0?)
-  // Actually, keeping its absolute position (y) is better for context.
-  // But wait, if it's in body, y is relative to section start.
-  // The generateElementZPL takes offsetYMm.
-  // If we want to show "what this element generates", we should probably use its actual context?
-  // Or just 0 to keep it simple?
-  // Let's use 0 for now as it shows the ^FO command with current x,y.
-  // Wait, y in canvas state is pixels relative to section top.
-  // generateElementZPL adds offsetYMm (converted to dots) to y (converted to dots).
-  // So passing 0 is fine, it will show ^FOx,y where y is section-relative.
   const zplCode = generateElementZPL(element, false, 0);
+  const zplCodePreview = zplCode.length > 2000
+    ? zplCode.substring(0, 2000) + '\n... [Truncated for Preview]'
+    : zplCode;
 
   const handleChange = (key: string, value: any) => {
-    console.log(`Updating element ${selectedElementId} in ${selectedSection}: ${key} =`, value);
+    // console.log(`Updating element ${selectedElementId} in ${selectedSection}: ${key} =`, value);
     updateElement(selectedSection!, selectedElementId!, { [key]: value });
   };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // Convert to ZPL and Base64
+      // We limit to 800x800 for reasonable ZPL size
+      const result = await imageToZPL(file, 800, 800);
+
+      updateElement(selectedSection!, selectedElementId!, {
+        imageBase64: result.base64,
+        zplImage: {
+          hex: result.zplHex,
+          totalBytes: result.totalBytes,
+          bytesPerRow: result.bytesPerRow
+        },
+        // Clear preset key if setting custom
+        imageKey: undefined,
+        // Update dimensions to match result
+        width: result.width,
+        height: result.height
+      });
+
+      // Reset input value to allow re-upload of same file
+      e.target.value = '';
+    } catch (err) {
+      console.error("Image upload failed", err);
+      alert("Failed to process image.");
+    }
+  };
+
+  const handleImageKeyChange = (val: string) => {
+    if (val) {
+      // If selecting a preset, clear custom image
+      updateElement(selectedSection!, selectedElementId!, {
+        imageKey: val,
+        imageBase64: undefined,
+        zplImage: undefined
+      });
+    } else {
+      handleChange('imageKey', val);
+    }
+  };
+
 
   let sectionDataSources = selectedSection === 'body'
     ? ALL_DATA_SOURCES
@@ -215,14 +268,29 @@ export const PropertiesPanel = () => {
       </div>
 
       {element.type === 'image' ? (
-        <div className="space-y-2">
-          <Label htmlFor="prop-imagekey">Image Key</Label>
-          <Select id="prop-imagekey" value={element.imageKey || ''} onChange={(e) => handleChange('imageKey', e.target.value)}>
-            <option value="">Select Image...</option>
-            <option value="TenantLogo">Tenant Logo (dynamic)</option>
-            <option value="GibLogo">Gib Logo (standard)</option>
-            <option value="GibQRCode">Gib QR Code (automatic)</option>
-          </Select>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="prop-imagekey">Preset Image</Label>
+            <Select id="prop-imagekey" value={element.imageKey || ''} onChange={(e) => handleImageKeyChange(e.target.value)}>
+              <option value="">None / Custom</option>
+              <option value="TenantLogo">Tenant Logo (dynamic)</option>
+              <option value="GibLogo">Gib Logo (standard)</option>
+              <option value="GibQRCode">Gib QR Code (automatic)</option>
+            </Select>
+          </div>
+
+          <div className="pt-2 border-t mt-2">
+             <Label className="mb-2 block">Custom Image Upload</Label>
+             <Input type="file" accept="image/*" onChange={handleImageUpload} className="text-xs" />
+             <p className="text-[10px] text-gray-400 mt-1">Uploads will be converted to ZPL Hex automatically.</p>
+
+             {element.imageBase64 && (
+                <div className="mt-2 border p-2 rounded bg-white">
+                   <p className="text-[10px] text-gray-500 mb-1">Current Image:</p>
+                   <img src={element.imageBase64} alt="Preview" className="max-w-full h-auto max-h-32 object-contain mx-auto"/>
+                </div>
+             )}
+          </div>
         </div>
       ) : element.isDynamic ? (
         <div className="space-y-2">
@@ -336,8 +404,8 @@ export const PropertiesPanel = () => {
         {zplCode && (
           <div className="mt-2">
             <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Preview ZPL (Element Only)</p>
-            <pre className="text-[9px] bg-gray-50 p-2 border rounded overflow-x-auto text-gray-600 font-mono">
-              {zplCode.split('\n').filter((l: string) => l.includes('^FO')).join('\n')}
+            <pre className="text-[9px] bg-gray-50 p-2 border rounded overflow-x-auto h-32 whitespace-pre-wrap break-all">
+              {renderZPLPreview(zplCodePreview)}
             </pre>
           </div>
         )}
