@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { Sidebar } from './components/Sidebar';
 import { Canvas } from './components/Canvas';
@@ -34,6 +34,49 @@ function App() {
 
     // Memoize snap points when drag starts
     const [snapPoints, setSnapPoints] = useState<{ x: number[], y: number[], centerX: number[], centerY: number[] }>({ x: [], y: [], centerX: [], centerY: [] });
+
+    // Keyboard Navigation
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Check if user is typing in an input
+            if (document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement) {
+                return;
+            }
+
+            const state = useStore.getState();
+            const { selectedElementId, selectedSection, header, body, footer, updateElement } = state;
+
+            if (!selectedElementId || !selectedSection) return;
+
+            if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+
+            e.preventDefault();
+
+            let elements;
+            if (selectedSection === 'header') elements = header.elements;
+            else if (selectedSection === 'body') elements = body.elements;
+            else if (selectedSection === 'footer') elements = footer.elements;
+
+            const element = elements?.find(el => el.id === selectedElementId);
+            if (!element) return;
+
+            const step = e.shiftKey ? 10 : 1;
+            let newX = element.x;
+            let newY = element.y;
+
+            switch (e.key) {
+                case 'ArrowLeft': newX -= step; break;
+                case 'ArrowRight': newX += step; break;
+                case 'ArrowUp': newY -= step; break;
+                case 'ArrowDown': newY += step; break;
+            }
+
+            updateElement(selectedSection, selectedElementId, { x: newX, y: newY });
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     const handleDragStart = (event: DragStartEvent) => {
         setActiveId(event.active.id as string);
@@ -278,16 +321,18 @@ function App() {
                         // Render Element Overlay
                         // We scale the content manually to match the visual size on canvas
                         <div style={{
-                            width: (dragData.element?.width || 0) * zoomLevel,
-                            height: (dragData.element?.height || 0) * zoomLevel,
+                            width: dragData.element?.width ? dragData.element.width * zoomLevel : 'max-content',
+                            height: dragData.element?.height ? dragData.element.height * zoomLevel : 'max-content',
+                            minWidth: '20px',
+                            minHeight: '20px',
                         }}>
                             <div className="border border-blue-500 bg-white/80 p-1 whitespace-nowrap shadow-xl cursor-grabbing w-full h-full flex items-center justify-center overflow-hidden text-sm">
                                 {dragData.element?.type === 'box' ? (
                                     <div className="w-full h-full border-2 border-black bg-black/5" />
                                 ) : dragData.element?.type === 'image' ? (
                                     dragData.element?.imageBase64 ?
-                                     <img src={dragData.element.imageBase64} className="w-full h-full object-contain opacity-50"/> :
-                                     <span className="text-[10px] text-gray-500 font-bold">IMAGE</span>
+                                        <img src={dragData.element.imageBase64} className="w-full h-full object-contain opacity-50" /> :
+                                        <span className="text-[10px] text-gray-500 font-bold">IMAGE</span>
                                 ) : (
                                     <span style={{ fontSize: `${(dragData.element?.fontSize || 12) * zoomLevel}px` }}>
                                         {dragData.element?.content || dragData.element?.dataSource || 'Element'}

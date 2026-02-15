@@ -1,4 +1,5 @@
 import { useDraggable } from '@dnd-kit/core';
+import { saveAs } from 'file-saver';
 import { useEffect, useState } from 'react';
 import { Type, Square, Barcode, Image, QrCode, RotateCcw, RotateCw, Save, Trash } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -16,7 +17,7 @@ interface SidebarItemProps {
 
 export const SidebarItem = ({ type, label, icon: Icon, extraData }: SidebarItemProps) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `tool-${type}-${label}`,
+    id: `tool - ${type} -${label} `,
     data: {
       type: 'tool',
       toolType: type,
@@ -41,7 +42,7 @@ export const SidebarItem = ({ type, label, icon: Icon, extraData }: SidebarItemP
 };
 
 export const Sidebar = () => {
-  const { clearCanvas, header, body, footer, canvasWidth, setTemplate, savedTemplates, saveTemplate, loadTemplate, deleteTemplate, currentTemplateName } = useStore();
+  const { clearCanvas, header, body, footer, canvasWidth, setTemplate, setCurrentTemplateName, savedTemplates, saveTemplate, loadTemplate, deleteTemplate, currentTemplateName } = useStore();
   const [templateName, setTemplateName] = useState('');
 
   const undo = () => useStore.temporal?.getState().undo();
@@ -61,7 +62,7 @@ export const Sidebar = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleSaveFile = () => {
+  const handleSaveFile = async () => {
     try {
       const template = {
         header,
@@ -72,16 +73,38 @@ export const Sidebar = () => {
         createdAt: new Date().toISOString()
       };
       const jsonString = JSON.stringify(template, null, 2);
-      // Use application/octet-stream to force download
-      const blob = new Blob([jsonString], { type: 'application/octet-stream' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `z-composer-template-${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+
+      const fileName = currentTemplateName
+        ? `${currentTemplateName}.json`
+        : `z-composer-template-${new Date().toISOString().slice(0, 10)}.json`;
+
+      console.log('Exporting with filename:', fileName);
+
+      // Try Native File System Access API first (Chrome/Edge/Opera)
+      if ('showSaveFilePicker' in window) {
+        try {
+          // @ts-ignore - TS might not know about showSaveFilePicker yet
+          const handle = await window.showSaveFilePicker({
+            suggestedName: fileName,
+            types: [{
+              description: 'Z-Composer Template',
+              accept: { 'application/json': ['.json'] },
+            }],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(jsonString);
+          await writable.close();
+          return;
+        } catch (err: any) {
+          // User cancelled or not allowed
+          if (err.name === 'AbortError') return;
+          console.warn('File System Access API failed, falling back to file-saver', err);
+        }
+      }
+
+      // Fallback to file-saver
+      const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
+      saveAs(blob, fileName);
     } catch (error) {
       console.error('Export failed:', error);
       alert('Failed to export template. Check console for details.');
@@ -104,7 +127,9 @@ export const Sidebar = () => {
           return;
         }
 
+        const name = (file.name || 'imported-template').replace(/\.json$/i, '');
         setTemplate(template);
+        setCurrentTemplateName(name);
       } catch (error) {
         console.error('Failed to parse template:', error);
         alert('Failed to load template');
@@ -212,7 +237,7 @@ export const Sidebar = () => {
               const id = Math.random().toString(36).substr(2, 9);
               useStore.getState().addElement('body', {
                 id, type: 'text', x: (i % 5) * 20, y: Math.floor(i / 5) * 10,
-                content: `Item ${i}`, fontSize: 8, isDynamic: false, width: 40, height: 10
+                content: `Item ${i} `, fontSize: 8, isDynamic: false, width: 40, height: 10
               });
             }
           }}>Add 50 Elements (Test)</Button>
@@ -253,9 +278,10 @@ export const Sidebar = () => {
 // import { MM_TO_PX } from '../lib/constants'; // Already imported
 
 const loadInvoiceTemplate = () => {
-  const { addElement, clearCanvas, setSectionHeight, canvasWidth } = useStore.getState();
+  const { addElement, clearCanvas, setSectionHeight, canvasWidth, setCurrentTemplateName } = useStore.getState();
 
   clearCanvas();
+  setCurrentTemplateName('Varsayilan Fatura');
 
   // Set Heights roughly based on the receipt photo
   setSectionHeight('header', 65); // Reduced from 130 to remove gap (content ends approx ~235px)

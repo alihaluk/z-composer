@@ -44,6 +44,7 @@ interface AppState {
   zoomLevel: number;
   setZoomLevel: (zoom: number) => void;
   setTemplate: (template: { header: SectionState; body: SectionState; footer: SectionState; canvasWidth: number }) => void;
+  setCurrentTemplateName: (name: string | null) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -158,6 +159,8 @@ export const useStore = create<AppState>()(
         selectedSection: null,
         currentTemplateName: null
       }),
+
+      setCurrentTemplateName: (name) => set({ currentTemplateName: name }),
     }),
     {
       partialize: (state) => {
