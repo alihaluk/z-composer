@@ -4,12 +4,16 @@ A React-based visual designer for creating ZPL (Zebra Programming Language) invo
 
 ![Project Status](https://img.shields.io/badge/Status-Phase%201%20Complete-green)
 
-## Features (Phase 1)
-- **Visual Drag & Drop**: Add Text, Box, Barcode, Image elements.
+## Features
+- **Visual Drag & Drop**: Add Text, Box, Barcode, Image elements with snap-to-grid and alignment guides.
 - **Dynamic Data Binding**: Bind elements to `[Product.Name]`, `[Total]`, etc.
 - **Canvas Zoom**: Scale the workspace (25% - 300%) for precise editing.
 - **Specific Invoice Layout**: Pre-built template matching GIB requirements (Logos, Totals, QR).
 - **ZPL Preview**: Instant visual preview using Labelary API.
+- **Custom Image Upload**: Upload images, convert to monochrome, and generate ZPL hex (`^GFA`) automatically.
+- **Keyboard Navigation**: Move selected elements with Arrow keys (Shift+Arrow for 10px steps).
+- **Line Print Mode**: Support for text-only output simulation.
+- **Real-time Code Preview**: View generated ZPL or Text output instantly in the properties panel.
 - **Customizable**: Adjust canvas width (mm), font sizes, rotation, and more.
 
 ## Installation
@@ -25,10 +29,10 @@ See [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md) for details on how to embed t
 ## Roadmap
 
 ### Phase 2: Advanced Features & Refinements
-- [ ] **Line Print Mode**: Support for Zebra Line Print Mode (Text-only output).
-- [ ] **Custom Image Upload**: Allow users to upload images and convert to ZPL hex (`^GF`).
+- [x] **Line Print Mode**: Support for Zebra Line Print Mode (Text-only output).
+- [x] **Custom Image Upload**: Allow users to upload images and convert to ZPL hex (`^GF`).
 - [ ] **Refine ZPL Preview**: Context-aware preview (Element vs Document).
-- [ ] **Enhanced Drag & Drop**: Fix zoom coordinate issues and implement element snapping.
+- [x] **Enhanced Drag & Drop**: Fix zoom coordinate issues and implement element snapping.
 - [ ] **Templates Management**: Save/Load different templates from local storage or API.
 - [ ] **Undo/Redo**: History management for actions.
 
