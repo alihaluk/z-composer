@@ -2,7 +2,7 @@
 
 A React-based visual designer for creating ZPL (Zebra Programming Language) invoice templates.
 
-![Project Status](https://img.shields.io/badge/Status-Phase%201%20Complete-green)
+![Project Status](https://img.shields.io/badge/Status-Phase%202%20Nearly%20Complete-brightgreen)
 
 ## Features
 - **Visual Drag & Drop**: Add Text, Box, Barcode, Image elements with snap-to-grid and alignment guides.
@@ -58,8 +58,8 @@ To deploy manually:
 - [x] **Internationalization (i18n)**: Multi-language support with Turkish and English.
 - [ ] **Refine ZPL Preview**: Context-aware preview (Element vs Document).
 - [x] **Enhanced Drag & Drop**: Fix zoom coordinate issues and implement element snapping.
-- [ ] **Templates Management**: Save/Load different templates from local storage or API.
-- [ ] **Undo/Redo**: History management for actions.
+- [x] **Templates Management**: Save/Load/Delete different templates from local storage with export/import to JSON files.
+- [x] **Undo/Redo**: History management for actions with keyboard shortcuts (Ctrl+Z, Ctrl+Shift+Z).
 
 ### Backlog
 - [ ] Multi-page support
