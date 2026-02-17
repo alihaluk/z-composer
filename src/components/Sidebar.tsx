@@ -2,6 +2,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { saveAs } from 'file-saver';
 import { useEffect, useState } from 'react';
 import { Type, Square, Barcode, Image, QrCode, RotateCcw, RotateCw, Save, Trash } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 import { PreviewModal } from './PreviewModal';
 import { useStore } from '../store/useStore';
@@ -42,6 +43,7 @@ export const SidebarItem = ({ type, label, icon: Icon, extraData }: SidebarItemP
 };
 
 export const Sidebar = () => {
+  const { t } = useTranslation();
   const { clearCanvas, header, body, footer, canvasWidth, setTemplate, setCurrentTemplateName, savedTemplates, saveTemplate, loadTemplate, deleteTemplate, currentTemplateName } = useStore();
   const [templateName, setTemplateName] = useState('');
 
@@ -157,7 +159,7 @@ export const Sidebar = () => {
   return (
     <div className="p-4 flex flex-col h-full overflow-y-auto">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold text-gray-800">Toolbox</h2>
+        <h2 className="text-lg font-bold text-gray-800">{t('toolbox.title')}</h2>
         <div className="flex gap-1">
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => undo()} title="Undo (Ctrl+Z)">
             <RotateCcw size={14} />
@@ -169,28 +171,28 @@ export const Sidebar = () => {
       </div>
       <div className="space-y-4">
         <div>
-          <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Basic Elements</h3>
-          <SidebarItem type="text" label="Text Field" icon={Type} />
-          <SidebarItem type="box" label="Box / Line" icon={Square} />
-          <SidebarItem type="barcode" label="Barcode" icon={Barcode} />
+          <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">{t('toolbox.basicElements')}</h3>
+          <SidebarItem type="text" label={t('toolbox.textField')} icon={Type} />
+          <SidebarItem type="box" label={t('toolbox.boxLine')} icon={Square} />
+          <SidebarItem type="barcode" label={t('toolbox.barcode')} icon={Barcode} />
         </div>
 
         <div>
-          <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Visual Elements</h3>
-          <SidebarItem type="image" label="Tenant Logo" icon={Image} extraData={{ imageKey: 'TenantLogo' }} />
-          <SidebarItem type="image" label="Gib Logo" icon={Image} extraData={{ imageKey: 'GibLogo' }} />
-          <SidebarItem type="barcode" label="Gib QR Code" icon={QrCode} extraData={{ barcodeType: 'qr', dataSource: 'GibInfo', isDynamic: true, width: 80, height: 80 }} />
+          <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">{t('toolbox.visualElements')}</h3>
+          <SidebarItem type="image" label={t('toolbox.tenantLogo')} icon={Image} extraData={{ imageKey: 'TenantLogo' }} />
+          <SidebarItem type="image" label={t('toolbox.gibLogo')} icon={Image} extraData={{ imageKey: 'GibLogo' }} />
+          <SidebarItem type="barcode" label={t('toolbox.gibQrCode')} icon={QrCode} extraData={{ barcodeType: 'qr', dataSource: 'GibInfo', isDynamic: true, width: 80, height: 80 }} />
         </div>
       </div>
 
       <div className="pt-4 border-t mt-4 space-y-2">
-        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">Saved Templates</h3>
+        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">{t('toolbox.savedTemplates')}</h3>
 
         {/* Update Button for Current Template */}
         {currentTemplateName && (
           <div className="mb-2">
             <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white h-7 text-xs" onClick={handleUpdateTemplate}>
-              Update "{currentTemplateName}"
+              {t('toolbox.update', { name: currentTemplateName })}
             </Button>
           </div>
         )}
@@ -198,29 +200,29 @@ export const Sidebar = () => {
         <div className="flex gap-2">
           <input
             className="flex-1 text-xs border rounded px-2 h-8"
-            placeholder="New Template Name..."
+            placeholder={t('toolbox.newTemplatePlaceholder')}
             value={templateName}
             onChange={(e) => setTemplateName(e.target.value)}
           />
-          <Button size="sm" variant="outline" className="h-8" onClick={handleSaveLocal} title="Save New">
+          <Button size="sm" variant="outline" className="h-8" onClick={handleSaveLocal} title={t('toolbox.saveNew')}>
             <Save size={14} />
           </Button>
         </div>
         <div className="max-h-32 overflow-y-auto space-y-1 mt-2">
-          {savedTemplates.length === 0 && <p className="text-[10px] text-gray-400">No saved templates</p>}
-          {savedTemplates.map(t => (
+          {savedTemplates.length === 0 && <p className="text-[10px] text-gray-400">{t('toolbox.noSavedTemplates')}</p>}
+          {savedTemplates.map(template => (
             <div
-              key={t.name}
+              key={template.name}
               className={cn(
                 "flex justify-between items-center text-xs p-1 rounded group",
-                currentTemplateName === t.name ? "bg-blue-50 border border-blue-100" : "bg-gray-50 border border-transparent"
+                currentTemplateName === template.name ? "bg-blue-50 border border-blue-100" : "bg-gray-50 border border-transparent"
               )}
             >
-              <span className="truncate flex-1 cursor-pointer hover:text-blue-600" onClick={() => loadTemplate(t.name)}>
-                {t.name}
-                {currentTemplateName === t.name && <span className="ml-1 text-[9px] text-blue-400">(active)</span>}
+              <span className="truncate flex-1 cursor-pointer hover:text-blue-600" onClick={() => loadTemplate(template.name)}>
+                {template.name}
+                {currentTemplateName === template.name && <span className="ml-1 text-[9px] text-blue-400">{t('toolbox.active')}</span>}
               </span>
-              <button className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteTemplate(t.name)}>
+              <button className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteTemplate(template.name)}>
                 <Trash size={12} />
               </button>
             </div>
@@ -230,7 +232,7 @@ export const Sidebar = () => {
 
 
       <div className="pt-4 border-t mt-auto space-y-2">
-        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">File Operations</h3>
+        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">{t('toolbox.fileOperations')}</h3>
         <div className="mb-2">
           <Button variant="ghost" className="w-full text-[10px] text-gray-400 h-6" onClick={() => {
             for (let i = 0; i < 50; i++) {
@@ -240,17 +242,17 @@ export const Sidebar = () => {
                 content: `Item ${i} `, fontSize: 8, isDynamic: false, width: 40, height: 10
               });
             }
-          }}>Add 50 Elements (Test)</Button>
+          }}>{t('toolbox.addTestElements')}</Button>
         </div>
         <div className="grid grid-cols-3 gap-2">
           <Button variant="outline" className="text-xs h-8 px-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={clearCanvas}>
-            Clear
+            {t('toolbox.clear')}
           </Button>
           <Button variant="outline" className="text-xs h-8 px-0" onClick={handleSaveFile} title="Download JSON">
-            Export
+            {t('toolbox.export')}
           </Button>
           <Button variant="outline" className="text-xs h-8 px-0" onClick={() => document.getElementById('load-template-input')?.click()} title="Upload JSON">
-            Import
+            {t('toolbox.import')}
           </Button>
           <input
             type="file"
@@ -264,7 +266,7 @@ export const Sidebar = () => {
         <Button variant="outline" className="w-full text-xs" onClick={() => {
           loadInvoiceTemplate();
         }}>
-          Load Preset Invoice
+          {t('toolbox.loadPresetInvoice')}
         </Button>
         <PreviewModal />
       </div>
