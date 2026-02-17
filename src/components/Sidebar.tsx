@@ -43,12 +43,16 @@ export const SidebarItem = ({ type, label, icon: Icon, extraData }: SidebarItemP
 };
 
 export const Sidebar = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { clearCanvas, header, body, footer, canvasWidth, setTemplate, setCurrentTemplateName, savedTemplates, saveTemplate, loadTemplate, deleteTemplate, currentTemplateName } = useStore();
   const [templateName, setTemplateName] = useState('');
 
   const undo = () => useStore.temporal?.getState().undo();
   const redo = () => useStore.temporal?.getState().redo();
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -160,7 +164,22 @@ export const Sidebar = () => {
     <div className="p-4 flex flex-col h-full overflow-y-auto">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold text-gray-800">{t('toolbox.title')}</h2>
-        <div className="flex gap-1">
+        <div className="flex gap-1 items-center">
+          <div className="flex bg-gray-100 rounded mr-2 p-0.5 gap-0.5">
+            <button
+              onClick={() => changeLanguage('tr')}
+              className={cn("text-[10px] px-2 h-6 rounded transition-colors", i18n.resolvedLanguage === 'tr' ? "bg-white shadow text-blue-600 font-bold" : "text-gray-500 hover:text-gray-700")}
+            >
+              TR
+            </button>
+            <button
+              onClick={() => changeLanguage('en')}
+              className={cn("text-[10px] px-2 h-6 rounded transition-colors", i18n.resolvedLanguage === 'en' ? "bg-white shadow text-blue-600 font-bold" : "text-gray-500 hover:text-gray-700")}
+            >
+              EN
+            </button>
+          </div>
+
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => undo()} title="Undo (Ctrl+Z)">
             <RotateCcw size={14} />
           </Button>

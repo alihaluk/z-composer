@@ -69,5 +69,10 @@
     "generatedCode": "Generated Code",
     "rendering": "Rendering Label...",
     "failed": "Failed to load preview. Check console."
+  },
+  "sections": {
+    "header": "Header",
+    "body": "Body",
+    "footer": "Footer"
   }
 }
