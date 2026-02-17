@@ -69,5 +69,10 @@
     "generatedCode": "Oluşturulan Kod",
     "rendering": "Etiket Oluşturuluyor...",
     "failed": "Önizleme yüklenemedi. Konsolu kontrol edin."
+  },
+  "sections": {
+    "header": "Üst Bilgi",
+    "body": "Gövde",
+    "footer": "Alt Bilgi"
   }
 }

@@ -1,4 +1,5 @@
 import { useDroppable } from '@dnd-kit/core';
+import { useTranslation } from 'react-i18next';
 import { type SectionName, type SectionState } from '../types';
 import { DraggableElement } from './DraggableElement';
 import { cn } from '../lib/utils';
@@ -12,6 +13,7 @@ interface CanvasSectionProps {
 }
 
 export const CanvasSection = ({ name, state, className, width }: CanvasSectionProps) => {
+  const { t } = useTranslation();
   const { setNodeRef } = useDroppable({
     id: name,
     data: {
@@ -37,7 +39,7 @@ export const CanvasSection = ({ name, state, className, width }: CanvasSectionPr
        />
 
        <div className="absolute top-0 left-0 bg-gray-100/80 text-[10px] text-gray-500 px-1 uppercase tracking-wider z-10 select-none border-br rounded-br">
-         {name} ({state.height}mm)
+         {t(`sections.${name}`)} ({state.height}mm)
        </div>
 
       {state.elements.map((el) => (

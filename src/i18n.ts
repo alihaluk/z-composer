@@ -15,15 +15,18 @@ i18n
     },
     supportedLngs: ['en', 'tr'],
     load: 'languageOnly', // 'tr-TR' -> 'tr'
-    fallbackLng: 'en',
+    fallbackLng: 'tr',
     interpolation: {
       escapeValue: false,
     },
     detection: {
-      // Prioritize navigator. Remove htmlTag to avoid issues with default lang="en".
-      order: ['navigator', 'path', 'subdomain'],
-      // Do not cache in localStorage since we don't have a language switcher.
-      caches: [],
+      // Prioritize querystring, then localStorage, then navigator.
+      // Remove htmlTag to avoid issues with default lang="en".
+      order: ['querystring', 'localStorage', 'navigator', 'path', 'subdomain'],
+      // Cache in localStorage to remember user preference
+      caches: ['localStorage'],
+      lookupQuerystring: 'lng',
+      lookupLocalStorage: 'i18nextLng',
     }
   });
 
