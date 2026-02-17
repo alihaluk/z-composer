@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Secrets and Internal
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+coverage/
+JULES_TODO.md
