@@ -13,13 +13,17 @@ i18n
       en: { translation: en },
       tr: { translation: tr },
     },
+    supportedLngs: ['en', 'tr'],
+    load: 'languageOnly', // 'tr-TR' -> 'tr'
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,
     },
     detection: {
-      order: ['navigator', 'htmlTag', 'path', 'subdomain'],
-      caches: ['localStorage'],
+      // Prioritize navigator. Remove htmlTag to avoid issues with default lang="en".
+      order: ['navigator', 'path', 'subdomain'],
+      // Do not cache in localStorage since we don't have a language switcher.
+      caches: [],
     }
   });
 
