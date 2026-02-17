@@ -23,8 +23,21 @@ npm install
 npm run dev
 ```
 
+## Live Demo
+
+Visit the live demo at: [https://alihaluk.github.io/z-composer/](https://alihaluk.github.io/z-composer/)
+
 ## Integration
 See [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md) for details on how to embed this component into your web application.
+
+## Deployment
+
+This project is automatically deployed to GitHub Pages when changes are pushed to the `main` branch.
+
+To deploy manually:
+1. Build the project: `npm run build`
+2. The built files will be in the `dist` folder
+3. The GitHub Actions workflow will handle the deployment automatically
 
 ## Roadmap
 
