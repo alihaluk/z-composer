@@ -11,6 +11,7 @@ The Invoice Composer is a React-based component that allows users to design ZPL-
 - **Drag & Drop:** @dnd-kit/core
 - **Styling:** Tailwind CSS
 - **Icons:** lucide-react
+- **Internationalization:** i18next, react-i18next, i18next-browser-languagedetector
 
 ## 3. Integration Steps
 

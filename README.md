@@ -14,6 +14,7 @@ A React-based visual designer for creating ZPL (Zebra Programming Language) invo
 - **Keyboard Navigation**: Move selected elements with Arrow keys (Shift+Arrow for 10px steps).
 - **Line Print Mode**: Support for text-only output simulation.
 - **Real-time Code Preview**: View generated ZPL or Text output instantly in the properties panel.
+- **Internationalization (i18n)**: Full support for multiple languages with Turkish and English locales. Automatic language detection based on browser settings.
 - **Customizable**: Adjust canvas width (mm), font sizes, rotation, and more.
 
 ## Installation
@@ -26,6 +27,16 @@ npm run dev
 ## Live Demo
 
 Visit the live demo at: [https://alihaluk.github.io/z-composer/](https://alihaluk.github.io/z-composer/)
+
+## Language Support
+
+The application supports multiple languages:
+- **Turkish (tr)**: Default language
+- **English (en)**: Full translation available
+
+The language is automatically detected based on your browser settings. You can also manually switch languages using the language selector in the top-right corner of the application.
+
+To add the language query parameter to the URL: `?lng=en` or `?lng=tr`
 
 ## Integration
 See [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md) for details on how to embed this component into your web application.
@@ -44,6 +55,7 @@ To deploy manually:
 ### Phase 2: Advanced Features & Refinements
 - [x] **Line Print Mode**: Support for Zebra Line Print Mode (Text-only output).
 - [x] **Custom Image Upload**: Allow users to upload images and convert to ZPL hex (`^GF`).
+- [x] **Internationalization (i18n)**: Multi-language support with Turkish and English.
 - [ ] **Refine ZPL Preview**: Context-aware preview (Element vs Document).
 - [x] **Enhanced Drag & Drop**: Fix zoom coordinate issues and implement element snapping.
 - [ ] **Templates Management**: Save/Load different templates from local storage or API.
