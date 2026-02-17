@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './ui/Button';
 import { useStore } from '../store/useStore';
 import { generateZPL } from '../lib/zplGenerator';
 import { Loader2 } from 'lucide-react';
 
 export const PreviewModal = () => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -62,32 +64,32 @@ export const PreviewModal = () => {
     return (
         <>
             <Button onClick={handlePreview} className="w-full bg-green-600 hover:bg-green-700 text-white shadow-sm">
-                Preview ZPL
+                {t('preview.button')}
             </Button>
 
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-                            <h2 className="text-xl font-bold text-gray-800">ZPL Preview</h2>
-                            <Button variant="ghost" onClick={() => setIsOpen(false)}>Close</Button>
+                            <h2 className="text-xl font-bold text-gray-800">{t('preview.title')}</h2>
+                            <Button variant="ghost" onClick={() => setIsOpen(false)}>{t('preview.close')}</Button>
                         </div>
 
                         <div className="flex-1 flex overflow-hidden">
                             <div className="w-1/2 p-4 border-r overflow-auto bg-gray-50">
-                                <h3 className="font-bold mb-2 text-sm text-gray-500 uppercase">Generated Code</h3>
+                                <h3 className="font-bold mb-2 text-sm text-gray-500 uppercase">{t('preview.generatedCode')}</h3>
                                 <pre className="text-xs font-mono whitespace-pre-wrap break-all bg-white p-2 border rounded text-gray-700">{zplCode}</pre>
                             </div>
                             <div className="w-1/2 p-4 flex items-start justify-center bg-gray-200 overflow-auto">
                                 {loading ? (
                                     <div className="flex flex-col items-center gap-2 mt-20">
                                         <Loader2 className="animate-spin text-gray-500" size={32} />
-                                        <span className="text-gray-500 text-sm">Rendering Label...</span>
+                                        <span className="text-gray-500 text-sm">{t('preview.rendering')}</span>
                                     </div>
                                 ) : imageUrl ? (
                                     <img src={imageUrl} alt="Label Preview" className="shadow-2xl border-2 border-white max-w-full" />
                                 ) : (
-                                    <span className="text-red-500 mt-20">Failed to load preview. Check console.</span>
+                                    <span className="text-red-500 mt-20">{t('preview.failed')}</span>
                                 )}
                             </div>
                         </div>
