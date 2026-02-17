@@ -36,7 +36,7 @@ The application supports multiple languages:
 
 The language is automatically detected based on your browser settings. You can also manually switch languages using the language selector in the top-right corner of the application.
 
-To add the language query parameter to the URL: `?lng=en` or `?lng=tr`
+To manually set the language, add a query parameter to the URL: `?lng=en` or `?lng=tr`
 
 ## Integration
 See [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md) for details on how to embed this component into your web application.
