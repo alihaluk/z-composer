@@ -144,6 +144,10 @@ export function generateZPL(
 
     // 3. Render Body (Loop)
     // When generating a template (no mock data), we only render one body row with markers
+    if (!useMockData) {
+        zpl += `^FX LOOP START height=${body.height}\n`;
+    }
+
     const itemsToRender = useMockData ? mockItems : 1;
     for (let i = 0; i < itemsToRender; i++) {
         const rowOffsetMm = header.height + (i * body.height);
@@ -152,6 +156,10 @@ export function generateZPL(
         body.elements.forEach(el => {
             zpl += generateElementZPL(el, useMockData, rowOffsetMm, mockRowData);
         });
+    }
+
+    if (!useMockData) {
+        zpl += '^FX LOOP END\n';
     }
 
     // 4. Render Footer
