@@ -19,6 +19,15 @@ function App() {
     const { addElement, updateElement, removeElement, selectElement, canvasWidth, zoomLevel, header, body, footer } = useStore();
     const [activeId, setActiveId] = useState<string | null>(null);
     const [dragData, setDragData] = useState<any>(null);
+    const [dragPosition, setDragPosition] = useState<{ x: number, y: number } | null>(null);
+    const [ghostBox, setGhostBox] = useState<{ x: number, y: number, width: number, height: number } | null>(null);
+
+    const getSectionOffset = (sectionName: SectionName) => {
+        if (sectionName === 'header') return 0;
+        if (sectionName === 'body') return header.height * MM_TO_PX;
+        if (sectionName === 'footer') return (header.height + body.height) * MM_TO_PX;
+        return 0;
+    };
 
     const sensors = useSensors(
         useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
@@ -83,15 +92,14 @@ function App() {
         setDragData(event.active.data.current);
         setAlignmentGuides([]);
 
-        const draggingId = event.active.id;
+        if (event.active.data.current?.type === 'element') {
+            setDragPosition({
+                x: event.active.data.current.element.x,
+                y: event.active.data.current.element.y
+            });
+        }
 
-        // Calculate absolute offsets for sections in px
-        const getSectionOffset = (sectionName: SectionName) => {
-            if (sectionName === 'header') return 0;
-            if (sectionName === 'body') return header.height * MM_TO_PX;
-            if (sectionName === 'footer') return (header.height + body.height) * MM_TO_PX;
-            return 0;
-        };
+        const draggingId = event.active.id;
 
         const allElements = [
             ...header.elements.map(el => ({ ...el, absoluteY: el.y + getSectionOffset('header') })),
@@ -124,44 +132,90 @@ function App() {
 
 
     const handleDragMove = (event: DragMoveEvent) => {
-        const { active, delta } = event;
+        const { active, over, delta } = event;
         // Logic to update Visual Guides based on same math
 
         const activeData = active.data.current;
-        if (!activeData || activeData.type !== 'element') {
+        if (!activeData) {
             setAlignmentGuides([]);
+            setGhostBox(null);
+            setDragPosition(null);
             return;
         }
 
-        const element = activeData.element;
-        const currentLeft = element.x + (delta.x / zoomLevel);
-        const currentWidth = element.width || 0;
-        const currentRight = currentLeft + currentWidth;
-        const currentCenter = currentLeft + currentWidth / 2;
+        if (activeData.type === 'element') {
+            const element = activeData.element;
+            const currentLeft = element.x + (delta.x / zoomLevel);
+            const currentTop = element.y + (delta.y / zoomLevel);
+            const currentWidth = element.width || 0;
+            const currentRight = currentLeft + currentWidth;
+            const currentCenter = currentLeft + currentWidth / 2;
 
-        const newGuides: typeof alignmentGuides = [];
-
-        // Center Snapping Guide
-        for (const pt of snapPoints.centerX) {
-            if (Math.abs(currentCenter - pt) < SNAP_THRESHOLD) {
-                newGuides.push({ type: 'vertical', position: pt });
+            // Ghost Box & Tooltip Snapped Prediction
+            const currentSection = activeData.section as SectionName;
+            const targetSection = over?.data.current?.name as SectionName || currentSection;
+            
+            let snapX = currentLeft;
+            if (Math.abs(currentCenter - CENTER_X) < SNAP_THRESHOLD) {
+                snapX = CENTER_X - (currentWidth / 2);
+            } else {
+                snapX = snap(Math.max(0, snapX));
             }
-        }
+            const snapY = snap(Math.max(0, currentTop));
 
-        // Edge Snapping Guides
-        if (newGuides.length === 0) {
-            for (const pt of snapPoints.x) {
-                if (Math.abs(currentLeft - pt) < SNAP_THRESHOLD) {
-                    newGuides.push({ type: 'vertical', position: pt });
-                } else if (Math.abs(currentRight - pt) < SNAP_THRESHOLD) {
+            setGhostBox({
+                x: snapX,
+                y: getSectionOffset(targetSection) + snapY,
+                width: element.width || 100,
+                height: element.height || 50
+            });
+            setDragPosition({ x: snapX, y: snapY });
+
+            const newGuides: typeof alignmentGuides = [];
+
+            // Center Snapping Guide
+            for (const pt of snapPoints.centerX) {
+                if (Math.abs(currentCenter - pt) < SNAP_THRESHOLD) {
                     newGuides.push({ type: 'vertical', position: pt });
                 }
             }
-        }
 
-        // Optimization: Only update if changed
-        if (JSON.stringify(newGuides) !== JSON.stringify(alignmentGuides)) {
-            setAlignmentGuides(newGuides);
+            // Edge Snapping Guides
+            if (newGuides.length === 0) {
+                for (const pt of snapPoints.x) {
+                    if (Math.abs(currentLeft - pt) < SNAP_THRESHOLD) {
+                        newGuides.push({ type: 'vertical', position: pt });
+                    } else if (Math.abs(currentRight - pt) < SNAP_THRESHOLD) {
+                        newGuides.push({ type: 'vertical', position: pt });
+                    }
+                }
+            }
+
+            // Optimization: Only update if changed
+            if (JSON.stringify(newGuides) !== JSON.stringify(alignmentGuides)) {
+                setAlignmentGuides(newGuides);
+            }
+        } else if (activeData.type === 'tool' && over?.data.current?.type === 'section') {
+            const overRect = over.rect;
+            const activeRect = active.rect.current.translated;
+            if (activeRect) {
+                 const relativeX = (activeRect.left - overRect.left) / zoomLevel;
+                 const relativeY = (activeRect.top - overRect.top) / zoomLevel;
+                 const targetSection = over.data.current.name as SectionName;
+                 const snapX = snap(Math.max(0, relativeX));
+                 const snapY = snap(Math.max(0, relativeY));
+
+                 const width = activeData.toolType === 'box' ? 100 : activeData.toolType === 'barcode' ? 150 : activeData.toolType === 'image' ? 60 : 100;
+                 const height = activeData.toolType === 'box' ? 50 : activeData.toolType === 'barcode' ? 60 : activeData.toolType === 'image' ? 60 : 50;
+
+                 setGhostBox({
+                     x: snapX,
+                     y: getSectionOffset(targetSection) + snapY,
+                     width,
+                     height
+                 });
+                 setDragPosition({ x: snapX, y: snapY });
+            }
         }
     };
 
@@ -171,6 +225,8 @@ function App() {
 
         setActiveId(null);
         setDragData(null);
+        setDragPosition(null);
+        setGhostBox(null);
         setAlignmentGuides([]);
 
         if (!over) return;
@@ -305,6 +361,19 @@ function App() {
                                     }}
                                 />
                             ))}
+
+                            {/* Ghost Box for Snap Prediction */}
+                            {ghostBox && activeId && (
+                                <div
+                                    className="absolute border-2 border-blue-500 bg-blue-300/30 border-dashed pointer-events-none z-40"
+                                    style={{
+                                        left: ghostBox.x,
+                                        top: ghostBox.y,
+                                        width: ghostBox.width,
+                                        height: ghostBox.height,
+                                    }}
+                                />
+                            )}
                             <Canvas />
                         </div>
                     </div>
@@ -325,7 +394,13 @@ function App() {
                             height: dragData.element?.height ? dragData.element.height * zoomLevel : 'max-content',
                             minWidth: '20px',
                             minHeight: '20px',
+                            position: 'relative'
                         }}>
+                            {dragPosition && (
+                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-blue-600 font-mono text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-[100] animate-in fade-in zoom-in duration-150">
+                                    X: {dragPosition.x} | Y: {dragPosition.y}
+                                </div>
+                            )}
                             <div className="border border-blue-500 bg-white/80 p-1 whitespace-nowrap shadow-xl cursor-grabbing w-full h-full flex items-center justify-center overflow-hidden text-sm">
                                 {dragData.element?.type === 'box' ? (
                                     <div className="w-full h-full border-2 border-black bg-black/5" />
