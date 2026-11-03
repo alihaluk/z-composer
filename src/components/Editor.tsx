@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, pointerWithin, useSensor, useSensors,
   type DragEndEvent, type DragMoveEvent, type DragStartEvent,
 } from '@dnd-kit/core';
 import { mmToPx, pxToMm } from '../lib/constants';
+import { sampleGrowth } from '../lib/elementDisplay';
 import { snapPosition, type Guide } from '../lib/snapping';
 import { createElement, type ToolType } from '../lib/tools';
 import { useEditor, useEditorStore, type EditorStore } from '../store/editorStore';
@@ -74,8 +75,13 @@ export function Editor() {
 
   const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 4 } }), useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }));
   const widthPx = mmToPx(template.printer.widthMm);
+  const catalog = useEditor(s => s.catalog);
+  const mode = useEditor(s => s.canvasMode);
+  const locale = useEditor(s => s.previewLocale);
+  // In sample mode bands grow with their growing text, like in print.
+  const growth = useMemo(() => template.bands.map(b => sampleGrowth(b, catalog, mode, locale, template.printer.dpi)), [template, catalog, mode, locale]);
   const bandTops: number[] = [];
-  template.bands.forEach((_, i) => bandTops.push(i === 0 ? 0 : bandTops[i - 1] + template.bands[i - 1].height));
+  template.bands.forEach((_, i) => bandTops.push(i === 0 ? 0 : bandTops[i - 1] + template.bands[i - 1].height + growth[i - 1].extraMm));
 
   const computeDrop = (e: DragMoveEvent | DragEndEvent): Drop | null => {
     const data = e.active.data.current as DragData | undefined;
@@ -144,7 +150,7 @@ export function Editor() {
       <div className="min-h-full flex justify-center py-8 pl-32 pr-8" onClick={() => store.getState().select(null)}>
         <div style={{ width: widthPx * zoom, minHeight: '100%' }}>
           <div className="relative shadow-lg bg-white" style={{ width: widthPx, transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
-            {template.bands.map(band => <BandView key={band.id} band={band} widthPx={widthPx} />)}
+            {template.bands.map((band, i) => <BandView key={band.id} band={band} widthPx={widthPx} growth={growth[i]} />)}
             {drop && dropBandIndex >= 0 && (
               <>
                 <div

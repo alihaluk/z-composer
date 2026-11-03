@@ -24,6 +24,9 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | R6-3 | 6 | minor | open | The catalog editor can change types and labels and remove fields, but not add a field by hand; new fields come from a sample or schema. |
 | R6-4 | 6 | minor | open | The saved `fieldsUsed` snapshot is written but only missing fields are reported; a field whose type changed in the catalog is not flagged. |
 | R6-5 | 6 | minor | open | Arrays inside array items (e.g. line discounts) cannot be bound; they are skipped with a note. Nested repeating bands would be needed. |
-| R7-1 | 7 | minor | open | On the canvas a growing text wraps but its band does not grow; only the preview shows the grown band. |
+| R7-1 | 7 | minor | fixed | On the canvas a growing text wrapped but its band did not grow. In sample mode the canvas now breaks the text like the filler and grows the band (step 8). |
 | R7-2 | 7 | minor | open | The preview culture is not remembered across reloads and does not follow the interface language. |
 | R7-3 | 7 | minor | open | The preview culture list is fixed (tr-TR, en-US, en-GB, de-DE, fr-FR); other cultures cannot be entered. |
+| R8-1 | 8 | minor | open | In sample mode, dropping an element below a grown text measures its position from the grown layout, so it lands lower by the growth than it appears. |
+| R8-2 | 8 | minor | open | Sample mode shows only the first item of a repeating band; wrapping of later items is visible only in the preview. |
+| R8-3 | 8 | minor | open | Non-growing wrapped text is wrapped by the browser on the canvas, by the printer's `^FB` in print; break points can differ slightly. |

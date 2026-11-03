@@ -6,7 +6,7 @@ import { mmToDots, mmToPx, pxToMm, roundMm } from '../lib/constants';
 import { displayText, hiddenInSample } from '../lib/elementDisplay';
 import { DEFAULT_FONT_MM, DEFAULT_THICKNESS_MM, textMetrics } from '../lib/zplTemplate';
 import { useEditor, useEditorStore } from '../store/editorStore';
-import { type Band, type TemplateElement } from '../types';
+import { type Band, type Dpi, type TemplateElement } from '../types';
 
 export const CANVAS_FONT = '"Roboto Condensed", "Arial Narrow", sans-serif';
 const MIN_SIZE_MM = 1;
@@ -14,9 +14,13 @@ const MIN_SIZE_MM = 1;
 interface Props {
   element: TemplateElement;
   band: Band;
+  /** Extra offset from a growing text above this element (sample mode). */
+  offsetY?: number;
+  /** Wrapped lines of a growing text, broken like the filler does. */
+  lines?: string[];
 }
 
-export function CanvasElement({ element: el, band }: Props) {
+export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) {
   const store = useEditorStore();
   const selected = useEditor(s => s.selection?.bandId === band.id && s.selection.ids.includes(el.id));
   const zoom = useEditor(s => s.zoom);
@@ -74,7 +78,7 @@ export function CanvasElement({ element: el, band }: Props) {
   const style: CSSProperties = {
     position: 'absolute',
     left: mmToPx(el.x),
-    top: mmToPx(el.y),
+    top: mmToPx(el.y + offsetY),
     width: mmToPx(width),
     height: mmToPx(height),
   };
@@ -94,7 +98,7 @@ export function CanvasElement({ element: el, band }: Props) {
       {...listeners}
       {...attributes}
     >
-      <ElementBody element={el} band={band} text={displayText(el, band, catalog, mode, locale)} dpi={dpi} />
+      <ElementBody element={el} band={band} text={lines ? lines.join('\n') : displayText(el, band, catalog, mode, locale)} dpi={dpi} preformatted={!!lines} />
       {el.condition?.path && (
         <span title={`${el.condition.path} ${el.condition.op}`} className="absolute top-0 left-0 w-0 h-0 border-t-[5px] border-r-[5px] border-t-amber-500 border-r-transparent" />
       )}
@@ -111,7 +115,7 @@ export function CanvasElement({ element: el, band }: Props) {
   );
 }
 
-export function ElementBody({ element: el, text, dpi }: { element: TemplateElement; band?: Band; text: string; dpi: number }) {
+export function ElementBody({ element: el, text, dpi, preformatted }: { element: TemplateElement; band?: Band; text: string; dpi: Dpi; preformatted?: boolean }) {
   if (el.type === 'box') {
     const t = Math.max(1, mmToPx(el.thickness ?? DEFAULT_THICKNESS_MM));
     const filled = t * 2 >= Math.min(mmToPx(el.width), mmToPx(el.height));
@@ -141,7 +145,7 @@ export function ElementBody({ element: el, text, dpi }: { element: TemplateEleme
     );
   }
 
-  const metrics = textMetrics(el, dpi as 203);
+  const metrics = textMetrics(el, dpi);
   const fontPx = mmToPx(el.fontSize ?? DEFAULT_FONT_MM);
   const lineHeightPx = (metrics.lineHeight / metrics.height) * fontPx;
   const wraps = el.overflow === 'wrap';
@@ -156,7 +160,7 @@ export function ElementBody({ element: el, text, dpi }: { element: TemplateEleme
         fontSize: fontPx,
         lineHeight: `${lineHeightPx}px`,
         textAlign: el.align ?? 'left',
-        whiteSpace: wraps ? 'normal' : 'pre',
+        whiteSpace: preformatted ? 'pre' : wraps ? 'normal' : 'pre',
         wordBreak: wraps ? 'break-word' : undefined,
         WebkitTextStroke: el.fontBold ? `${mmToPx(1 / (mmToDots(1, dpi) || 8)) * 0.6}px #000` : undefined,
         maxHeight: wraps && !el.grow ? lineHeightPx * maxLines : undefined,

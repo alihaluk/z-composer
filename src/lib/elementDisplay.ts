@@ -1,9 +1,10 @@
 // What an element shows on the design canvas: field names, or sample data
 // resolved with the same rules as the filler.
 import { type Catalog } from './catalog';
-import { evaluateCondition, lookup, resolvePlaceholder } from './zplFill';
-import { placeholder } from './zplTemplate';
-import { type Band, type TemplateElement } from '../types';
+import { dotsPerMm } from './constants';
+import { evaluateCondition, lookup, resolvePlaceholder, wrapText } from './zplFill';
+import { placeholder, textMetrics } from './zplTemplate';
+import { type Band, type Dpi, type TemplateElement } from '../types';
 import { type CanvasMode } from '../store/editorStore';
 
 /** Data context of a band in sample mode: the first array item for repeating bands. */
@@ -20,6 +21,23 @@ export function displayText(el: TemplateElement, band: Band, catalog: Catalog, m
   }
   if (mode === 'fields') return `[${el.dataSource}]`;
   return resolvePlaceholder(placeholder(el).slice(2, -2), sampleContext(catalog, band), catalog.sample, locale);
+}
+
+export interface BandGrowth {
+  /** The growing element and its wrapped lines, as the filler would break them. */
+  elementId?: string;
+  lines?: string[];
+  growY: number;
+  extraMm: number;
+}
+
+/** How much a band grows in sample mode because of its growing text (docs/OUTPUT_SPEC.md section 9). */
+export function sampleGrowth(band: Band, catalog: Catalog, mode: CanvasMode, locale: string, dpi: Dpi): BandGrowth {
+  const el = band.elements.find(e => e.type === 'text' && e.overflow === 'wrap' && e.grow);
+  if (!el || mode !== 'sample' || hiddenInSample(el, band, catalog, mode)) return { growY: 0, extraMm: 0 };
+  const m = textMetrics(el, dpi);
+  const lines = wrapText(displayText(el, band, catalog, mode, locale), m.charsPerLine, Math.max(1, el.maxLines ?? 2));
+  return { elementId: el.id, lines, growY: el.y, extraMm: (Math.max(0, lines.length - 1) * m.lineHeight) / dotsPerMm(dpi) };
 }
 
 /** In sample mode, whether an element's condition hides it. */

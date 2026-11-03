@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 import { mmToPx } from '../lib/constants';
 import { useEditor, useEditorStore } from '../store/editorStore';
+import { type BandGrowth } from '../lib/elementDisplay';
 import { type Band } from '../types';
 import { CanvasElement } from './CanvasElement';
 
-export function BandView({ band, widthPx }: { band: Band; widthPx: number }) {
+export function BandView({ band, widthPx, growth }: { band: Band; widthPx: number; growth: BandGrowth }) {
   const { t } = useTranslation();
   const store = useEditorStore();
   const bandSelected = useEditor(s => s.selection?.bandId === band.id && s.selection.ids.length === 0);
@@ -32,7 +33,7 @@ export function BandView({ band, widthPx }: { band: Band; widthPx: number }) {
       <div
         ref={setNodeRef}
         onClick={e => { e.stopPropagation(); store.getState().select({ bandId: band.id, ids: [] }); }}
-        style={{ height: mmToPx(band.height), width: widthPx }}
+        style={{ height: mmToPx(band.height + growth.extraMm), width: widthPx }}
         className={cn(
           // Overflow stays visible: content past the band edge also prints over the next band.
           'relative border-b border-dashed border-gray-300',
@@ -46,7 +47,11 @@ export function BandView({ band, widthPx }: { band: Band; widthPx: number }) {
           className="absolute inset-0 pointer-events-none opacity-[0.08]"
           style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: `${mmToPx(1)}px ${mmToPx(1)}px` }}
         />
-        {band.elements.map(el => <CanvasElement key={el.id} element={el} band={band} />)}
+        {band.elements.map(el => (
+          <CanvasElement key={el.id} element={el} band={band}
+            offsetY={growth.extraMm > 0 && el.y > growth.growY ? growth.extraMm : 0}
+            lines={el.id === growth.elementId ? growth.lines : undefined} />
+        ))}
       </div>
     </div>
   );
