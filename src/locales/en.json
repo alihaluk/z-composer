@@ -1,7 +1,7 @@
 {
   "toolbar": {
-    "undo": "Undo (Ctrl+Z)",
-    "redo": "Redo (Ctrl+Shift+Z)"
+    "undo": "Undo (Ctrl/⌘+Z)",
+    "redo": "Redo (Ctrl/⌘+Shift+Z)"
   },
   "toolbox": {
     "title": "Toolbox",
@@ -219,15 +219,15 @@
     "title": "Shortcuts",
     "moveKeys": "Arrows",
     "move": "Move 0.5 mm; 5 mm with Shift",
-    "selectKeys": "Shift / Ctrl + click",
+    "selectKeys": "Shift / Ctrl / ⌘ + click",
     "select": "Add to or remove from the selection",
-    "copyKeys": "Ctrl+C / Ctrl+V",
+    "copyKeys": "Ctrl/⌘+C, V",
     "copy": "Copy, paste into the selected band",
-    "duplicateKeys": "Ctrl+D",
+    "duplicateKeys": "Ctrl/⌘+D",
     "duplicate": "Duplicate",
     "deleteKeys": "Delete",
     "delete": "Delete (except locked)",
-    "undoKeys": "Ctrl+Z / Ctrl+Y",
+    "undoKeys": "Ctrl/⌘+Z, Y",
     "undo": "Undo / redo",
     "deselectKeys": "Esc",
     "deselect": "Clear the selection"

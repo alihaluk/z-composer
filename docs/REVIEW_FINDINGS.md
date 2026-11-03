@@ -32,8 +32,8 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | R8-3 | 8 | minor | open | Non-growing wrapped text is wrapped by the browser on the canvas, by the printer's `^FB` in print; break points can differ slightly. |
 | R9-1 | 9 | minor | open | There is no rubber-band selection; several elements are selected with Shift or Ctrl click. |
 | R9-2 | 9 | minor | open | A selection is limited to one band; elements of different bands cannot be moved or aligned together. |
-| R9-3 | 9 | minor | open | The shortcut list names Ctrl only; on macOS the same shortcuts also work with Cmd. |
+| R9-3 | 9 | minor | fixed | The shortcut list names Ctrl only; on macOS the same shortcuts also work with Cmd. (final pass: shortcuts show Ctrl/⌘) |
 | R10-1 | 10 | major | fixed | Without Tailwind's global reset the library's ring utilities had no default variables and `.container` was not scoped; both are now defined or disabled under `.zc-root`. |
 | R10-2 | 10 | minor | open | The package is `private`; publishing it to a registry is a separate decision. |
 | R10-3 | 10 | minor | accepted | The library stylesheet embeds the preview font (about 80 kB) and the barcode chunk is about 290 kB gzipped; both load only with the designer or the first barcode preview. |
-| R10-4 | 10 | minor | open | When the host fixes `language`, the language switcher is still shown and lets the user switch for the session. |
+| R10-4 | 10 | minor | fixed | When the host fixes `language`, the language switcher is still shown and lets the user switch for the session. (final pass: the switcher is hidden when the host fixes the language) |

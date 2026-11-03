@@ -39,7 +39,7 @@ function ToolItem({ tool, icon: Icon }: { tool: ToolType; icon: LucideIcon }) {
   );
 }
 
-export function Sidebar({ allowLocalTemplates = true, catalogEditable = true, onSave }: { allowLocalTemplates?: boolean; catalogEditable?: boolean; onSave?: () => void }) {
+export function Sidebar({ allowLocalTemplates = true, catalogEditable = true, showLanguageSwitch = true, onSave }: { allowLocalTemplates?: boolean; catalogEditable?: boolean; showLanguageSwitch?: boolean; onSave?: () => void }) {
   const { t, i18n } = useTranslation();
   const store = useEditorStore();
   const templateName = useEditor(s => s.templateName);
@@ -78,14 +78,14 @@ export function Sidebar({ allowLocalTemplates = true, catalogEditable = true, on
       <div className="flex justify-between items-center">
         <h2 className="text-base font-bold text-gray-800">Z-Composer</h2>
         <div className="flex items-center gap-1">
-          <div className="flex bg-gray-100 rounded p-0.5 gap-0.5" role="group" aria-label="Language">
+          {showLanguageSwitch && <div className="flex bg-gray-100 rounded p-0.5 gap-0.5" role="group" aria-label="Language">
             {['tr', 'en'].map(lng => (
               <button key={lng} type="button" onClick={() => i18n.changeLanguage(lng)}
                 className={cn('text-[10px] px-2 h-6 rounded uppercase', i18n.resolvedLanguage === lng ? 'bg-white shadow text-blue-600 font-bold' : 'text-gray-500')}>
                 {lng}
               </button>
             ))}
-          </div>
+          </div>}
           <Button variant="ghost" size="icon" className="h-7 w-7" disabled={!canUndo} onClick={() => store.temporal.getState().undo()} title={t('toolbar.undo')} aria-label={t('toolbar.undo')}><Undo2 size={14} /></Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" disabled={!canRedo} onClick={() => store.temporal.getState().redo()} title={t('toolbar.redo')} aria-label={t('toolbar.redo')}><Redo2 size={14} /></Button>
         </div>

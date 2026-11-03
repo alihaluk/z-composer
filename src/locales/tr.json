@@ -1,7 +1,7 @@
 {
   "toolbar": {
-    "undo": "Geri al (Ctrl+Z)",
-    "redo": "Yinele (Ctrl+Shift+Z)"
+    "undo": "Geri al (Ctrl/⌘+Z)",
+    "redo": "Yinele (Ctrl/⌘+Shift+Z)"
   },
   "toolbox": {
     "title": "Araç Kutusu",
@@ -219,15 +219,15 @@
     "title": "Kısayollar",
     "moveKeys": "Oklar",
     "move": "0,5 mm taşı; Shift ile 5 mm",
-    "selectKeys": "Shift / Ctrl + tık",
+    "selectKeys": "Shift / Ctrl / ⌘ + tık",
     "select": "Seçime ekle veya çıkar",
-    "copyKeys": "Ctrl+C / Ctrl+V",
+    "copyKeys": "Ctrl/⌘+C, V",
     "copy": "Kopyala, seçili banda yapıştır",
-    "duplicateKeys": "Ctrl+D",
+    "duplicateKeys": "Ctrl/⌘+D",
     "duplicate": "Çoğalt",
     "deleteKeys": "Delete",
     "delete": "Sil (kilitliler hariç)",
-    "undoKeys": "Ctrl+Z / Ctrl+Y",
+    "undoKeys": "Ctrl/⌘+Z, Y",
     "undo": "Geri al / yinele",
     "deselectKeys": "Esc",
     "deselect": "Seçimi kaldır"

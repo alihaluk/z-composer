@@ -83,7 +83,7 @@ export function ZComposer({ template, catalog, language, locale, storageKey, cat
     <I18nextProvider i18n={i18n}>
       <EditorStoreContext.Provider value={store}>
         <div className={cn('zc-root h-full', className)}>
-          <Layout sidebar={<Sidebar allowLocalTemplates={storageKey !== null} catalogEditable={catalogEditable} onSave={save} />} propertiesPanel={<PropertiesPanel />}>
+          <Layout sidebar={<Sidebar allowLocalTemplates={storageKey !== null} catalogEditable={catalogEditable} showLanguageSwitch={!language} onSave={save} />} propertiesPanel={<PropertiesPanel />}>
             <Editor />
           </Layout>
         </div>
