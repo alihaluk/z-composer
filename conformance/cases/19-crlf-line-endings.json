@@ -1,0 +1,35 @@
+{
+  "id": "crlf-line-endings",
+  "section": "3",
+  "title": "A template with CRLF line endings fills like one with LF",
+  "locale": "tr-TR",
+  "lineEnding": "crlf",
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE spec=1 dpi=203",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL20",
+    "^FX ZC:BAND id=a height=20",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FH_^FD{{A}}^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {
+    "A": "x"
+  },
+  "expected": [
+    "^XA",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL20",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FH_^FDx^FS",
+    "^LH0,0",
+    "^XZ"
+  ]
+}

@@ -54,4 +54,7 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | U-11 | UI review | minor | accepted | Dialogs do not trap Tab focus inside them. |
 | U-12 | UI review | minor | accepted | Below about 1000 px width the fixed side panels leave little room for the canvas; the designer is a desktop tool. |
 | U-13 | UI review | minor | accepted | Band labels mark conditions with the text "if" rather than an icon. |
+| C-1 | conformance | major | fixed | The reference filler did not reject templates with a newer `spec` version, although section 13 requires it. |
+| C-2 | conformance | minor | fixed | `notZero` treated `"1e3"`, `"0x0"` or `"Infinity"` as numbers while the number formats did not; both now use the numeric string definition of section 6.1. |
+| C-3 | conformance | minor | documented | The specification did not say what `^LL` is when nothing is printed (the filler wrote 1), nor that unknown markers are ignored; both are now stated. |
 

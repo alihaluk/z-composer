@@ -19,7 +19,7 @@ A visual designer for ZPL receipt and invoice templates for Zebra thermal printe
 
 ## Output
 
-The designer saves a JSON template and produces a ZPL template with placeholders such as `{{Totals.Grand|fmt=N2}}`. The format, the escaping rules and the filling algorithm are defined in the [output specification](./docs/OUTPUT_SPEC.md).
+The designer saves a JSON template and produces a ZPL template with placeholders such as `{{Totals.Grand|fmt=N2}}`. The format, the escaping rules and the filling algorithm are defined in the [output specification](./docs/OUTPUT_SPEC.md). Fillers in other languages can check themselves against the [conformance suite](./conformance/README.md).
 
 ## Development
 
@@ -38,6 +38,7 @@ Pushes to `main` run CI (lint, tests, both builds) and deploy the standalone app
 
 - [Scope and design decisions](./docs/SCOPE.md), including the roadmap
 - [ZPL template output specification](./docs/OUTPUT_SPEC.md)
+- [Conformance suite for fillers](./conformance/README.md)
 - [Integration guide](./INTEGRATION_GUIDE.md)
 - [Review findings](./docs/REVIEW_FINDINGS.md)
 - [Changelog](./CHANGELOG.md)

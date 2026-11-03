@@ -1,0 +1,32 @@
+{
+  "id": "nothing-printed",
+  "section": "11",
+  "title": "When no band copy is printed the length is 1 dot",
+  "locale": "tr-TR",
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE spec=1 dpi=203",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL30",
+    "^FX ZC:BAND id=lines height=30 repeat=Lines",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FH_^FD{{Name}}^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {
+    "Lines": []
+  },
+  "expected": [
+    "^XA",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL1",
+    "^LH0,0",
+    "^XZ"
+  ]
+}

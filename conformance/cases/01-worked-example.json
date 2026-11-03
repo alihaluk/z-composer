@@ -1,0 +1,95 @@
+{
+  "id": "worked-example",
+  "section": "12",
+  "title": "The worked example of the specification",
+  "locale": "tr-TR",
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE spec=1 dpi=203",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL240",
+    "^FX ZC:BAND id=header height=120",
+    "^LH0,0",
+    "^FO16,16^A0N,28,28^FH_^FD{{Company.Name}}^FS",
+    "^FO16,56^A0N,22,22^FH_^FDBelge No: {{DocNumber}}^FS",
+    "^FO16,84^A0N,22,22^FH_^FDTarih: {{DocDate|fmt=d}}^FS",
+    "^FX ZC:END",
+    "^FX ZC:BAND id=lines height=40 repeat=Lines",
+    "^LH0,120",
+    "^FX ZC:GROW cpl=24 lines=3 lineHeight=26",
+    "^FO16,8^A0N,22,22^FB360,3,4,L^FH_^FD{{Product.Name}}^FS",
+    "^FO400,8^A0N,22,22^FB160,1,0,R^FH_^FD{{Total|fmt=N2}}^FS",
+    "^FX ZC:END",
+    "^FX ZC:IF Discount notZero",
+    "^FX ZC:BAND id=discount height=32",
+    "^LH0,160",
+    "^FO16,4^A0N,22,22^FH_^FDİndirim^FS",
+    "^FO400,4^A0N,22,22^FB160,1,0,R^FH_^FD{{Discount|fmt=N2}}^FS",
+    "^FX ZC:END",
+    "^FX ZC:ENDIF",
+    "^FX ZC:BAND id=totals height=48",
+    "^LH0,192",
+    "^FO16,8^A0N,28,28^FH_^FDGenel Toplam^FS",
+    "^FO400,8^A0N,28,28^FB160,1,0,R^FH_^FD{{Total|fmt=N2}} {{Currency}}^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {
+    "Company": {
+      "Name": "Örnek Gıda A.Ş."
+    },
+    "DocNumber": "FTR2026000123",
+    "DocDate": "2026-11-13T14:37:00",
+    "Currency": "TRY",
+    "Discount": 0,
+    "Total": 2751.5,
+    "Lines": [
+      {
+        "Product": {
+          "Name": "Süt 1L"
+        },
+        "Total": 1200.5
+      },
+      {
+        "Product": {
+          "Name": "Peynir_Beyaz ^Tam Yağlı"
+        },
+        "Total": 1201
+      },
+      {
+        "Product": {
+          "Name": "Tam Yağlı Beyaz Peynir Ezine 1 kg Vakumlu"
+        },
+        "Total": 350
+      }
+    ]
+  },
+  "expected": [
+    "^XA",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL314",
+    "^LH0,0",
+    "^FO16,16^A0N,28,28^FH_^FDÖrnek Gıda A.Ş.^FS",
+    "^FO16,56^A0N,22,22^FH_^FDBelge No: FTR2026000123^FS",
+    "^FO16,84^A0N,22,22^FH_^FDTarih: 13.11.2026^FS",
+    "^LH0,120",
+    "^FO16,8^A0N,22,22^FB360,3,4,L^FH_^FDSüt 1L^FS",
+    "^FO400,8^A0N,22,22^FB160,1,0,R^FH_^FD1.200,50^FS",
+    "^LH0,160",
+    "^FO16,8^A0N,22,22^FB360,3,4,L^FH_^FDPeynir_5FBeyaz _5ETam Yağlı^FS",
+    "^FO400,8^A0N,22,22^FB160,1,0,R^FH_^FD1.201,00^FS",
+    "^LH0,200",
+    "^FO16,8^A0N,22,22^FB360,3,4,L^FH_^FDTam Yağlı Beyaz Peynir\\&Ezine 1 kg Vakumlu^FS",
+    "^FO400,8^A0N,22,22^FB160,1,0,R^FH_^FD350,00^FS",
+    "^LH0,266",
+    "^FO16,8^A0N,28,28^FH_^FDGenel Toplam^FS",
+    "^FO400,8^A0N,28,28^FB160,1,0,R^FH_^FD2.751,50 TRY^FS",
+    "^LH0,0",
+    "^XZ"
+  ]
+}

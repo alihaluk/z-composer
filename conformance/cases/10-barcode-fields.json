@@ -1,0 +1,40 @@
+{
+  "id": "barcode-fields",
+  "section": "5.2",
+  "title": "Code 128 doubles > as >0; QR data is escaped like any field",
+  "locale": "tr-TR",
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE spec=1 dpi=203",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL200",
+    "^FX ZC:BAND id=a height=200",
+    "^LH0,0",
+    "^FO0,0^BY2^BCN,60,Y,N,N^FH_^FD{{Code}}^FS",
+    "^FO0,80^A0N,20,20^FH_^FD{{Code}}^FS",
+    "^FO0,110^BQN,2,3^FH_^FDQA,_7B\"no\":\"{{No}}\",\"tutar\":\"{{Total|fmt=F2|inv}}\"}^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {
+    "Code": "AB>12_3",
+    "No": "FTR_1",
+    "Total": 2751.5
+  },
+  "expected": [
+    "^XA",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL200",
+    "^LH0,0",
+    "^FO0,0^BY2^BCN,60,Y,N,N^FH_^FDAB>012_5F3^FS",
+    "^FO0,80^A0N,20,20^FH_^FDAB>12_5F3^FS",
+    "^FO0,110^BQN,2,3^FH_^FDQA,_7B\"no\":\"FTR_5F1\",\"tutar\":\"2751.50\"}^FS",
+    "^LH0,0",
+    "^XZ"
+  ]
+}

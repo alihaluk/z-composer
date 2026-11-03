@@ -1,0 +1,67 @@
+{
+  "id": "growing-text",
+  "section": "9",
+  "title": "A growing field wraps and moves the lines below it down; the band copy grows",
+  "locale": "tr-TR",
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE spec=1 dpi=203",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL60",
+    "^FX ZC:BAND id=lines height=40 repeat=Lines",
+    "^LH0,0",
+    "^FO16,4^A0N,18,18^FH_^FDx^FS",
+    "^FX ZC:GROW cpl=10 lines=3 lineHeight=26",
+    "^FO16,8^A0N,22,22^FB300,3,4,L^FH_^FD{{Name}}^FS",
+    "^FO400,8^A0N,22,22^FH_^FD{{Qty}}^FS",
+    "^FO16,30^GB544,1,1^FS",
+    "^FX ZC:IF Note notEmpty",
+    "^FO16,32^A0N,18,18^FH_^FD{{Note}}^FS",
+    "^FX ZC:ENDIF",
+    "^FX ZC:END",
+    "^FX ZC:BAND id=foot height=20",
+    "^LH0,40",
+    "^FO0,0^A0N,20,20^FH_^FDfoot^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {
+    "Lines": [
+      {
+        "Name": "Süt",
+        "Qty": 1,
+        "Note": ""
+      },
+      {
+        "Name": "Beyaz peynir tam yağlı",
+        "Qty": 2,
+        "Note": "Kampanya"
+      }
+    ]
+  },
+  "expected": [
+    "^XA",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL152",
+    "^LH0,0",
+    "^FO16,4^A0N,18,18^FH_^FDx^FS",
+    "^FO16,8^A0N,22,22^FB300,3,4,L^FH_^FDSüt^FS",
+    "^FO400,8^A0N,22,22^FH_^FD1^FS",
+    "^FO16,30^GB544,1,1^FS",
+    "^LH0,40",
+    "^FO16,4^A0N,18,18^FH_^FDx^FS",
+    "^FO16,8^A0N,22,22^FB300,3,4,L^FH_^FDBeyaz\\&peynir tam\\&yağlı^FS",
+    "^FO400,8^A0N,22,22^FH_^FD2^FS",
+    "^FO16,82^GB544,1,1^FS",
+    "^FO16,84^A0N,18,18^FH_^FDKampanya^FS",
+    "^LH0,132",
+    "^FO0,0^A0N,20,20^FH_^FDfoot^FS",
+    "^LH0,0",
+    "^XZ"
+  ]
+}

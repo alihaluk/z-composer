@@ -1,0 +1,98 @@
+{
+  "id": "repeating-bands",
+  "section": "10",
+  "title": "Repeat context, conditions per item, missing, empty and non-array lists, nested list paths",
+  "locale": "tr-TR",
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE spec=1 dpi=203",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL190",
+    "^FX ZC:BAND id=head height=20",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FH_^FDhead^FS",
+    "^FX ZC:END",
+    "^FX ZC:BAND id=lines height=30 repeat=Lines",
+    "^LH0,20",
+    "^FO0,0^A0N,20,20^FH_^FD[{{Name}}]^FS",
+    "^FX ZC:IF Discount notZero",
+    "^FO0,10^A0N,20,20^FH_^FD[{{Discount|fmt=N2}}]^FS",
+    "^FX ZC:ENDIF",
+    "^FX ZC:IF $.ShowCodes notEmpty",
+    "^FO0,20^A0N,20,20^FH_^FD[{{Code}}]^FS",
+    "^FX ZC:ENDIF",
+    "^FX ZC:END",
+    "^FX ZC:BAND id=empty height=30 repeat=Empty",
+    "^LH0,50",
+    "^FO0,0^A0N,20,20^FH_^FDempty^FS",
+    "^FX ZC:END",
+    "^FX ZC:BAND id=missing height=30 repeat=NoSuchList",
+    "^LH0,80",
+    "^FO0,0^A0N,20,20^FH_^FDmissing^FS",
+    "^FX ZC:END",
+    "^FX ZC:BAND id=object height=30 repeat=NotAList",
+    "^LH0,110",
+    "^FO0,0^A0N,20,20^FH_^FDobject^FS",
+    "^FX ZC:END",
+    "^FX ZC:BAND id=nested height=30 repeat=Doc.Items",
+    "^LH0,140",
+    "^FO0,0^A0N,20,20^FH_^FD[{{Name}}]^FS",
+    "^FX ZC:END",
+    "^FX ZC:BAND id=foot height=20",
+    "^LH0,170",
+    "^FO0,0^A0N,20,20^FH_^FDfoot^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {
+    "Lines": [
+      {
+        "Name": "A",
+        "Discount": 0,
+        "Code": "c1"
+      },
+      {
+        "Name": "B",
+        "Discount": 1.5,
+        "Code": "c2"
+      }
+    ],
+    "ShowCodes": "yes",
+    "Empty": [],
+    "NotAList": {
+      "Name": "x"
+    },
+    "Doc": {
+      "Items": [
+        {
+          "Name": "N1"
+        }
+      ]
+    }
+  },
+  "expected": [
+    "^XA",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL130",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FH_^FDhead^FS",
+    "^LH0,20",
+    "^FO0,0^A0N,20,20^FH_^FD[A]^FS",
+    "^FO0,20^A0N,20,20^FH_^FD[c1]^FS",
+    "^LH0,50",
+    "^FO0,0^A0N,20,20^FH_^FD[B]^FS",
+    "^FO0,10^A0N,20,20^FH_^FD[1,50]^FS",
+    "^FO0,20^A0N,20,20^FH_^FD[c2]^FS",
+    "^LH0,80",
+    "^FO0,0^A0N,20,20^FH_^FD[N1]^FS",
+    "^LH0,110",
+    "^FO0,0^A0N,20,20^FH_^FDfoot^FS",
+    "^LH0,0",
+    "^XZ"
+  ]
+}

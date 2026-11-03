@@ -1,0 +1,36 @@
+{
+  "id": "field-block",
+  "section": "5.2",
+  "title": "In a ^FB field a backslash is doubled before ^FH escaping",
+  "locale": "tr-TR",
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE spec=1 dpi=203",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL60",
+    "^FX ZC:BAND id=a height=60",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FB400,2,0,L^FH_^FDa\\\\b {{Path}}^FS",
+    "^FO0,40^A0N,20,20^FH_^FD{{Path}}^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {
+    "Path": "C:\\my_dir\\&x"
+  },
+  "expected": [
+    "^XA",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL60",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FB400,2,0,L^FH_^FDa\\\\b C:\\\\my_5Fdir\\\\&x^FS",
+    "^FO0,40^A0N,20,20^FH_^FDC:\\my_5Fdir\\&x^FS",
+    "^LH0,0",
+    "^XZ"
+  ]
+}

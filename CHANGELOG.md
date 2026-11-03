@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0 — 2026-11-03
+
+### Added
+- [Conformance suite](./conformance/README.md) for fillers: 21 language-independent cases (template, data, expected output) covering every section of the output specification. The reference filler runs it in CI.
+
+### Changed
+- The output specification defines numeric strings, a minimum length of 1 dot and that unknown markers are ignored.
+- `fillTemplate` rejects templates with a newer specification version, and `notZero` accepts the same numeric strings as the number formats (`"1e3"` is no longer a number).
+
 ## 1.0.2 — 2026-11-03
 
 ### Fixed

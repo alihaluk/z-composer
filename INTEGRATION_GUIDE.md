@@ -96,7 +96,7 @@ const template = parseTemplate(JSON.parse(storedJson)); // also migrates v1 temp
 const zplTemplate = generateTemplateZpl(template);      // docs/OUTPUT_SPEC.md
 ```
 
-Printing is outside Z-Composer's scope. The [output specification](./docs/OUTPUT_SPEC.md) defines how to fill a ZPL template in any language. `fillTemplate` is the reference implementation in TypeScript, used by the designer's preview:
+Printing is outside Z-Composer's scope. The [output specification](./docs/OUTPUT_SPEC.md) defines how to fill a ZPL template in any language. `fillTemplate` is the reference implementation in TypeScript, used by the designer's preview. A filler written in another language can be checked against the [conformance suite](./conformance/README.md):
 
 ```ts
 const zpl = fillTemplate(zplTemplate, invoiceData, { locale: 'tr-TR' });

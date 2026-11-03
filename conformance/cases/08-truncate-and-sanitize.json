@@ -1,0 +1,53 @@
+{
+  "id": "truncate-and-sanitize",
+  "section": "5.2",
+  "title": "max counts code points after formatting; control characters become spaces",
+  "locale": "tr-TR",
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE spec=1 dpi=203",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL160",
+    "^FX ZC:BAND id=a height=160",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FH_^FD{{Name|max=9}}^FS",
+    "^FO0,20^A0N,20,20^FH_^FD{{Emoji|max=2}}^FS",
+    "^FO0,40^A0N,20,20^FH_^FD{{Total|fmt=N2|max=5}}^FS",
+    "^FO0,60^A0N,20,20^FH_^FD{{Total|max=5|fmt=N2}}^FS",
+    "^FO0,80^A0N,20,20^FH_^FD{{Short|max=10}}^FS",
+    "^FO0,100^A0N,20,20^FH_^FD[{{Name|max=0}}]^FS",
+    "^FO0,120^A0N,20,20^FH_^FD{{Multi}}^FS",
+    "^FO0,140^A0N,20,20^FH_^FD{{Ctrl}}^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {
+    "Name": "Tam Yağlı Beyaz Peynir",
+    "Emoji": "😀😀😀x",
+    "Total": 1234.5,
+    "Short": "ab",
+    "Multi": "Satır 1\nSatır 2\tSon",
+    "Ctrl": "a\u0000bc"
+  },
+  "expected": [
+    "^XA",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL160",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FH_^FDTam Yağlı^FS",
+    "^FO0,20^A0N,20,20^FH_^FD😀😀^FS",
+    "^FO0,40^A0N,20,20^FH_^FD1.234^FS",
+    "^FO0,60^A0N,20,20^FH_^FD1.234^FS",
+    "^FO0,80^A0N,20,20^FH_^FDab^FS",
+    "^FO0,100^A0N,20,20^FH_^FD[]^FS",
+    "^FO0,120^A0N,20,20^FH_^FDSatır 1 Satır 2 Son^FS",
+    "^FO0,140^A0N,20,20^FH_^FDa b c^FS",
+    "^LH0,0",
+    "^XZ"
+  ]
+}

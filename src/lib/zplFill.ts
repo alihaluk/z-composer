@@ -1,6 +1,6 @@
 // Reference filler for ZPL templates (docs/OUTPUT_SPEC.md section 10).
 // The designer uses it for previews; it is not part of the deliverable.
-import { formatValue } from './formats';
+import { formatValue, toNumber } from './formats';
 
 type Data = unknown;
 
@@ -29,10 +29,7 @@ const decodeStatic = (s: string) =>
 
 export function evaluateCondition(value: unknown, op: string): boolean {
   if (op === 'notEmpty') return !(value === undefined || value === null || (typeof value === 'string' && !value.trim()) || (Array.isArray(value) && value.length === 0));
-  if (op === 'notZero') {
-    const n = typeof value === 'number' ? value : typeof value === 'string' && value.trim() !== '' && !Number.isNaN(Number(value)) ? Number(value) : null;
-    return n !== null && n !== 0;
-  }
+  if (op === 'notZero') { const n = toNumber(value); return n !== null && n !== 0; }
   return true;
 }
 
@@ -93,6 +90,9 @@ function parse(lines: string[]): { prologue: string[]; blocks: Node[] } {
 
 const yOf = (line: string) => Number(/^\^FO\d+,(\d+)/.exec(line)?.[1] ?? 0);
 
+/** Highest specification version this filler understands (docs/OUTPUT_SPEC.md section 13). */
+export const SPEC_VERSION = 1;
+
 export interface FillOptions {
   locale: string;
   /** Supplies ^GFA graphic data (without ^FO/^FS) for a dynamic image key. */
@@ -102,6 +102,8 @@ export interface FillOptions {
 /** Fills a ZPL template with data, following the specification's filling algorithm. */
 export function fillTemplate(template: string, root: Data, options: FillOptions): string {
   const { prologue, blocks } = parse(template.split(/\r?\n/).filter(l => l.length > 0));
+  const version = Number(/^\^FX ZC:TEMPLATE\b.*\bspec=(\d+)/m.exec(prologue.join('\n'))?.[1] ?? SPEC_VERSION);
+  if (version > SPEC_VERSION) throw new Error(`Unsupported template specification version ${version}; this filler supports ${SPEC_VERSION}.`);
   const out = prologue.filter(l => !l.startsWith('^FX '));
   let offset = 0;
 

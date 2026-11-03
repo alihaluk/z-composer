@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/alihaluk/z-composer/conformance/case.schema.json",
+  "title": "Z-Composer conformance case",
+  "type": "object",
+  "required": ["id", "section", "title", "locale", "template", "data"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "section": { "type": "string" },
+    "title": { "type": "string" },
+    "locale": { "type": "string" },
+    "strict": { "type": "boolean", "default": true },
+    "lineEnding": { "enum": ["lf", "crlf"], "default": "lf" },
+    "template": { "type": "array", "items": { "type": "string" } },
+    "data": {},
+    "images": { "type": "object", "additionalProperties": { "type": "string" } },
+    "expected": { "type": "array", "items": { "type": "string" } },
+    "error": { "const": true }
+  },
+  "oneOf": [
+    { "required": ["expected"], "not": { "required": ["error"] } },
+    { "required": ["error"], "not": { "required": ["expected"] } }
+  ],
+  "additionalProperties": false
+}

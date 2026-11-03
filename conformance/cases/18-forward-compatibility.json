@@ -1,0 +1,45 @@
+{
+  "id": "forward-compatibility",
+  "section": "13",
+  "title": "Unknown attributes, markers and placeholder options are ignored; attribute order is free",
+  "locale": "tr-TR",
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE dpi=203 spec=1 future=yes",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL30",
+    "^FX ZC:BAND height=30 repeat=Lines id=rows color=red",
+    "^LH0,0",
+    "^FX ZC:NOTE text=ignored",
+    "^FX ZC:GROW lineHeight=20 lines=2 cpl=5 font=A0",
+    "^FO0,0^A0N,18,18^FB200,2,2,L^FH_^FD{{Name}}^FS",
+    "^FO300,0^A0N,18,18^FH_^FD{{Name|upper}}^FS",
+    "^FO0,25^A0N,18,18^FH_^FD{{Total|fmt=N2|future=3}}^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {
+    "Lines": [
+      {
+        "Name": "abc defg",
+        "Total": 5
+      }
+    ]
+  },
+  "expected": [
+    "^XA",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL50",
+    "^LH0,0",
+    "^FO0,0^A0N,18,18^FB200,2,2,L^FH_^FDabc\\&defg^FS",
+    "^FO300,0^A0N,18,18^FH_^FDabc defg^FS",
+    "^FO0,45^A0N,18,18^FH_^FD5,00^FS",
+    "^LH0,0",
+    "^XZ"
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "id": "lookup-and-context",
+  "section": "5.2",
+  "title": "Paths, missing values, conversion and the repeat context",
+  "locale": "tr-TR",
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE spec=1 dpi=203",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL360",
+    "^FX ZC:BAND id=doc height=300",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FH_^FD[{{Customer.Name}}]^FS",
+    "^FO0,20^A0N,20,20^FH_^FD[{{Customer.Missing}}]^FS",
+    "^FO0,40^A0N,20,20^FH_^FD[{{Missing.Deep.Path}}]^FS",
+    "^FO0,60^A0N,20,20^FH_^FD[{{Nothing}}]^FS",
+    "^FO0,80^A0N,20,20^FH_^FD[{{Customer}}]^FS",
+    "^FO0,100^A0N,20,20^FH_^FD[{{Tags}}]^FS",
+    "^FO0,120^A0N,20,20^FH_^FD[{{Count}}]^FS",
+    "^FO0,140^A0N,20,20^FH_^FD[{{Negative}}]^FS",
+    "^FO0,160^A0N,20,20^FH_^FD[{{Zero}}]^FS",
+    "^FO0,180^A0N,20,20^FH_^FD[{{Paid}}]^FS",
+    "^FO0,200^A0N,20,20^FH_^FD[{{Draft}}]^FS",
+    "^FO0,220^A0N,20,20^FH_^FD[{{$.Customer.Name}}]^FS",
+    "^FO0,240^A0N,20,20^FH_^FD[{{Customer.Name.First}}]^FS",
+    "^FO0,260^A0N,20,20^FH_^FD[{{Müşteri.Adı}}]^FS",
+    "^FX ZC:END",
+    "^FX ZC:BAND id=items height=60 repeat=Items",
+    "^LH0,300",
+    "^FO0,0^A0N,20,20^FH_^FD[{{Name}}]^FS",
+    "^FO0,20^A0N,20,20^FH_^FD[{{$.Customer.Name}}]^FS",
+    "^FO0,40^A0N,20,20^FH_^FD[{{Customer.Name}}]^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {
+    "Customer": {
+      "Name": "Deniz"
+    },
+    "Nothing": null,
+    "Tags": [
+      "a",
+      "b"
+    ],
+    "Count": 1200.5,
+    "Negative": -3,
+    "Zero": 0,
+    "Paid": true,
+    "Draft": false,
+    "Müşteri": {
+      "Adı": "Ayşe"
+    },
+    "Items": [
+      {
+        "Name": "A",
+        "Customer": {
+          "Name": "Kalem müşterisi"
+        }
+      },
+      {
+        "Name": "B"
+      }
+    ]
+  },
+  "expected": [
+    "^XA",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL420",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FH_^FD[Deniz]^FS",
+    "^FO0,20^A0N,20,20^FH_^FD[]^FS",
+    "^FO0,40^A0N,20,20^FH_^FD[]^FS",
+    "^FO0,60^A0N,20,20^FH_^FD[]^FS",
+    "^FO0,80^A0N,20,20^FH_^FD[]^FS",
+    "^FO0,100^A0N,20,20^FH_^FD[]^FS",
+    "^FO0,120^A0N,20,20^FH_^FD[1200.5]^FS",
+    "^FO0,140^A0N,20,20^FH_^FD[-3]^FS",
+    "^FO0,160^A0N,20,20^FH_^FD[0]^FS",
+    "^FO0,180^A0N,20,20^FH_^FD[true]^FS",
+    "^FO0,200^A0N,20,20^FH_^FD[false]^FS",
+    "^FO0,220^A0N,20,20^FH_^FD[Deniz]^FS",
+    "^FO0,240^A0N,20,20^FH_^FD[]^FS",
+    "^FO0,260^A0N,20,20^FH_^FD[Ayşe]^FS",
+    "^LH0,300",
+    "^FO0,0^A0N,20,20^FH_^FD[A]^FS",
+    "^FO0,20^A0N,20,20^FH_^FD[Deniz]^FS",
+    "^FO0,40^A0N,20,20^FH_^FD[Kalem müşterisi]^FS",
+    "^LH0,360",
+    "^FO0,0^A0N,20,20^FH_^FD[B]^FS",
+    "^FO0,20^A0N,20,20^FH_^FD[Deniz]^FS",
+    "^FO0,40^A0N,20,20^FH_^FD[]^FS",
+    "^LH0,0",
+    "^XZ"
+  ]
+}

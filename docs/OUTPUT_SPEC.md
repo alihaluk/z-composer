@@ -1,6 +1,6 @@
 # Z-Composer — ZPL Template Output Specification
 
-Status: Version 1 (2026-11-03), implemented by Z-Composer 1.0.0
+Status: Version 1 (2026-11-03), implemented by Z-Composer 1.0.0; clarified in 1.1.0 (numeric strings, minimum length, unknown markers) and checked by the [conformance suite](../conformance/README.md)
 
 ## 1. Purpose
 
@@ -69,12 +69,13 @@ id         = letter { letter | digit | "_" | "-" } ;
 Rules:
 
 - Marker attributes are `key=value` pairs separated by one space. Values never contain spaces. Attribute order is not significant; unknown attributes must be ignored.
+- Unknown marker kinds (`^FX ZC:` followed by another name) and other `^FX` comment lines must be ignored.
 - Bands are not nested. A band appears at the top level or inside a top-level `ZC:IF` block.
 - `ZC:IF` blocks may be nested.
 - Every element belongs to a band.
 - Every element line starts with `^FO<x>,<y>`.
 - A band contains at most one growing element (section 9).
-- The `^LL` value in an unfilled template is the sum of all band heights, each band counted once.
+- The `^LL` value in an unfilled template is the sum of all band heights, each band counted once, and at least 1.
 - The template ends with `^LH0,0` so that the band offset never leaks into later labels.
 
 ## 5. Placeholders
@@ -113,7 +114,7 @@ A template stores the meaning of a format; the filler applies its own culture (S
 
 ### 6.1 Numbers
 
-Applies to JSON numbers and to numeric strings written in the invariant culture (`"1234.5"`). Rounding is half away from zero.
+Applies to JSON numbers and to numeric strings: an optional `-`, digits, optionally `.` and digits, with optional surrounding white space (`"1234.5"`, `" 42 "`). Strings in other forms (`"1234,5"`, `"1e3"`, `"+5"`) are not numbers. Rounding is half away from zero (`2.5` → `3`, `-2.5` → `-3`).
 
 | Code | Meaning | tr-TR (1234.5) | en-US (1234.5) | `inv` |
 |---|---|---|---|---|
@@ -164,7 +165,7 @@ Any other character is copied literally. Letters other than these tokens must no
 | Operator | True when |
 |---|---|
 | `notEmpty` | The value exists and is not `null`, not an empty or whitespace-only string, and not an empty array. |
-| `notZero` | The value is a number, or a numeric string, that is not zero. Negative values are not zero and are therefore shown. Missing, empty and non-numeric values are false. |
+| `notZero` | The value is a number, or a numeric string (section 6.1), that is not zero. Negative values are not zero and are therefore shown. Missing, empty and non-numeric values are false. |
 
 - A condition is evaluated in the context where it appears (inside a repeating band: the current item).
 - A `ZC:IF` around a band that is false skips the band; it takes no space.
@@ -212,7 +213,7 @@ offset = 0
 for each line in prologue:        output line (remember the position of ^LL)
 process(blocks at top level, context = root)
 output "^LH0,0" and "^XZ"
-set the ^LL value to offset
+set the ^LL value to max(1, offset)
 
 process(blocks, context):
   for each block:
@@ -237,7 +238,7 @@ A repeating band whose array is missing or empty prints nothing and takes no spa
 
 ## 11. Limits
 
-- After filling, `^LL` is the sum of the heights of all printed band copies.
+- After filling, `^LL` is the sum of the heights of all printed band copies, and at least 1 when nothing is printed.
 - ZPL accepts `^LL` values up to 32000 dots (about 4 m at 203 dpi). Output longer than the printer's maximum length is outside this specification; a filler may split it into several formats.
 
 ## 12. Example
@@ -347,3 +348,7 @@ To check on the first real print (low risk, documented ZPL behavior):
 
 - The closing `^LH0,0` keeps the offset from leaking into the next print; an emulator renders every format in isolation.
 - `^MNN` with the filled `^LL` feeds exactly the computed length.
+
+## 15. Conformance
+
+The [conformance suite](../conformance/README.md) lists templates, data and the expected filled output for every section of this document. A filler that passes all strict cases follows this specification. The reference filler runs the suite in CI.

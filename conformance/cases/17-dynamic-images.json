@@ -1,0 +1,40 @@
+{
+  "id": "dynamic-images",
+  "section": "8",
+  "title": "An available image replaces the outline; a missing one removes it",
+  "locale": "tr-TR",
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE spec=1 dpi=203",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL100",
+    "^FX ZC:BAND id=a height=100",
+    "^LH0,0",
+    "^FX ZC:IMAGE key=Company.Logo width=240 height=80",
+    "^FO168,16^GB240,80,1^FS",
+    "^FX ZC:IMAGE key=Signature width=100 height=40",
+    "^FO10,10^GB100,40,1^FS",
+    "^FO0,90^A0N,20,20^FH_^FDtext^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {},
+  "images": {
+    "Company.Logo": "^GFA,4,4,1,F0F0F0F0"
+  },
+  "expected": [
+    "^XA",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL100",
+    "^LH0,0",
+    "^FO168,16^GFA,4,4,1,F0F0F0F0^FS",
+    "^FO0,90^A0N,20,20^FH_^FDtext^FS",
+    "^LH0,0",
+    "^XZ"
+  ]
+}

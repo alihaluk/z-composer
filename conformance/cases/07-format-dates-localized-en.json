@@ -1,0 +1,41 @@
+{
+  "id": "format-dates-localized-en",
+  "section": "6.2",
+  "title": "Localized date codes in en-US",
+  "locale": "en-US",
+  "strict": false,
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE spec=1 dpi=203",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL80",
+    "^FX ZC:BAND id=a height=80",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FH_^FD{{Dt|fmt=d}}^FS",
+    "^FO0,20^A0N,20,20^FH_^FD{{Dt|fmt=D}}^FS",
+    "^FO0,40^A0N,20,20^FH_^FD{{Dt|fmt=t}}^FS",
+    "^FO0,60^A0N,20,20^FH_^FD{{Dt|fmt=g}}^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {
+    "Dt": "2026-11-13T14:37:00"
+  },
+  "expected": [
+    "^XA",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL80",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FH_^FD11/13/2026^FS",
+    "^FO0,20^A0N,20,20^FH_^FDFriday, November 13, 2026^FS",
+    "^FO0,40^A0N,20,20^FH_^FD2:37 PM^FS",
+    "^FO0,60^A0N,20,20^FH_^FD11/13/2026 2:37 PM^FS",
+    "^LH0,0",
+    "^XZ"
+  ]
+}
