@@ -1,0 +1,177 @@
+import { useEffect, useState } from 'react';
+import {
+  DndContext, DragOverlay, MouseSensor, TouchSensor, pointerWithin, useSensor, useSensors,
+  type DragEndEvent, type DragMoveEvent, type DragStartEvent,
+} from '@dnd-kit/core';
+import { mmToPx, pxToMm } from '../lib/constants';
+import { snapPosition, type Guide } from '../lib/snapping';
+import { createElement, type ToolType } from '../lib/tools';
+import { useEditor, useEditorStore, type EditorStore } from '../store/editorStore';
+import { type TemplateElement } from '../types';
+import { BandView } from './BandView';
+
+interface Drop {
+  bandId: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  guides: Guide[];
+}
+
+type DragData = { type: 'tool'; tool: ToolType } | { type: 'element'; bandId: string; id: string };
+
+const KEY_STEP_MM = 0.5;
+const KEY_STEP_LARGE_MM = 5;
+
+const isTyping = () => {
+  const el = document.activeElement;
+  return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement || (el as HTMLElement | null)?.isContentEditable;
+};
+
+function useKeyboard(store: EditorStore) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (isTyping()) return;
+      const s = store.getState();
+      const mod = e.metaKey || e.ctrlKey;
+      const key = e.key.toLowerCase();
+      if (mod && key === 'z') { e.preventDefault(); if (e.shiftKey) store.temporal.getState().redo(); else store.temporal.getState().undo(); return; }
+      if (mod && key === 'y') { e.preventDefault(); store.temporal.getState().redo(); return; }
+      if (mod && key === 'c') { s.copySelection(); return; }
+      if (mod && key === 'v') { e.preventDefault(); s.paste(); return; }
+      if (mod && key === 'd') { e.preventDefault(); s.duplicateSelection(); return; }
+      if (e.key === 'Escape') { s.select(null); return; }
+
+      const sel = s.selection;
+      if (!sel?.ids.length) return;
+      const band = s.template.bands.find(b => b.id === sel.bandId);
+      const movable = band?.elements.filter(el => sel.ids.includes(el.id) && !el.locked) ?? [];
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        s.removeElements(sel.bandId, movable.map(el => el.id));
+        return;
+      }
+      const step = e.shiftKey ? KEY_STEP_LARGE_MM : KEY_STEP_MM;
+      const delta = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+      if (!delta || !movable.length) return;
+      e.preventDefault();
+      const round = (v: number) => Math.round(v * 100) / 100;
+      s.updateElements(sel.bandId, Object.fromEntries(movable.map(el => [el.id, { x: round(Math.max(0, el.x + delta[0])), y: round(Math.max(0, el.y + delta[1])) }])));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [store]);
+}
+
+export function Editor() {
+  const store = useEditorStore();
+  const template = useEditor(s => s.template);
+  const zoom = useEditor(s => s.zoom);
+  const [drag, setDrag] = useState<DragData | null>(null);
+  const [drop, setDrop] = useState<Drop | null>(null);
+  useKeyboard(store);
+
+  const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 4 } }), useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }));
+  const widthPx = mmToPx(template.printer.widthMm);
+  const bandTops: number[] = [];
+  template.bands.forEach((_, i) => bandTops.push(i === 0 ? 0 : bandTops[i - 1] + template.bands[i - 1].height));
+
+  const computeDrop = (e: DragMoveEvent | DragEndEvent): Drop | null => {
+    const data = e.active.data.current as DragData | undefined;
+    const targetId = (e.over?.data.current as { bandId?: string } | undefined)?.bandId;
+    const targetIndex = template.bands.findIndex(b => b.id === targetId);
+    if (!data || targetIndex < 0) return null;
+    const target = template.bands[targetIndex];
+
+    let box: { x: number; y: number; width: number; height: number };
+    let ignore: string[] = [];
+    if (data.type === 'tool') {
+      const rect = e.active.rect.current.translated;
+      if (!rect || !e.over) return null;
+      const el = createElement(data.tool, 0, 0, template.printer.widthMm);
+      box = { x: pxToMm((rect.left - e.over.rect.left) / zoom), y: pxToMm((rect.top - e.over.rect.top) / zoom), width: el.width, height: el.height };
+    } else {
+      const sourceIndex = template.bands.findIndex(b => b.id === data.bandId);
+      const el = template.bands[sourceIndex]?.elements.find(x => x.id === data.id);
+      if (!el) return null;
+      // Positions are compared on the whole page, then made relative to the target band.
+      const pageY = bandTops[sourceIndex] + el.y + pxToMm(e.delta.y / zoom);
+      box = { x: el.x + pxToMm(e.delta.x / zoom), y: pageY - bandTops[targetIndex], width: el.width, height: el.height };
+      ignore = [el.id];
+    }
+    const others = target.elements.filter(o => !ignore.includes(o.id));
+    const snapped = snapPosition(box, others, template.printer.widthMm, target.height);
+    return { bandId: target.id, ...snapped, width: box.width, height: box.height };
+  };
+
+  const onStart = (e: DragStartEvent) => setDrag((e.active.data.current as DragData) ?? null);
+  const onMove = (e: DragMoveEvent) => setDrop(computeDrop(e));
+  const onEnd = (e: DragEndEvent) => {
+    const data = e.active.data.current as DragData | undefined;
+    const result = computeDrop(e);
+    setDrag(null);
+    setDrop(null);
+    if (!data || !result) return;
+    const s = store.getState();
+    if (data.type === 'tool') {
+      s.addElement(result.bandId, createElement(data.tool, result.x, result.y, template.printer.widthMm));
+      return;
+    }
+    if (data.bandId !== result.bandId) {
+      s.moveElementToBand(data.bandId, result.bandId, data.id, { x: result.x, y: result.y });
+      return;
+    }
+    // Moving one of several selected elements moves them all by the same distance.
+    const band = s.template.bands.find(b => b.id === data.bandId)!;
+    const moved = band.elements.find(el => el.id === data.id)!;
+    const group = s.selection?.bandId === band.id && s.selection.ids.includes(data.id) ? s.selection.ids : [data.id];
+    const dx = result.x - moved.x;
+    const dy = result.y - moved.y;
+    const patches: Record<string, Partial<TemplateElement>> = {};
+    for (const el of band.elements) {
+      if (!group.includes(el.id) || el.locked) continue;
+      patches[el.id] = { x: Math.round(Math.max(0, el.x + dx) * 100) / 100, y: Math.round(Math.max(0, el.y + dy) * 100) / 100 };
+    }
+    s.updateElements(band.id, patches);
+    if (!group.includes(data.id) || group.length === 1) s.select({ bandId: band.id, ids: [data.id] });
+  };
+
+  const dropBandIndex = drop ? template.bands.findIndex(b => b.id === drop.bandId) : -1;
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={onStart} onDragMove={onMove} onDragEnd={onEnd} onDragCancel={() => { setDrag(null); setDrop(null); }}>
+      <div className="min-h-full flex justify-center py-8 pl-32 pr-8" onClick={() => store.getState().select(null)}>
+        <div style={{ width: widthPx * zoom, minHeight: '100%' }}>
+          <div className="relative shadow-lg bg-white" style={{ width: widthPx, transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
+            {template.bands.map(band => <BandView key={band.id} band={band} widthPx={widthPx} />)}
+            {drop && dropBandIndex >= 0 && (
+              <>
+                <div
+                  className="absolute border-2 border-dashed border-blue-500 bg-blue-300/30 pointer-events-none z-40"
+                  style={{ left: mmToPx(drop.x), top: mmToPx(bandTops[dropBandIndex] + drop.y), width: mmToPx(drop.width), height: Math.max(2, mmToPx(drop.height)) }}
+                >
+                  <span className="absolute -top-5 left-0 whitespace-nowrap bg-blue-600 text-white text-[10px] font-mono px-1 rounded">
+                    {drop.x.toFixed(1)}, {drop.y.toFixed(1)} mm
+                  </span>
+                </div>
+                {drop.guides.map((g, i) => (
+                  <div
+                    key={i}
+                    className="absolute pointer-events-none z-50 border-red-500 border-dashed"
+                    style={g.axis === 'x'
+                      ? { left: mmToPx(g.at), top: 0, bottom: 0, borderLeftWidth: 1 }
+                      : { top: mmToPx(bandTops[dropBandIndex] + g.at), left: 0, right: 0, borderTopWidth: 1 }}
+                  />
+                ))}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+      <DragOverlay dropAnimation={null}>
+        {drag?.type === 'tool' ? <div className="px-3 py-2 bg-white border rounded shadow text-sm capitalize opacity-90">{drag.tool}</div> : null}
+      </DragOverlay>
+    </DndContext>
+  );
+}

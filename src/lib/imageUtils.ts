@@ -1,103 +1,77 @@
-export interface ZPLImageResult {
-  zplHex: string;
+import { type GrayBitmap } from '../types';
+
+export interface ZplGraphic {
   totalBytes: number;
   bytesPerRow: number;
-  base64: string;
-  width: number;
-  height: number;
+  hex: string;
 }
 
-export const imageToZPL = (fileOrUrl: File | string, maxWidth: number = 200, maxHeight: number = 200): Promise<ZPLImageResult> => {
-  return new Promise((resolve, reject) => {
-    const processImage = (src: string) => {
-      const img = new Image();
-      img.onload = () => {
-        // Calculate new dimensions keeping aspect ratio
-        let width = img.width;
-        let height = img.height;
+const MAX_SOURCE_SIZE = 600;
 
-        if (width > maxWidth) {
-          height = Math.round(height * (maxWidth / width));
-          width = maxWidth;
-        }
-        if (height > maxHeight) {
-          width = Math.round(width * (maxHeight / height));
-          height = maxHeight;
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Could not get canvas context'));
-          return;
-        }
-
-        // Draw image (white background)
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const imageData = ctx.getImageData(0, 0, width, height);
-        const data = imageData.data;
-
-        // Convert to monochrome and pack bits
-        let hexString = '';
-
-        // ZPL expects row padding to nearest byte
-        const bytesPerRow = Math.ceil(width / 8);
-        const totalBytes = bytesPerRow * height;
-
-        for (let y = 0; y < height; y++) {
-          let rowBits = '';
-          for (let x = 0; x < width; x++) {
-            const idx = (y * width + x) * 4;
-            const r = data[idx];
-            const g = data[idx + 1];
-            const b = data[idx + 2];
-            // Luminance
-            const avg = (r + g + b) / 3;
-            // Threshold (black pixel = 1, white = 0) in ZPL
-            // If avg < 128 (dark), bit is 1 (print). Else 0.
-            const isBlack = avg < 128;
-            rowBits += isBlack ? '1' : '0';
-          }
-          // Pad row to byte boundary with 0 (white)
-          while (rowBits.length % 8 !== 0) {
-            rowBits += '0';
-          }
-
-          // Convert row bits to hex
-          for (let i = 0; i < rowBits.length; i += 4) {
-            const nibble = rowBits.substr(i, 4);
-            const val = parseInt(nibble, 2);
-            hexString += val.toString(16).toUpperCase();
-          }
-        }
-
-        resolve({
-          zplHex: hexString,
-          totalBytes,
-          bytesPerRow,
-          base64: typeof fileOrUrl === 'string' ? fileOrUrl : src,
-          width,
-          height
-        });
-      };
-      img.onerror = reject;
-      img.src = src;
-    };
-
-    if (typeof fileOrUrl === 'string') {
-      processImage(fileOrUrl);
-    } else {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        processImage(e.target?.result as string);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(fileOrUrl);
-    }
-  });
+const toBase64 = (bytes: Uint8Array) => {
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s);
 };
+
+const fromBase64 = (b64: string) => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+
+/** Reads an image (file or data URL) into a grayscale bitmap; runs in the browser. */
+export function loadGrayBitmap(source: File | string): Promise<{ bitmap: GrayBitmap; dataUrl: string }> {
+  const readDataUrl = (file: File) => new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+
+  return (typeof source === 'string' ? Promise.resolve(source) : readDataUrl(source)).then(dataUrl => new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, MAX_SOURCE_SIZE / Math.max(img.width, img.height));
+      const width = Math.max(1, Math.round(img.width * scale));
+      const height = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas 2D context is not available'));
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      const rgba = ctx.getImageData(0, 0, width, height).data;
+      const gray = new Uint8Array(width * height);
+      for (let i = 0; i < gray.length; i++) gray[i] = Math.round(0.299 * rgba[i * 4] + 0.587 * rgba[i * 4 + 1] + 0.114 * rgba[i * 4 + 2]);
+      resolve({ bitmap: { width, height, data: toBase64(gray) }, dataUrl });
+    };
+    img.onerror = () => reject(new Error('Image could not be loaded'));
+    img.src = dataUrl;
+  }));
+}
+
+/**
+ * Scales a grayscale bitmap to fit within the target size in dots (keeping its aspect
+ * ratio) and encodes it as ZPL ^GFA data. Pixels darker than the threshold print.
+ */
+export function bitmapToZpl(bitmap: GrayBitmap, maxWidth: number, maxHeight: number, threshold = 128): ZplGraphic & { width: number; height: number } {
+  const gray = fromBase64(bitmap.data);
+  const scale = Math.min(maxWidth / bitmap.width, maxHeight / bitmap.height);
+  const width = Math.max(1, Math.floor(bitmap.width * scale));
+  const height = Math.max(1, Math.floor(bitmap.height * scale));
+  const bytesPerRow = Math.ceil(width / 8);
+  let hex = '';
+  for (let y = 0; y < height; y++) {
+    const sy = Math.min(bitmap.height - 1, Math.floor(y / scale));
+    for (let byteIndex = 0; byteIndex < bytesPerRow; byteIndex++) {
+      let byte = 0;
+      for (let bit = 0; bit < 8; bit++) {
+        const x = byteIndex * 8 + bit;
+        if (x >= width) continue;
+        const sx = Math.min(bitmap.width - 1, Math.floor(x / scale));
+        if (gray[sy * bitmap.width + sx] < threshold) byte |= 0x80 >> bit;
+      }
+      hex += byte.toString(16).toUpperCase().padStart(2, '0');
+    }
+  }
+  return { totalBytes: bytesPerRow * height, bytesPerRow, hex, width, height };
+}

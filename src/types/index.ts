@@ -1,33 +1,96 @@
-export type ElementType = 'text' | 'box' | 'barcode' | 'image';
+// Template model v2 (docs/SCOPE.md). All positions and sizes are in millimetres;
+// they are converted to printer dots only when ZPL is generated.
 
-export interface CanvasElement {
+export type ElementType = 'text' | 'box' | 'barcode' | 'image';
+export type Rotation = 0 | 90 | 180 | 270;
+export type Align = 'left' | 'center' | 'right';
+export type ConditionOp = 'notEmpty' | 'notZero';
+export type OverflowMode = 'none' | 'truncate' | 'wrap';
+export type Dpi = 203 | 300 | 600;
+
+export interface Condition {
+  path: string;
+  op: ConditionOp;
+}
+
+export interface GrayBitmap {
+  width: number;
+  height: number;
+  /** Base64 of one byte per pixel, 0 = black, 255 = white. */
+  data: string;
+}
+
+export interface TemplateElement {
   id: string;
   type: ElementType;
   x: number;
   y: number;
-  width?: number;
-  height?: number;
+  width: number;
+  height: number;
+  locked?: boolean;
+  condition?: Condition;
+
+  // Text and barcode content: static text, or a field of the catalog.
+  isDynamic?: boolean;
   content?: string;
-  isDynamic: boolean;
   dataSource?: string;
-  imageKey?: string; // e.g., 'TenantLogo', 'GibLogo', 'GibQRCode'
+  /** Format code (docs/OUTPUT_SPEC.md section 6). */
+  format?: string;
+  /** Format with the invariant culture. */
+  invariant?: boolean;
+
+  // Text
+  /** Character height in millimetres. */
   fontSize?: number;
   fontBold?: boolean;
-  rotation?: number;
+  rotation?: Rotation;
+  align?: Align;
+  overflow?: OverflowMode;
   maxChars?: number;
+  maxLines?: number;
+  /** Wrapped text grows its band (docs/OUTPUT_SPEC.md section 9). */
+  grow?: boolean;
+  charsPerLine?: number;
+
+  // Box
+  /** Border thickness in millimetres; boxes thicker than half their size are filled. */
+  thickness?: number;
+
+  // Barcode
   barcodeType?: 'code128' | 'qr';
   showLabel?: boolean;
-  zplImage?: {
-    hex: string;
-    totalBytes: number;
-    bytesPerRow: number;
-  };
+  /** Code 128 narrow bar width in dots. */
+  moduleWidth?: number;
+  /** QR module size in dots. */
+  magnification?: number;
+
+  // Image: a dynamic image key, or an uploaded image.
+  imageKey?: string;
   imageBase64?: string;
+  bitmap?: GrayBitmap;
+  threshold?: number;
 }
 
-export interface SectionState {
+export interface Band {
+  id: string;
+  name: string;
+  /** Array field of the catalog this band repeats for; static when absent. */
+  repeat?: string;
   height: number;
-  elements: CanvasElement[];
+  condition?: Condition;
+  elements: TemplateElement[];
 }
 
-export type SectionName = 'header' | 'body' | 'footer';
+export interface PrinterProfile {
+  /** Printable width in millimetres (^PW). */
+  widthMm: number;
+  dpi: Dpi;
+}
+
+export interface Template {
+  schemaVersion: 2;
+  printer: PrinterProfile;
+  bands: Band[];
+  /** Snapshot of the catalog fields the template uses (docs/SCOPE.md D2). */
+  fieldsUsed?: { path: string; type: string }[];
+}

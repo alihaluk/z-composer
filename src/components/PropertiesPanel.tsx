@@ -1,455 +1,66 @@
 import { useTranslation } from 'react-i18next';
-import { useStore } from '../store/useStore';
-import { Label } from './ui/Label';
-import { Input } from './ui/Input';
+import { AlignCenterVertical, AlignEndVertical, AlignStartHorizontal, AlignStartVertical, Copy, Trash2 } from 'lucide-react';
+import { useEditorStore, useSelectedBand, useSelectedElements } from '../store/editorStore';
+import { type Band, type TemplateElement } from '../types';
 import { Button } from './ui/Button';
-import { Select } from './ui/Select';
-import { MM_TO_PX } from '../lib/constants';
-import { generateZPL, generateElementZPL, generateLinePrint } from '../lib/zplGenerator';
-import { GLOBAL_DATA_SOURCES, ALL_DATA_SOURCES } from '../lib/dataSources';
-import { imageToZPL } from '../lib/imageUtils';
-import { type CanvasElement } from '../types';
+import { Section } from './ui/Field';
+import { BandProperties } from './properties/BandProperties';
+import { ElementProperties } from './properties/ElementProperties';
+import { TemplateSettings } from './properties/TemplateSettings';
 
-export const PropertiesPanel = () => {
+type AlignTo = 'left' | 'center' | 'right' | 'top';
+
+function MultiSelection({ band, elements }: { band: Band; elements: TemplateElement[] }) {
   const { t } = useTranslation();
-  const {
-    selectedElementId,
-    selectedSection,
-    header,
-    body,
-    footer,
-    updateElement,
-    removeElement,
-    selectElement,
-    setSectionHeight,
-    canvasWidth,
-    setCanvasWidth,
-    zoomLevel,
-    setZoomLevel,
-    previewMode,
-    setPreviewMode
-  } = useStore();
+  const s = useEditorStore().getState();
+  const movable = elements.filter(el => !el.locked);
 
-  const renderZPLPreview = (zpl: string) => {
-    // Simple highlighter
-    const parts = zpl.split(/(\^[A-Z0-9]+)/g);
-    return (
-      <span className="font-mono text-[9px]">
-        {parts.map((part, i) => {
-          if (part.startsWith('^')) {
-            return <span key={i} className="text-blue-600 font-bold">{part}</span>;
-          }
-          return <span key={i} className="text-gray-600">{part}</span>;
-        })}
-      </span>
-    );
-  };
-
-  if (!selectedElementId || !selectedSection) {
-    // Show Canvas Properties
-    return (
-      <div className="p-4 space-y-4">
-        <h3 className="font-bold border-b pb-2 text-gray-800">{t('properties.canvasSettings')}</h3>
-
-        <div className="space-y-2">
-          <Label>{t('properties.paperWidth')}</Label>
-          <Input
-            type="number"
-            value={canvasWidth}
-            onFocus={(e) => e.target.select()}
-            onChange={(e) => setCanvasWidth(Number(e.target.value))}
-            max={104}
-          />
-          <p className="text-[10px] text-gray-400">{t('properties.maxWidth')}</p>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <Label>{t('properties.zoomLevel')}</Label>
-            <span className="text-xs text-gray-500">{Math.round(zoomLevel * 100)}%</span>
-          </div>
-          <input
-            type="range"
-            min="0.25"
-            max="3"
-            step="0.05"
-            value={zoomLevel}
-            onChange={(e) => setZoomLevel(Number(e.target.value))}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-          />
-          <div className="flex justify-between text-[10px] text-gray-400">
-            <span>25%</span>
-            <button onClick={() => setZoomLevel(1)} className="hover:text-blue-500">{t('properties.reset')}</button>
-            <span>300%</span>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>{t('properties.headerHeight')}</Label>
-          <Input
-            type="number"
-            value={header.height}
-            onFocus={(e) => e.target.select()}
-            onChange={(e) => setSectionHeight('header', Math.min(500, Number(e.target.value)))}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>{t('properties.bodyHeight')}</Label>
-          <Input
-            type="number"
-            value={body.height}
-            onFocus={(e) => e.target.select()}
-            onChange={(e) => setSectionHeight('body', Math.min(500, Number(e.target.value)))}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>{t('properties.footerHeight')}</Label>
-          <Input
-            type="number"
-            value={footer.height}
-            onFocus={(e) => e.target.select()}
-            onChange={(e) => setSectionHeight('footer', Math.min(500, Number(e.target.value)))}
-          />
-        </div>
-
-        <div className="pt-4 border-t mt-4 space-y-2">
-          <div className="flex justify-between items-center mb-1">
-            <p className="text-[10px] text-gray-400 uppercase font-bold">{t('properties.previewFullOutput')}</p>
-            <div className="flex gap-1 bg-gray-100 p-0.5 rounded">
-              <button
-                onClick={() => setPreviewMode('zpl')}
-                className={`text-[9px] px-2 py-0.5 rounded ${previewMode === 'zpl' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}
-              >
-                ZPL
-              </button>
-              <button
-                onClick={() => setPreviewMode('text')}
-                className={`text-[9px] px-2 py-0.5 rounded ${previewMode === 'text' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}
-              >
-                TEXT
-              </button>
-            </div>
-          </div>
-          <pre className="text-[9px] bg-gray-50 p-2 border rounded overflow-x-auto h-48 whitespace-pre-wrap break-all">
-            {previewMode === 'zpl'
-              ? renderZPLPreview(generateZPL(header, body, footer, 1, false, canvasWidth))
-              : generateLinePrint(header, body, footer, 1, false, canvasWidth)
-            }
-          </pre>
-        </div>
-      </div>
-    );
-  }
-
-  // Find the element
-  const section = selectedSection === 'header' ? header : selectedSection === 'body' ? body : footer;
-  const element = section.elements.find(el => el.id === selectedElementId);
-
-  if (!element) return <div className="p-4">Element not found</div>;
-
-  // Generate ZPL for this specific element only
-  const zplCode = generateElementZPL(element, false, 0);
-  const zplCodePreview = zplCode.length > 2000
-    ? zplCode.substring(0, 2000) + '\n... [Truncated for Preview]'
-    : zplCode;
-
-  const handleChange = <K extends keyof CanvasElement>(key: K, value: CanvasElement[K]) => {
-    updateElement(selectedSection!, selectedElementId!, { [key]: value } as Partial<CanvasElement>);
-
-    // If resizing an image, re-process the ZPL data to match new dimensions
-    if (element.type === 'image' && element.imageBase64 && (key === 'width' || key === 'height')) {
-      const newWidth = Number(key === 'width' ? value : element.width);
-      const newHeight = Number(key === 'height' ? value : element.height);
-
-      // Convert screen pixels (value) back to physical mm, then to ZPL dots
-      // widthPx / MM_TO_PX = widthMm
-      // widthMm * DOTS_PER_MM = widthDots
-      const DOTS_PER_MM = 8;
-      const widthDots = Math.round((newWidth / MM_TO_PX) * DOTS_PER_MM);
-      const heightDots = Math.round((newHeight / MM_TO_PX) * DOTS_PER_MM);
-
-      // We use a small timeout to debounce/avoid blocking UI if typing fast, 
-      // though for input onBlur it's fine.
-      imageToZPL(element.imageBase64, widthDots, heightDots).then(result => {
-        updateElement(selectedSection!, selectedElementId!, {
-          zplImage: {
-            hex: result.zplHex,
-            totalBytes: result.totalBytes,
-            bytesPerRow: result.bytesPerRow
-          },
-          // We don't update width/height here to avoid loops, as we just used them as input
-        });
-      }).catch(err => console.error("Failed to re-process resized image", err));
+  const align = (to: AlignTo) => {
+    const left = Math.min(...movable.map(el => el.x));
+    const right = Math.max(...movable.map(el => el.x + el.width));
+    const top = Math.min(...movable.map(el => el.y));
+    const patches: Record<string, Partial<TemplateElement>> = {};
+    for (const el of movable) {
+      const x = to === 'left' ? left : to === 'right' ? right - el.width : to === 'center' ? (left + right) / 2 - el.width / 2 : el.x;
+      patches[el.id] = { x: Math.round(x * 100) / 100, y: to === 'top' ? top : el.y };
     }
+    s.updateElements(band.id, patches);
   };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      // Convert to ZPL and Base64
-      // We limit to 800x800 for reasonable ZPL size
-      const result = await imageToZPL(file, 800, 800);
-
-      // Calculate scaled dimensions (mm -> px)
-      // ZPL is 8 dots/mm. result.width is in dots.
-      // widthMm = result.width / 8
-      // widthPx = widthMm * MM_TO_PX
-      const DOTS_PER_MM = 8;
-      const scaledWidth = (result.width / DOTS_PER_MM) * MM_TO_PX;
-      const scaledHeight = (result.height / DOTS_PER_MM) * MM_TO_PX;
-
-      updateElement(selectedSection!, selectedElementId!, {
-        imageBase64: result.base64,
-        zplImage: {
-          hex: result.zplHex,
-          totalBytes: result.totalBytes,
-          bytesPerRow: result.bytesPerRow
-        },
-        // Clear preset key if setting custom
-        imageKey: undefined,
-        // Update dimensions to match result (scaled to screen px)
-        width: scaledWidth,
-        height: scaledHeight
-      });
-
-      // Reset input value to allow re-upload of same file
-      e.target.value = '';
-    } catch (err) {
-      console.error("Image upload failed", err);
-      alert("Failed to process image.");
-    }
-  };
-
-  const handleImageKeyChange = (val: string) => {
-    if (val) {
-      // If selecting a preset, clear custom image
-      updateElement(selectedSection!, selectedElementId!, {
-        imageKey: val,
-        imageBase64: undefined,
-        zplImage: undefined
-      });
-    } else {
-      handleChange('imageKey', val);
-    }
-  };
-
-
-  let sectionDataSources = selectedSection === 'body'
-    ? ALL_DATA_SOURCES
-    : GLOBAL_DATA_SOURCES;
-
-  // Filter based on element type and specific requirements
-  if (element.type === 'barcode') {
-    if (element.barcodeType === 'qr') {
-      // User Request: QR Code -> GibInfo
-      sectionDataSources = sectionDataSources.filter(ds => ds.id === 'GibInfo');
-    } else {
-      // User Request: Code 128 -> Product Barcode (or similar identifiers)
-      // We filter for fields that look like barcodes or codes
-      sectionDataSources = sectionDataSources.filter(ds =>
-        ds.id === 'Barcode' ||
-        ds.id === 'Product.Sku' ||
-        ds.id === 'DocNumber' ||
-        ds.id === 'ETTN'
-      );
-    }
-  }
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex justify-between items-center border-b pb-2">
-        <h3 className="font-bold text-gray-800">{t('properties.elementProperties')}</h3>
-        <Button size="sm" variant="ghost" onClick={() => selectElement(null, null)}>{t('properties.close')}</Button>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-gray-800">{t('selection.count', { count: elements.length })}</h3>
+        <Button size="sm" variant="ghost" onClick={() => s.select({ bandId: band.id, ids: [] })}>{t('properties.close')}</Button>
       </div>
-
+      <Section title={t('selection.align')}>
+        <div className="grid grid-cols-4 gap-2">
+          <Button size="sm" variant="outline" title={t('selection.alignLeft')} onClick={() => align('left')}><AlignStartVertical size={14} /></Button>
+          <Button size="sm" variant="outline" title={t('selection.alignCenter')} onClick={() => align('center')}><AlignCenterVertical size={14} /></Button>
+          <Button size="sm" variant="outline" title={t('selection.alignRight')} onClick={() => align('right')}><AlignEndVertical size={14} /></Button>
+          <Button size="sm" variant="outline" title={t('selection.alignTop')} onClick={() => align('top')}><AlignStartHorizontal size={14} /></Button>
+        </div>
+      </Section>
       <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-2">
-          <Label htmlFor="prop-x">{t('properties.x')}</Label>
-          <Input id="prop-x" type="number" value={Math.round(element.x)} onFocus={(e) => e.target.select()} onChange={(e) => handleChange('x', Number(e.target.value))} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="prop-y">{t('properties.y')}</Label>
-          <Input id="prop-y" type="number" value={Math.round(element.y)} onFocus={(e) => e.target.select()} onChange={(e) => handleChange('y', Number(e.target.value))} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="prop-w">{t('properties.width')}</Label>
-          <Input id="prop-w" type="number" value={Math.round(element.width || 0)} onFocus={(e) => e.target.select()} onChange={(e) => handleChange('width', Number(e.target.value))} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="prop-h">{t('properties.height')}</Label>
-          <Input id="prop-h" type="number" value={Math.round(element.height || 0)} onFocus={(e) => e.target.select()} onChange={(e) => handleChange('height', Number(e.target.value))} />
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label>{t('properties.dataBinding')}</Label>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            className="w-1/2"
-            variant={!element.isDynamic ? 'default' : 'outline'}
-            onClick={() => handleChange('isDynamic', false)}
-          >
-            {t('properties.static')}
-          </Button>
-          <Button
-            size="sm"
-            className="w-1/2"
-            variant={element.isDynamic ? 'default' : 'outline'}
-            onClick={() => handleChange('isDynamic', true)}
-          >
-            {t('properties.dynamic')}
-          </Button>
-        </div>
-      </div>
-
-      {element.type === 'image' ? (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="prop-imagekey">{t('properties.presetImage')}</Label>
-            <Select id="prop-imagekey" value={element.imageKey || ''} onChange={(e) => handleImageKeyChange(e.target.value)}>
-              <option value="">{t('properties.noneCustom')}</option>
-              <option value="TenantLogo">{t('properties.tenantLogoDynamic')}</option>
-              <option value="GibLogo">{t('properties.gibLogoStandard')}</option>
-              <option value="GibQRCode">{t('properties.gibQrCodeAutomatic')}</option>
-            </Select>
-          </div>
-
-          <div className="pt-2 border-t mt-2">
-            <Label className="mb-2 block">{t('properties.customImageUpload')}</Label>
-            <Input type="file" accept="image/*" onChange={handleImageUpload} className="text-xs" />
-            <p className="text-[10px] text-gray-400 mt-1">{t('properties.uploadHelp')}</p>
-
-            {element.imageBase64 && (
-              <div className="mt-2 border p-2 rounded bg-white">
-                <p className="text-[10px] text-gray-500 mb-1">{t('properties.currentImage')}</p>
-                <img src={element.imageBase64} alt="Preview" className="max-w-full h-auto max-h-32 object-contain mx-auto" />
-              </div>
-            )}
-          </div>
-        </div>
-      ) : element.isDynamic ? (
-        <div className="space-y-2">
-          <Label htmlFor="prop-source">{t('properties.dataSource')}</Label>
-          <Select id="prop-source" value={element.dataSource || ''} onChange={(e) => handleChange('dataSource', e.target.value)}>
-            <option value="">{t('properties.selectSource')}</option>
-            {Object.entries(
-              sectionDataSources.reduce((groups, ds) => {
-                const parts = ds.id.split('.');
-                const groupName = parts.length > 1 ? parts[0] : 'General';
-                if (!groups[groupName]) groups[groupName] = [];
-                groups[groupName].push(ds);
-                return groups;
-              }, {} as Record<string, typeof sectionDataSources>)
-            ).sort((a, b) => a[0].localeCompare(b[0])) // Sort groups alphabetically
-              .map(([group, sources]) => (
-                <optgroup key={group} label={group}>
-                  {sources.map(ds => (
-                    <option key={ds.id} value={ds.id}>{ds.name}</option>
-                  ))}
-                </optgroup>
-              ))}
-          </Select>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <Label htmlFor="prop-content">{t('properties.content')}</Label>
-          <Input
-            id="prop-content"
-            value={element.content || ''}
-            onFocus={(e) => e.target.select()}
-            onChange={(e) => handleChange('content', e.target.value)}
-          />
-        </div>
-      )}
-
-      <div className="space-y-2">
-        <Label htmlFor="prop-fontsize">{t('properties.fontSize')}</Label>
-        <Input
-          id="prop-fontsize"
-          type="number"
-          value={element.fontSize || 12}
-          onFocus={(e) => e.target.select()}
-          onChange={(e) => handleChange('fontSize', Number(e.target.value))}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="prop-bold"
-            checked={element.fontBold || false}
-            onChange={(e) => handleChange('fontBold', e.target.checked)}
-            className="h-4 w-4 border border-input rounded shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          />
-          <Label htmlFor="prop-bold">{t('properties.bold')}</Label>
-        </div>
-      </div>
-
-      {
-        element.type === 'barcode' && (
-          <>
-            <div className="space-y-2">
-              <Label htmlFor="prop-barcodetype">{t('properties.barcodeType')}</Label>
-              <Select
-                id="prop-barcodetype"
-                value={element.barcodeType || 'code128'}
-                onChange={(e) => handleChange('barcodeType', e.target.value as CanvasElement['barcodeType'])}
-              >
-                <option value="code128">Code 128</option>
-                <option value="qr">QR Code</option>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="prop-showlabel"
-                  checked={element.showLabel ?? true}
-                  onChange={(e) => handleChange('showLabel', e.target.checked)}
-                  className="h-4 w-4 border border-input rounded shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
-                <Label htmlFor="prop-showlabel">{t('properties.showLabel')}</Label>
-              </div>
-            </div>
-          </>
-        )
-      }
-
-      <div className="space-y-2">
-        <Label htmlFor="prop-rotation">{t('properties.rotation')}</Label>
-        <Select
-          id="prop-rotation"
-          value={element.rotation || 0}
-          onChange={(e) => handleChange('rotation', Number(e.target.value))}
-        >
-          <option value={0}>{t('properties.normal')}</option>
-          <option value={90}>90°</option>
-          <option value={180}>180°</option>
-          <option value={270}>270°</option>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="prop-maxchars">{t('properties.maxCharacters')}</Label>
-        <Input id="prop-maxchars" type="number" value={element.maxChars || 0} onChange={(e) => handleChange('maxChars', Number(e.target.value))} />
-      </div>
-
-      <div className="pt-4 border-t mt-4 space-y-2">
-        {zplCode && (
-          <div className="mt-2">
-            <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">{t('properties.previewZplElement')}</p>
-            <pre className="text-[9px] bg-gray-50 p-2 border rounded overflow-x-auto h-32 whitespace-pre-wrap break-all">
-              {renderZPLPreview(zplCodePreview)}
-            </pre>
-          </div>
-        )}
-        <Button variant="outline" className="w-full text-red-500 hover:bg-red-50 hover:text-red-600 border-red-200" onClick={() => removeElement(selectedSection, selectedElementId)}>
-          {t('properties.deleteElement')}
+        <Button size="sm" variant="outline" onClick={() => s.duplicateSelection()}><Copy size={14} className="mr-1" />{t('properties.duplicate')}</Button>
+        <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => s.removeElements(band.id, movable.map(el => el.id))}>
+          <Trash2 size={14} className="mr-1" />{t('properties.delete')}
         </Button>
       </div>
-    </div >
+      <p className="text-[10px] text-gray-400">{t('selection.hint')}</p>
+    </div>
+  );
+}
+
+export const PropertiesPanel = () => {
+  const band = useSelectedBand();
+  const elements = useSelectedElements();
+  return (
+    <div className="p-4">
+      {!band ? <TemplateSettings />
+        : elements.length === 0 ? <BandProperties band={band} />
+          : elements.length === 1 ? <ElementProperties key={elements[0].id} band={band} element={elements[0]} />
+            : <MultiSelection band={band} elements={elements} />}
+    </div>
   );
 };

@@ -1,28 +1,16 @@
-import React from 'react';
+import { type ReactNode } from 'react';
 
 interface LayoutProps {
-  children: React.ReactNode;
-  sidebar: React.ReactNode;
-  propertiesPanel: React.ReactNode;
+  children: ReactNode;
+  sidebar: ReactNode;
+  propertiesPanel: ReactNode;
 }
 
-export const Layout = ({ children, sidebar, propertiesPanel }: LayoutProps) => {
-  return (
-    <div className="flex h-screen w-full bg-gray-100 overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-64 border-r bg-white flex flex-col">
-        {sidebar}
-      </aside>
-
-      {/* Main Content (Canvas) */}
-      <main className="flex-1 overflow-auto p-8 flex justify-center items-start">
-        {children}
-      </main>
-
-      {/* Right Sidebar (Properties) */}
-      <aside className="w-80 border-l bg-white flex flex-col">
-        {propertiesPanel}
-      </aside>
-    </div>
-  );
-};
+// Fills its container; the standalone app gives it the whole window.
+export const Layout = ({ children, sidebar, propertiesPanel }: LayoutProps) => (
+  <div className="flex h-full min-h-0 w-full bg-gray-100 overflow-hidden text-gray-900">
+    <aside className="w-64 shrink-0 border-r bg-white flex flex-col min-h-0">{sidebar}</aside>
+    <main className="flex-1 min-w-0 overflow-auto">{children}</main>
+    <aside className="w-80 shrink-0 border-l bg-white overflow-y-auto">{propertiesPanel}</aside>
+  </div>
+);

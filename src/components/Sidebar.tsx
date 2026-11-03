@@ -1,469 +1,170 @@
+import { useState, type ChangeEvent } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { saveAs } from 'file-saver';
-import { useEffect, useState } from 'react';
-import { Type, Square, Barcode, Image, QrCode, RotateCcw, RotateCw, Save, Trash, type LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Barcode, FilePlus, Image, Minus, QrCode, Redo2, Save, Square, Trash, Type, Undo2, type LucideIcon } from 'lucide-react';
+import { useStore } from 'zustand';
 import { cn } from '../lib/utils';
-import { PreviewModal } from './PreviewModal';
-import { useStore } from '../store/useStore';
+import { invoicePreset } from '../lib/presets';
+import { emptyTemplate, parseTemplate } from '../lib/templateIO';
+import { type ToolType } from '../lib/tools';
+import { useEditor, useEditorStore } from '../store/editorStore';
 import { Button } from './ui/Button';
-import { MM_TO_PX } from '../lib/constants';
-import { type CanvasElement } from '../types';
+import { PreviewModal } from './PreviewModal';
+import { CatalogPanel } from './CatalogPanel';
 
-interface SidebarItemProps {
-  type: string;
-  label: string;
-  icon: LucideIcon;
-  extraData?: Partial<CanvasElement>;
-}
+const TOOLS: { tool: ToolType; icon: LucideIcon }[] = [
+  { tool: 'text', icon: Type },
+  { tool: 'box', icon: Square },
+  { tool: 'line', icon: Minus },
+  { tool: 'barcode', icon: Barcode },
+  { tool: 'qr', icon: QrCode },
+  { tool: 'image', icon: Image },
+];
 
-export const SidebarItem = ({ type, label, icon: Icon, extraData }: SidebarItemProps) => {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `tool - ${type} -${label} `,
-    data: {
-      type: 'tool',
-      toolType: type,
-      ...extraData,
-    },
-  });
-
+function ToolItem({ tool, icon: Icon }: { tool: ToolType; icon: LucideIcon }) {
+  const { t } = useTranslation();
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `tool-${tool}`, data: { type: 'tool', tool } });
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={cn(
-        "flex items-center gap-2 p-3 mb-2 bg-white border rounded shadow-sm cursor-move hover:bg-gray-50 transition-colors",
-        isDragging && "opacity-50 ring-2 ring-blue-500"
-      )}
+      className={cn('flex items-center gap-2 p-2 bg-white border rounded shadow-sm cursor-grab hover:bg-gray-50 text-sm', isDragging && 'opacity-50 ring-2 ring-blue-500')}
     >
-      <Icon size={16} />
-      <span>{label}</span>
+      <Icon size={15} />
+      <span>{t(`tools.${tool}`)}</span>
     </div>
   );
-};
+}
 
-export const Sidebar = () => {
+export function Sidebar({ allowLocalTemplates = true }: { allowLocalTemplates?: boolean }) {
   const { t, i18n } = useTranslation();
-  const { clearCanvas, header, body, footer, canvasWidth, setTemplate, setCurrentTemplateName, savedTemplates, saveTemplate, loadTemplate, deleteTemplate, currentTemplateName } = useStore();
-  const [templateName, setTemplateName] = useState('');
+  const store = useEditorStore();
+  const templateName = useEditor(s => s.templateName);
+  const savedTemplates = useEditor(s => s.savedTemplates);
+  const canUndo = useStore(store.temporal, s => s.pastStates.length > 0);
+  const canRedo = useStore(store.temporal, s => s.futureStates.length > 0);
+  const [newName, setNewName] = useState('');
+  const [message, setMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null);
+  const s = store.getState();
 
-  const undo = () => useStore.temporal?.getState().undo();
-  const redo = () => useStore.temporal?.getState().redo();
-
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
-        if (e.shiftKey) {
-          redo();
-        } else {
-          undo();
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const handleSaveFile = async () => {
-    try {
-      const template = {
-        header,
-        body,
-        footer,
-        canvasWidth,
-        version: 1,
-        createdAt: new Date().toISOString()
-      };
-      const jsonString = JSON.stringify(template, null, 2);
-
-      const fileName = currentTemplateName
-        ? `${currentTemplateName}.json`
-        : `z-composer-template-${new Date().toISOString().slice(0, 10)}.json`;
-
-      console.log('Exporting with filename:', fileName);
-
-      // Try Native File System Access API first (Chrome/Edge/Opera)
-      if ('showSaveFilePicker' in window) {
-        try {
-          // File System Access API is not in TypeScript's DOM lib yet
-          const picker = window as Window & {
-            showSaveFilePicker: (options: object) => Promise<FileSystemFileHandle>;
-          };
-          const handle = await picker.showSaveFilePicker({
-            suggestedName: fileName,
-            types: [{
-              description: 'Z-Composer Template',
-              accept: { 'application/json': ['.json'] },
-            }],
-          });
-          const writable = await handle.createWritable();
-          await writable.write(jsonString);
-          await writable.close();
-          return;
-        } catch (err) {
-          // User cancelled or not allowed
-          if (err instanceof Error && err.name === 'AbortError') return;
-          console.warn('File System Access API failed, falling back to file-saver', err);
-        }
-      }
-
-      // Fallback to file-saver
-      const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
-      saveAs(blob, fileName);
-    } catch (error) {
-      console.error('Export failed:', error);
-      alert('Failed to export template. Check console for details.');
-    }
-  };
-
-  const handleLoadFile = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
+  const exportFile = async () => {
+    const { template, templateName } = store.getState();
+    const json = JSON.stringify(template, null, 2);
+    const fileName = `${templateName || `z-composer-${new Date().toISOString().slice(0, 10)}`}.json`;
+    const picker = window as Window & { showSaveFilePicker?: (options: object) => Promise<FileSystemFileHandle> };
+    if (picker.showSaveFilePicker) {
       try {
-        const content = e.target?.result as string;
-        const template = JSON.parse(content);
-
-        // Basic validation
-        if (!template.header || !template.body || !template.footer) {
-          alert('Invalid template file format');
-          return;
-        }
-
-        const name = (file.name || 'imported-template').replace(/\.json$/i, '');
-        setTemplate(template);
-        setCurrentTemplateName(name);
-      } catch (error) {
-        console.error('Failed to parse template:', error);
-        alert('Failed to load template');
+        const handle = await picker.showSaveFilePicker({ suggestedName: fileName, types: [{ description: 'Z-Composer template', accept: { 'application/json': ['.json'] } }] });
+        const writable = await handle.createWritable();
+        await writable.write(json);
+        await writable.close();
+        return;
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
       }
-      // Reset input
-      event.target.value = '';
-    };
-    reader.readAsText(file);
-  };
-
-  const handleSaveLocal = () => {
-    if (!templateName.trim()) return alert('Please enter a template name');
-    saveTemplate(templateName);
-    setTemplateName('');
-  };
-
-  const handleUpdateTemplate = () => {
-    if (currentTemplateName) {
-      saveTemplate(currentTemplateName);
-      // Optional: Visual feedback
-      // alert('Template updated!');
     }
+    saveAs(new Blob([json], { type: 'application/json;charset=utf-8' }), fileName);
+  };
+
+  const importFile = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    file.text().then(content => {
+      try {
+        s.setTemplate(parseTemplate(JSON.parse(content)), file.name.replace(/\.json$/i, ''));
+        setMessage(null);
+      } catch (e) {
+        setMessage({ kind: 'error', text: t('files.importFailed', { reason: e instanceof Error ? e.message : String(e) }) });
+      }
+    });
+  };
+
+  const saveAsNew = () => {
+    const name = newName.trim();
+    if (!name) return;
+    const error = s.saveTemplate(name);
+    setMessage(error ? { kind: 'error', text: t('files.saveFailed', { reason: error }) } : { kind: 'info', text: t('files.saved', { name }) });
+    if (!error) setNewName('');
   };
 
   return (
-    <div className="p-4 flex flex-col h-full overflow-y-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold text-gray-800">{t('toolbox.title')}</h2>
-        <div className="flex gap-1 items-center">
-          <div className="flex bg-gray-100 rounded mr-2 p-0.5 gap-0.5">
-            <button
-              onClick={() => changeLanguage('tr')}
-              className={cn("text-[10px] px-2 h-6 rounded transition-colors", i18n.resolvedLanguage === 'tr' ? "bg-white shadow text-blue-600 font-bold" : "text-gray-500 hover:text-gray-700")}
-            >
-              TR
-            </button>
-            <button
-              onClick={() => changeLanguage('en')}
-              className={cn("text-[10px] px-2 h-6 rounded transition-colors", i18n.resolvedLanguage === 'en' ? "bg-white shadow text-blue-600 font-bold" : "text-gray-500 hover:text-gray-700")}
-            >
-              EN
-            </button>
-          </div>
-
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => undo()} title="Undo (Ctrl+Z)">
-            <RotateCcw size={14} />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => redo()} title="Redo (Ctrl+Shift+Z)">
-            <RotateCw size={14} />
-          </Button>
-        </div>
-      </div>
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">{t('toolbox.basicElements')}</h3>
-          <SidebarItem type="text" label={t('toolbox.textField')} icon={Type} />
-          <SidebarItem type="box" label={t('toolbox.boxLine')} icon={Square} />
-          <SidebarItem type="barcode" label={t('toolbox.barcode')} icon={Barcode} />
-        </div>
-
-        <div>
-          <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">{t('toolbox.visualElements')}</h3>
-          <SidebarItem type="image" label={t('toolbox.tenantLogo')} icon={Image} extraData={{ imageKey: 'TenantLogo' }} />
-          <SidebarItem type="image" label={t('toolbox.gibLogo')} icon={Image} extraData={{ imageKey: 'GibLogo' }} />
-          <SidebarItem type="barcode" label={t('toolbox.gibQrCode')} icon={QrCode} extraData={{ barcodeType: 'qr', dataSource: 'GibInfo', isDynamic: true, width: 80, height: 80 }} />
-        </div>
-      </div>
-
-      <div className="pt-4 border-t mt-4 space-y-2">
-        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">{t('toolbox.savedTemplates')}</h3>
-
-        {/* Update Button for Current Template */}
-        {currentTemplateName && (
-          <div className="mb-2">
-            <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white h-7 text-xs" onClick={handleUpdateTemplate}>
-              {t('toolbox.update', { name: currentTemplateName })}
-            </Button>
-          </div>
-        )}
-
-        <div className="flex gap-2">
-          <input
-            className="flex-1 text-xs border rounded px-2 h-8"
-            placeholder={t('toolbox.newTemplatePlaceholder')}
-            value={templateName}
-            onChange={(e) => setTemplateName(e.target.value)}
-          />
-          <Button size="sm" variant="outline" className="h-8" onClick={handleSaveLocal} title={t('toolbox.saveNew')}>
-            <Save size={14} />
-          </Button>
-        </div>
-        <div className="max-h-32 overflow-y-auto space-y-1 mt-2">
-          {savedTemplates.length === 0 && <p className="text-[10px] text-gray-400">{t('toolbox.noSavedTemplates')}</p>}
-          {savedTemplates.map(template => (
-            <div
-              key={template.name}
-              className={cn(
-                "flex justify-between items-center text-xs p-1 rounded group",
-                currentTemplateName === template.name ? "bg-blue-50 border border-blue-100" : "bg-gray-50 border border-transparent"
-              )}
-            >
-              <span className="truncate flex-1 cursor-pointer hover:text-blue-600" onClick={() => loadTemplate(template.name)}>
-                {template.name}
-                {currentTemplateName === template.name && <span className="ml-1 text-[9px] text-blue-400">{t('toolbox.active')}</span>}
-              </span>
-              <button className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteTemplate(template.name)}>
-                <Trash size={12} />
+    <div className="p-4 flex flex-col gap-5 h-full overflow-y-auto">
+      <div className="flex justify-between items-center">
+        <h2 className="text-base font-bold text-gray-800">Z-Composer</h2>
+        <div className="flex items-center gap-1">
+          <div className="flex bg-gray-100 rounded p-0.5 gap-0.5" role="group" aria-label="Language">
+            {['tr', 'en'].map(lng => (
+              <button key={lng} type="button" onClick={() => i18n.changeLanguage(lng)}
+                className={cn('text-[10px] px-2 h-6 rounded uppercase', i18n.resolvedLanguage === lng ? 'bg-white shadow text-blue-600 font-bold' : 'text-gray-500')}>
+                {lng}
               </button>
-            </div>
-          ))}
+            ))}
+          </div>
+          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={!canUndo} onClick={() => store.temporal.getState().undo()} title={t('toolbar.undo')} aria-label={t('toolbar.undo')}><Undo2 size={14} /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={!canRedo} onClick={() => store.temporal.getState().redo()} title={t('toolbar.redo')} aria-label={t('toolbar.redo')}><Redo2 size={14} /></Button>
         </div>
       </div>
 
-
-      <div className="pt-4 border-t mt-auto space-y-2">
-        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">{t('toolbox.fileOperations')}</h3>
-        <div className="mb-2">
-          <Button variant="ghost" className="w-full text-[10px] text-gray-400 h-6" onClick={() => {
-            for (let i = 0; i < 50; i++) {
-              const id = Math.random().toString(36).substr(2, 9);
-              useStore.getState().addElement('body', {
-                id, type: 'text', x: (i % 5) * 20, y: Math.floor(i / 5) * 10,
-                content: `Item ${i} `, fontSize: 8, isDynamic: false, width: 40, height: 10
-              });
-            }
-          }}>{t('toolbox.addTestElements')}</Button>
+      <section>
+        <h3 className="text-xs font-semibold text-gray-400 uppercase mb-2">{t('toolbox.title')}</h3>
+        <div className="grid grid-cols-2 gap-2">
+          {TOOLS.map(tool => <ToolItem key={tool.tool} {...tool} />)}
         </div>
+        <p className="text-[10px] text-gray-400 mt-2">{t('toolbox.hint')}</p>
+      </section>
+
+      <CatalogPanel />
+
+      {allowLocalTemplates && (
+        <section className="space-y-2">
+          <h3 className="text-xs font-semibold text-gray-400 uppercase">{t('files.savedTemplates')}</h3>
+          {templateName && savedTemplates.some(x => x.name === templateName) && (
+            <Button size="sm" className="w-full h-7 text-xs bg-blue-600 hover:bg-blue-700" onClick={() => {
+              const error = s.saveTemplate(templateName);
+              setMessage(error ? { kind: 'error', text: t('files.saveFailed', { reason: error }) } : { kind: 'info', text: t('files.saved', { name: templateName }) });
+            }}>
+              {t('files.update', { name: templateName })}
+            </Button>
+          )}
+          <div className="flex gap-2">
+            <input className="flex-1 min-w-0 text-xs border rounded px-2 h-8" placeholder={t('files.newName')} value={newName}
+              onChange={e => setNewName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') saveAsNew(); }} aria-label={t('files.newName')} />
+            <Button size="sm" variant="outline" className="h-8" onClick={saveAsNew} title={t('files.saveNew')} aria-label={t('files.saveNew')}><Save size={14} /></Button>
+          </div>
+          <ul className="max-h-32 overflow-y-auto space-y-1">
+            {savedTemplates.length === 0 && <li className="text-[10px] text-gray-400">{t('files.none')}</li>}
+            {savedTemplates.map(saved => (
+              <li key={saved.name} className={cn('flex items-center text-xs rounded group border', templateName === saved.name ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-transparent')}>
+                <button type="button" className="flex-1 truncate text-left p-1 hover:text-blue-600" onClick={() => s.loadTemplate(saved.name)}>{saved.name}</button>
+                <button type="button" aria-label={t('files.delete', { name: saved.name })} className="p-1 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                  onClick={() => { if (window.confirm(t('files.confirmDelete', { name: saved.name }))) s.deleteTemplate(saved.name); }}>
+                  <Trash size={12} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="space-y-2 mt-auto">
+        <h3 className="text-xs font-semibold text-gray-400 uppercase">{t('files.title')}</h3>
+        {message && <p className={cn('text-[11px]', message.kind === 'error' ? 'text-red-600' : 'text-green-700')} role="status">{message.text}</p>}
         <div className="grid grid-cols-3 gap-2">
-          <Button variant="outline" className="text-xs h-8 px-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={clearCanvas}>
-            {t('toolbox.clear')}
+          <Button variant="outline" className="text-xs h-8 px-0" onClick={() => { if (window.confirm(t('files.confirmNew'))) s.setTemplate(emptyTemplate()); }}>
+            <FilePlus size={13} className="mr-1" />{t('files.new')}
           </Button>
-          <Button variant="outline" className="text-xs h-8 px-0" onClick={handleSaveFile} title="Download JSON">
-            {t('toolbox.export')}
-          </Button>
-          <Button variant="outline" className="text-xs h-8 px-0" onClick={() => document.getElementById('load-template-input')?.click()} title="Upload JSON">
-            {t('toolbox.import')}
-          </Button>
-          <input
-            type="file"
-            id="load-template-input"
-            className="hidden"
-            accept=".json"
-            onChange={handleLoadFile}
-          />
+          <Button variant="outline" className="text-xs h-8 px-0" onClick={() => void exportFile()}>{t('files.export')}</Button>
+          <label className="inline-flex items-center justify-center rounded-md border border-input text-xs h-8 shadow-sm cursor-pointer hover:bg-gray-50">
+            {t('files.import')}
+            <input type="file" accept=".json,application/json" className="sr-only" onChange={importFile} />
+          </label>
         </div>
-
-        <Button variant="outline" className="w-full text-xs" onClick={() => {
-          loadInvoiceTemplate();
-        }}>
-          {t('toolbox.loadPresetInvoice')}
-        </Button>
+        <Button variant="outline" className="w-full text-xs" onClick={() => s.setTemplate(invoicePreset(), t('files.presetName'))}>{t('files.loadPreset')}</Button>
         <PreviewModal />
-      </div>
+      </section>
     </div>
   );
-};
-
-// Helper to load template
-// import { useStore } from '../store/useStore'; // Already imported at top
-// import { Button } from './ui/Button'; // Already imported
-// import { MM_TO_PX } from '../lib/constants'; // Already imported
-
-const loadInvoiceTemplate = () => {
-  const { addElement, clearCanvas, setSectionHeight, canvasWidth, setCurrentTemplateName } = useStore.getState();
-
-  clearCanvas();
-  setCurrentTemplateName('Varsayilan Fatura');
-
-  // Set Heights roughly based on the receipt photo
-  setSectionHeight('header', 65); // Reduced from 130 to remove gap (content ends approx ~235px)
-  setSectionHeight('body', 6); // Compact rows
-  setSectionHeight('footer', 60); // Totals and signatures
-
-  const generateId = () => Math.random().toString(36).substr(2, 9);
-  const widthPx = canvasWidth * MM_TO_PX;
-  const centerX = widthPx / 2;
-  const padding = 10;
-  const safeWidth = widthPx - (padding * 2);
-
-  // --- HEADER ---
-
-  // 1. GIB Logo (Top Center)
-  addElement('header', {
-    id: generateId(), type: 'image', x: centerX - 20, y: 5, width: 40, height: 40, imageKey: 'GibLogo', isDynamic: false
-  });
-
-  // 2. Tenant Logo (Below GIB)
-  addElement('header', {
-    id: generateId(), type: 'image', x: centerX - 30, y: 50, width: 60, height: 20, imageKey: 'TenantLogo', isDynamic: false
-  });
-
-  // 3. e-Fatura Label
-  addElement('header', {
-    id: generateId(), type: 'text', x: centerX - 15, y: 75, fontSize: 8, content: 'e-Fatura', isDynamic: false
-  });
-
-  // 4. Tenant Details (Left Aligned Block) - reduced font size
-  let currentY = 90;
-  addElement('header', { id: generateId(), type: 'text', x: padding, y: currentY, fontSize: 8, fontBold: true, isDynamic: true, dataSource: 'Tenant.Name', maxChars: 40 });
-  currentY += 10;
-  addElement('header', { id: generateId(), type: 'text', x: padding, y: currentY, fontSize: 8, isDynamic: true, dataSource: 'Tenant.Address', maxChars: 50 });
-  currentY += 15; // Gap
-
-  // 5. Tenant Tax Info & Contact
-  addElement('header', { id: generateId(), type: 'text', x: padding, y: currentY, fontSize: 8, content: 'Tel: ', isDynamic: false });
-  addElement('header', { id: generateId(), type: 'text', x: padding + 20, y: currentY, fontSize: 8, isDynamic: true, dataSource: 'Tenant.Phone' });
-
-  // Align Tax info to right of the same line
-  const rightColX = widthPx / 2 + 20;
-  addElement('header', { id: generateId(), type: 'text', x: rightColX, y: currentY, fontSize: 8, content: 'VKN:', isDynamic: false });
-  addElement('header', { id: generateId(), type: 'text', x: rightColX + 25, y: currentY, fontSize: 8, isDynamic: true, dataSource: 'Tenant.TaxNumber' });
-
-  currentY += 10;
-  addElement('header', { id: generateId(), type: 'text', x: rightColX, y: currentY, fontSize: 8, content: 'V.D.:', isDynamic: false });
-  addElement('header', { id: generateId(), type: 'text', x: rightColX + 25, y: currentY, fontSize: 8, isDynamic: true, dataSource: 'Tenant.TaxOffice' });
-
-  currentY += 15; // Gap
-
-  // 6. Invoice Details (Grid)
-  // Row 1: Belge No | Tarih
-  addElement('header', { id: generateId(), type: 'text', x: padding, y: currentY, fontSize: 8, content: 'Belge No:', isDynamic: false });
-  addElement('header', { id: generateId(), type: 'text', x: padding + 40, y: currentY, fontSize: 8, isDynamic: true, dataSource: 'DocNumber' });
-
-  addElement('header', { id: generateId(), type: 'text', x: rightColX, y: currentY, fontSize: 8, content: 'Tarih:', isDynamic: false });
-  addElement('header', { id: generateId(), type: 'text', x: rightColX + 30, y: currentY, fontSize: 8, isDynamic: true, dataSource: 'DocDate' });
-
-  currentY += 10;
-  // Row 2: Saat | ETTN (simplified grid)
-  addElement('header', { id: generateId(), type: 'text', x: padding, y: currentY, fontSize: 8, content: 'Saat:', isDynamic: false });
-  addElement('header', { id: generateId(), type: 'text', x: padding + 40, y: currentY, fontSize: 8, isDynamic: true, dataSource: 'DocTime' });
-
-  addElement('header', { id: generateId(), type: 'text', x: rightColX, y: currentY, fontSize: 8, content: 'ETTN:', isDynamic: false });
-  addElement('header', { id: generateId(), type: 'text', x: rightColX + 30, y: currentY, fontSize: 8, isDynamic: true, dataSource: 'ETTN', maxChars: 15 });
-
-  currentY += 10;
-  // Row 3: Vade | Tip
-  addElement('header', { id: generateId(), type: 'text', x: padding, y: currentY, fontSize: 8, content: 'Vade:', isDynamic: false });
-  addElement('header', { id: generateId(), type: 'text', x: padding + 40, y: currentY, fontSize: 8, isDynamic: true, dataSource: 'PaymentDueDate' });
-
-  addElement('header', { id: generateId(), type: 'text', x: rightColX, y: currentY, fontSize: 8, content: 'Tip:', isDynamic: false });
-  addElement('header', { id: generateId(), type: 'text', x: rightColX + 30, y: currentY, fontSize: 8, isDynamic: true, dataSource: 'PaymentType' });
-
-  currentY += 20;
-
-  // 7. Customer Info
-  addElement('header', { id: generateId(), type: 'text', x: padding, y: currentY, fontSize: 8, fontBold: true, content: 'SAYIN', isDynamic: false });
-  addElement('header', { id: generateId(), type: 'text', x: padding + 30, y: currentY, fontSize: 8, isDynamic: true, dataSource: 'Customer.Name' });
-
-  currentY += 10;
-  addElement('header', { id: generateId(), type: 'text', x: padding, y: currentY, fontSize: 8, isDynamic: true, dataSource: 'Customer.Street1', maxChars: 50 });
-
-  currentY += 15;
-  // 8. Title "*** SATIS FATURASI ***"
-  addElement('header', { id: generateId(), type: 'text', x: centerX - 50, y: currentY, fontSize: 9, fontBold: true, content: '*** SATIS FATURASI ***', isDynamic: false });
-
-  currentY += 15;
-  // 9. Table Headers
-  const col1 = padding;
-  // Add right padding: shift columns left by 10px
-  // Add right padding: shift columns left by 10px
-  const rightPadding = 10;
-  // Shift Unit (col3) and Quantity (col2) further left to avoid overlap with Price (col4)
-  const colShift = 15;
-  const col2 = widthPx - 160 - rightPadding - colShift;
-  const col3 = widthPx - 110 - rightPadding - colShift;
-  const col4 = widthPx - 70 - rightPadding;
-  const col5 = widthPx - 30 - rightPadding; // Shifted left to leave space
-
-  addElement('header', { id: generateId(), type: 'text', x: col1, y: currentY, fontSize: 8, fontBold: true, content: 'Urun', isDynamic: false });
-  addElement('header', { id: generateId(), type: 'text', x: col2, y: currentY, fontSize: 8, fontBold: true, content: 'Miktar', isDynamic: false });
-  addElement('header', { id: generateId(), type: 'text', x: col3, y: currentY, fontSize: 8, fontBold: true, content: 'Birim', isDynamic: false });
-  addElement('header', { id: generateId(), type: 'text', x: col4, y: currentY, fontSize: 8, fontBold: true, content: 'Fiyat', isDynamic: false });
-  addElement('header', { id: generateId(), type: 'text', x: col5, y: currentY, fontSize: 8, fontBold: true, content: 'Tutar', isDynamic: false });
-
-  // Separator Line
-  addElement('header', { id: generateId(), type: 'box', x: padding, y: currentY + 12, width: safeWidth, height: 2, isDynamic: false });
-
-
-  // --- BODY ---
-  // Single Row Layout matching headers
-  addElement('body', { id: generateId(), type: 'text', x: col1, y: 3, fontSize: 8, isDynamic: true, dataSource: 'Product.Name', maxChars: 18 });
-  addElement('body', { id: generateId(), type: 'text', x: col2, y: 3, fontSize: 8, isDynamic: true, dataSource: 'Quantity' });
-  addElement('body', { id: generateId(), type: 'text', x: col3, y: 3, fontSize: 8, isDynamic: true, dataSource: 'Unit.Name' }); // Using Unit.Name
-  addElement('body', { id: generateId(), type: 'text', x: col4, y: 3, fontSize: 8, isDynamic: true, dataSource: 'Price' });
-  addElement('body', { id: generateId(), type: 'text', x: col5, y: 3, fontSize: 8, isDynamic: true, dataSource: 'Total' });
-
-
-  // --- FOOTER ---
-  let footerY = 5;
-  const labelsX = widthPx - 180 - rightPadding; // Apply same padding shift
-  const valuesX = widthPx - 80 - rightPadding;  // Apply same padding shift
-
-  // Totals Block
-  addElement('footer', { id: generateId(), type: 'text', x: labelsX, y: footerY, fontSize: 8, content: 'Ara Toplam:', isDynamic: false });
-  addElement('footer', { id: generateId(), type: 'text', x: valuesX, y: footerY, fontSize: 8, isDynamic: true, dataSource: 'NetTotal' }); // Ara toplam = Net usually
-
-  footerY += 10;
-  addElement('footer', { id: generateId(), type: 'text', x: labelsX, y: footerY, fontSize: 8, content: 'Top. Indirim:', isDynamic: false });
-  addElement('footer', { id: generateId(), type: 'text', x: valuesX, y: footerY, fontSize: 8, isDynamic: true, dataSource: 'Discount' });
-
-  footerY += 10;
-  addElement('footer', { id: generateId(), type: 'text', x: labelsX, y: footerY, fontSize: 8, content: 'Top. KDV:', isDynamic: false });
-  addElement('footer', { id: generateId(), type: 'text', x: valuesX, y: footerY, fontSize: 8, isDynamic: true, dataSource: 'VatTotal' });
-
-  footerY += 10;
-  addElement('footer', { id: generateId(), type: 'text', x: labelsX, y: footerY, fontSize: 9, fontBold: true, content: 'GENEL TOPLAM:', isDynamic: false });
-  addElement('footer', { id: generateId(), type: 'text', x: valuesX, y: footerY, fontSize: 9, fontBold: true, isDynamic: true, dataSource: 'VatIncludeTotal' });
-
-  // Bottom Section
-  footerY += 20;
-  // Signatures
-  const sigY = footerY;
-  addElement('footer', { id: generateId(), type: 'text', x: padding, y: sigY, fontSize: 8, content: 'Teslim Eden: Imza', isDynamic: false });
-  addElement('footer', { id: generateId(), type: 'text', x: rightColX, y: sigY, fontSize: 8, content: 'Teslim Alan: Imza', isDynamic: false });
-
-  // Signature Box - Increased height
-  addElement('footer', { id: generateId(), type: 'box', x: padding, y: sigY + 5, width: safeWidth, height: 40, isDynamic: false });
-
-  // Disclaimer
-  addElement('footer', { id: generateId(), type: 'text', x: padding, y: sigY + 50, fontSize: 6, content: 'e-Fatura izni kapsaminda elektronik ortamda iletilmistir.', isDynamic: false });
-
-  // QR Code (Bottom Center) - Increased Size and using GibInfo
-  const qrSize = 80; // Bigger QR
-  addElement('footer', {
-    id: generateId(), type: 'barcode', barcodeType: 'qr', x: centerX - (qrSize / 2), y: sigY + 65, width: qrSize, height: qrSize, isDynamic: true, dataSource: 'GibInfo'
-  });
-};
+}
