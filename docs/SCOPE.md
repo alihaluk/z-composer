@@ -43,7 +43,7 @@ Every company's data structure is different, so fields are not hardcoded.
 - The current company-specific field list is replaced by a generic default invoice catalog.
 - A template keeps a snapshot (path + type) of the fields it uses, so it can report missing or changed fields when opened with a newer catalog.
 
-Sketch (final schema to be defined):
+Catalog file format (`catalogVersion` 1). Field types: `string`, `number`, `date`, `datetime`, `boolean`, `image`, `array`; paths follow the segment rules of docs/OUTPUT_SPEC.md section 5, and arrays cannot be nested:
 
 ```json
 {
@@ -145,7 +145,7 @@ Real-device checks are done on a Zebra ZQ521 (203 dpi, ZPL) with 3-inch roll pap
 
 Placeholder syntax and escaping, band and condition markers, length calculation, dynamic images, encoding and format codes are defined in [`docs/OUTPUT_SPEC.md`](./OUTPUT_SPEC.md).
 
-- Final catalog file schema, including fields of type `image` (roadmap step 6).
+- None at the moment; see docs/REVIEW_FINDINGS.md for known limitations.
 
 ## 5. Roadmap
 1. ~~Output specification~~ — done: [`docs/OUTPUT_SPEC.md`](./OUTPUT_SPEC.md).
@@ -153,7 +153,7 @@ Placeholder syntax and escaping, band and condition markers, length calculation,
 3. ~~Own preview renderer replacing Labelary (D7)~~ — done: `src/preview`. Still open: calibrating the font width table on the reference printer.
 4. ~~Template schema v2~~ — done: millimetre units, printer profile, bands, conditions, overflow and format, v1 migration; the ZPL output follows docs/OUTPUT_SPEC.md and line-print mode is removed.
 5. ~~Output correctness~~ — done: `^FH` escaping, bold text, images encoded at their current size, positions kept when moving between bands, plus `>` in Code 128 and `\` in field blocks (docs/REVIEW_FINDINGS.md).
-6. Field catalog — file format, sample JSON import, JSON Schema import, editor, generic default invoice catalog.
+6. ~~Field catalog~~ — done: file format, import from a sample JSON or a JSON Schema, editor, generic default invoice catalog, missing-field warnings and the `fieldsUsed` snapshot.
 7. Formats and preview — format codes, preview culture, sample-data canvas mode.
 8. Overflow modes (truncate / wrap / alignment).
 9. Editor ergonomics — multi-select, copy / paste / duplicate, Delete key, layer list, locking.

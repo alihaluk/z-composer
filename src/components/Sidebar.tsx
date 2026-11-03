@@ -1,12 +1,13 @@
-import { useState, type ChangeEvent } from 'react';
+import { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { saveAs } from 'file-saver';
 import { useTranslation } from 'react-i18next';
 import { Barcode, FilePlus, Image, Minus, QrCode, Redo2, Save, Square, Trash, Type, Undo2, type LucideIcon } from 'lucide-react';
 import { useStore } from 'zustand';
 import { cn } from '../lib/utils';
 import { invoicePreset } from '../lib/presets';
-import { emptyTemplate, parseTemplate } from '../lib/templateIO';
+import { emptyTemplate, parseTemplate, withFieldsUsed } from '../lib/templateIO';
+import { readJsonFile, saveJson } from '../lib/download';
+import { FileButton } from './ui/FileButton';
 import { type ToolType } from '../lib/tools';
 import { useEditor, useEditorStore } from '../store/editorStore';
 import { Button } from './ui/Button';
@@ -49,37 +50,19 @@ export function Sidebar({ allowLocalTemplates = true }: { allowLocalTemplates?: 
   const [message, setMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null);
   const s = store.getState();
 
-  const exportFile = async () => {
-    const { template, templateName } = store.getState();
-    const json = JSON.stringify(template, null, 2);
+  const exportFile = () => {
+    const { template, templateName, catalog } = store.getState();
     const fileName = `${templateName || `z-composer-${new Date().toISOString().slice(0, 10)}`}.json`;
-    const picker = window as Window & { showSaveFilePicker?: (options: object) => Promise<FileSystemFileHandle> };
-    if (picker.showSaveFilePicker) {
-      try {
-        const handle = await picker.showSaveFilePicker({ suggestedName: fileName, types: [{ description: 'Z-Composer template', accept: { 'application/json': ['.json'] } }] });
-        const writable = await handle.createWritable();
-        await writable.write(json);
-        await writable.close();
-        return;
-      } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return;
-      }
-    }
-    saveAs(new Blob([json], { type: 'application/json;charset=utf-8' }), fileName);
+    void saveJson(withFieldsUsed(template, catalog), fileName, 'Z-Composer template');
   };
 
-  const importFile = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    file.text().then(content => {
-      try {
-        s.setTemplate(parseTemplate(JSON.parse(content)), file.name.replace(/\.json$/i, ''));
-        setMessage(null);
-      } catch (e) {
-        setMessage({ kind: 'error', text: t('files.importFailed', { reason: e instanceof Error ? e.message : String(e) }) });
-      }
-    });
+  const importFile = async (file: File) => {
+    try {
+      s.setTemplate(parseTemplate(await readJsonFile(file)), file.name.replace(/\.json$/i, ''));
+      setMessage(null);
+    } catch (e) {
+      setMessage({ kind: 'error', text: t('files.importFailed', { reason: e instanceof Error ? e.message : String(e) }) });
+    }
   };
 
   const saveAsNew = () => {
@@ -156,11 +139,8 @@ export function Sidebar({ allowLocalTemplates = true }: { allowLocalTemplates?: 
           <Button variant="outline" className="text-xs h-8 px-0" onClick={() => { if (window.confirm(t('files.confirmNew'))) s.setTemplate(emptyTemplate()); }}>
             <FilePlus size={13} className="mr-1" />{t('files.new')}
           </Button>
-          <Button variant="outline" className="text-xs h-8 px-0" onClick={() => void exportFile()}>{t('files.export')}</Button>
-          <label className="inline-flex items-center justify-center rounded-md border border-input text-xs h-8 shadow-sm cursor-pointer hover:bg-gray-50">
-            {t('files.import')}
-            <input type="file" accept=".json,application/json" className="sr-only" onChange={importFile} />
-          </label>
+          <Button variant="outline" className="text-xs h-8 px-0" onClick={exportFile}>{t('files.export')}</Button>
+          <FileButton accept=".json,application/json" variant="outline" className="text-xs h-8 px-0" onFile={f => void importFile(f)}>{t('files.import')}</FileButton>
         </div>
         <Button variant="outline" className="w-full text-xs" onClick={() => s.setTemplate(invoicePreset(), t('files.presetName'))}>{t('files.loadPreset')}</Button>
         <PreviewModal />

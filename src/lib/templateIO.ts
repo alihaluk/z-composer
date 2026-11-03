@@ -1,4 +1,6 @@
 // Loading, validating and migrating template files.
+import { type Catalog } from './catalog';
+import { fieldsUsed, isValidPath } from './catalogIO';
 import { DPI_OPTIONS, roundMm } from './constants';
 import { type Band, type ElementType, type Template, type TemplateElement } from '../types';
 
@@ -24,6 +26,20 @@ function fail(message: string): never {
   throw new Error(`Invalid template: ${message}`);
 }
 
+/** A format is written inside a placeholder, so it cannot contain `|`, `}` or line breaks. */
+export const isValidFormat = (format: unknown) => typeof format === 'string' && format.length > 0 && !/[|}\r\n]/.test(format);
+
+// Paths end up in placeholders and markers (docs/OUTPUT_SPEC.md sections 4 and 5).
+function checkPath(path: unknown, where: string) {
+  if (path !== undefined && path !== '' && (typeof path !== 'string' || !isValidPath(path))) fail(`${where}: invalid field path ${JSON.stringify(path)}`);
+}
+
+function checkCondition(condition: unknown, where: string) {
+  if (condition === undefined) return;
+  if (!isObject(condition) || !['notEmpty', 'notZero'].includes(condition.op as string)) fail(`${where}: invalid condition`);
+  checkPath(condition.path, `${where} condition`);
+}
+
 function validateV2(t: Record<string, unknown>): Template {
   const printer = t.printer;
   if (!isObject(printer) || !isNumber(printer.widthMm) || printer.widthMm <= 0) fail('printer.widthMm must be a positive number');
@@ -31,9 +47,16 @@ function validateV2(t: Record<string, unknown>): Template {
   if (!Array.isArray(t.bands)) fail('bands must be an array');
   const bands = t.bands.map((b, i): Band => {
     if (!isObject(b) || typeof b.id !== 'string' || !isNumber(b.height) || b.height <= 0 || !Array.isArray(b.elements)) fail(`band ${i} needs id, a positive height and elements`);
+    checkPath(b.repeat, `band ${i} repeat`);
+    checkCondition(b.condition, `band ${i}`);
     const elements = b.elements.map((e, j): TemplateElement => {
-      if (!isObject(e) || typeof e.id !== 'string' || !ELEMENT_TYPES.includes(e.type as ElementType)) fail(`element ${j} of band ${i} needs an id and a known type`);
-      for (const key of ['x', 'y', 'width', 'height']) if (!isNumber(e[key])) fail(`element ${j} of band ${i}: ${key} must be a number`);
+      const where = `element ${j} of band ${i}`;
+      if (!isObject(e) || typeof e.id !== 'string' || !ELEMENT_TYPES.includes(e.type as ElementType)) fail(`${where} needs an id and a known type`);
+      for (const key of ['x', 'y', 'width', 'height']) if (!isNumber(e[key])) fail(`${where}: ${key} must be a number`);
+      checkPath(e.dataSource, `${where} dataSource`);
+      checkPath(e.imageKey, `${where} imageKey`);
+      checkCondition(e.condition, where);
+      if (e.format !== undefined && !isValidFormat(e.format)) fail(`${where}: invalid format`);
       return e as unknown as TemplateElement;
     });
     return { ...(b as unknown as Band), name: typeof b.name === 'string' ? b.name : `Band ${i + 1}`, elements };
@@ -90,6 +113,9 @@ export function migrateV1(t: { header: V1Section; body: V1Section; footer: V1Sec
     bands: [band('Header', t.header), band('Lines', t.body, 'Lines'), band('Footer', t.footer)],
   };
 }
+
+/** The template as it is saved: with the snapshot of the catalog fields it uses (docs/SCOPE.md D2). */
+export const withFieldsUsed = (template: Template, catalog: Catalog): Template => ({ ...template, fieldsUsed: fieldsUsed(template, catalog) });
 
 /** Accepts a parsed JSON template of any supported version and returns a v2 template. */
 export function parseTemplate(json: unknown): Template {

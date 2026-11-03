@@ -1,7 +1,20 @@
 {
-  "toolbar": { "undo": "Undo (Ctrl+Z)", "redo": "Redo (Ctrl+Shift+Z)" },
-  "toolbox": { "title": "Toolbox", "hint": "Drag a tool onto a band on the canvas." },
-  "tools": { "text": "Text", "box": "Box", "line": "Line", "barcode": "Barcode", "qr": "QR code", "image": "Image" },
+  "toolbar": {
+    "undo": "Undo (Ctrl+Z)",
+    "redo": "Redo (Ctrl+Shift+Z)"
+  },
+  "toolbox": {
+    "title": "Toolbox",
+    "hint": "Drag a tool onto a band on the canvas."
+  },
+  "tools": {
+    "text": "Text",
+    "box": "Box",
+    "line": "Line",
+    "barcode": "Barcode",
+    "qr": "QR code",
+    "image": "Image"
+  },
   "catalog": {
     "title": "Field Catalog",
     "fields": "{{count}} fields",
@@ -24,7 +37,11 @@
     "importFailed": "Catalog could not be loaded: {{reason}}",
     "missing": "The template uses {{count}} fields that are not in the catalog: {{paths}}",
     "close": "Close",
-    "confirmReset": "Switch back to the default catalog?"
+    "confirmReset": "Switch back to the default catalog?",
+    "skipped": "{{count}} keys skipped: {{list}}",
+    "cancel": "Cancel",
+    "apply": "Apply",
+    "sampleHint": "The example document used in previews (JSON). Avoid real customer data; it stays in the browser but may be shared with the catalog file."
   },
   "files": {
     "title": "File",

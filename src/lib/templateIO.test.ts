@@ -38,6 +38,10 @@ describe('parseTemplate', () => {
     [{ schemaVersion: 2, printer: { widthMm: 72, dpi: 204 }, bands: [] }, 'printer.dpi'],
     [{ schemaVersion: 2, printer: { widthMm: 72, dpi: 203 }, bands: [{ id: 'a', height: 0, elements: [] }] }, 'band 0'],
     [{ schemaVersion: 2, printer: { widthMm: 72, dpi: 203 }, bands: [{ id: 'a', height: 5, elements: [{ id: 'x', type: 'circle' }] }] }, 'known type'],
+    [{ schemaVersion: 2, printer: { widthMm: 72, dpi: 203 }, bands: [{ id: 'a', height: 5, repeat: 'Li nes', elements: [] }] }, 'invalid field path'],
+    [{ schemaVersion: 2, printer: { widthMm: 72, dpi: 203 }, bands: [{ id: 'a', height: 5, elements: [{ id: 'x', type: 'text', x: 0, y: 0, width: 1, height: 1, dataSource: 'a}}b' }] }] }, 'invalid field path'],
+    [{ schemaVersion: 2, printer: { widthMm: 72, dpi: 203 }, bands: [{ id: 'a', height: 5, elements: [{ id: 'x', type: 'text', x: 0, y: 0, width: 1, height: 1, format: 'N2|max=1' }] }] }, 'invalid format'],
+    [{ schemaVersion: 2, printer: { widthMm: 72, dpi: 203 }, bands: [{ id: 'a', height: 5, condition: { path: 'A', op: 'gt' }, elements: [] }] }, 'invalid condition'],
     [{ schemaVersion: 3 }, 'newer'],
     [{ foo: 1 }, 'unknown format'],
   ])('rejects %j', (json, message) => {

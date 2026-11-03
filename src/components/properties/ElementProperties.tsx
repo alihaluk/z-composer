@@ -78,7 +78,7 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
                         {fieldType !== 'number' && <option value="custom">{t('properties.formatCustom')}</option>}
                       </SelectInput>
                       {el.format && !(formats as readonly string[]).includes(el.format) && (
-                        <TextInput value={el.format} placeholder="dd.MM.yyyy HH:mm" onChange={format => update({ format: format || undefined })} />
+                        <TextInput value={el.format} placeholder="dd.MM.yyyy HH:mm" onChange={format => update({ format: format.replace(/[|}\r\n]/g, '') || undefined })} />
                       )}
                     </div>
                   )}

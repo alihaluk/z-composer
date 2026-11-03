@@ -1,7 +1,20 @@
 {
-  "toolbar": { "undo": "Geri al (Ctrl+Z)", "redo": "Yinele (Ctrl+Shift+Z)" },
-  "toolbox": { "title": "Araç Kutusu", "hint": "Bir aracı tuvaldeki bir banda sürükleyin." },
-  "tools": { "text": "Metin", "box": "Kutu", "line": "Çizgi", "barcode": "Barkod", "qr": "QR Kod", "image": "Görsel" },
+  "toolbar": {
+    "undo": "Geri al (Ctrl+Z)",
+    "redo": "Yinele (Ctrl+Shift+Z)"
+  },
+  "toolbox": {
+    "title": "Araç Kutusu",
+    "hint": "Bir aracı tuvaldeki bir banda sürükleyin."
+  },
+  "tools": {
+    "text": "Metin",
+    "box": "Kutu",
+    "line": "Çizgi",
+    "barcode": "Barkod",
+    "qr": "QR Kod",
+    "image": "Görsel"
+  },
   "catalog": {
     "title": "Alan Kataloğu",
     "fields": "{{count}} alan",
@@ -24,7 +37,11 @@
     "importFailed": "Katalog yüklenemedi: {{reason}}",
     "missing": "Şablonda katalogda olmayan {{count}} alan var: {{paths}}",
     "close": "Kapat",
-    "confirmReset": "Varsayılan kataloğa dönülsün mü?"
+    "confirmReset": "Varsayılan kataloğa dönülsün mü?",
+    "skipped": "{{count}} anahtar atlandı: {{list}}",
+    "cancel": "Vazgeç",
+    "apply": "Uygula",
+    "sampleHint": "Önizlemede kullanılan örnek belge (JSON). Gerçek müşteri verisi koymayın; tarayıcıda kalır ama şablonla birlikte paylaşılabilir."
   },
   "files": {
     "title": "Dosya",

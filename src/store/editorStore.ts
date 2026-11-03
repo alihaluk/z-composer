@@ -3,7 +3,8 @@ import { createStore, useStore, type StoreApi } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { temporal, type TemporalState } from 'zundo';
 import { DEFAULT_CATALOG, type Catalog } from '../lib/catalog';
-import { emptyTemplate, newId, parseTemplate } from '../lib/templateIO';
+import { parseCatalog } from '../lib/catalogIO';
+import { emptyTemplate, newId, parseTemplate, withFieldsUsed } from '../lib/templateIO';
 import { type Band, type PrinterProfile, type Template, type TemplateElement } from '../types';
 
 export interface SavedTemplate {
@@ -134,14 +135,26 @@ const mapBand = (template: Template, bandId: string, fn: (band: Band) => Band): 
 const cloneElements = (elements: TemplateElement[], offset: number) =>
   elements.map(el => ({ ...structuredClone(el), id: newId(), x: el.x + offset, y: el.y + offset }));
 
+function readCatalog(key: string | null): Catalog | null {
+  const raw = key ? storageGet(key) : null;
+  if (!raw) return null;
+  try {
+    return parseCatalog(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
 export function createEditorStore(options: EditorStoreOptions = {}): EditorStore {
   const storageKey = options.storageKey === undefined ? DEFAULT_STORAGE_KEY : options.storageKey;
+  // A catalog passed in by the host wins; otherwise the standalone app keeps the last one used.
+  const catalogKey = storageKey === null ? null : `${storageKey}_catalog`;
 
   return createStore<EditorState>()(
     temporal(
       (set, get) => ({
         template: options.template ?? emptyTemplate(),
-        catalog: options.catalog ?? DEFAULT_CATALOG,
+        catalog: options.catalog ?? readCatalog(catalogKey) ?? DEFAULT_CATALOG,
         templateName: options.templateName ?? null,
         selection: null,
         zoom: 1.5,
@@ -152,7 +165,16 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
 
         setTemplate: (template, name = null) => set({ template, templateName: name, selection: null }),
         setTemplateName: (templateName) => set({ templateName }),
-        setCatalog: (catalog) => set({ catalog }),
+        setCatalog: (catalog) => {
+          if (catalogKey && !options.catalog) {
+            try {
+              localStorage.setItem(catalogKey, JSON.stringify(catalog));
+            } catch {
+              // The catalog still applies to this session.
+            }
+          }
+          set({ catalog });
+        },
         updatePrinter: (patch) => set(s => ({ template: { ...s.template, printer: { ...s.template.printer, ...patch } } })),
 
         addBand: (afterBandId) => set(s => {
@@ -236,8 +258,8 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
         setPreviewLocale: (previewLocale) => set({ previewLocale }),
 
         saveTemplate: (name) => {
-          const { template, savedTemplates } = get();
-          const updated = [...savedTemplates.filter(t => t.name !== name), { name, template, savedAt: new Date().toISOString() }];
+          const { template, savedTemplates, catalog } = get();
+          const updated = [...savedTemplates.filter(t => t.name !== name), { name, template: withFieldsUsed(template, catalog), savedAt: new Date().toISOString() }];
           const error = writeSaved(storageKey, updated);
           if (!error) set({ savedTemplates: updated, templateName: name });
           return error;
