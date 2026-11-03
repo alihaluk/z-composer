@@ -1,0 +1,60 @@
+/*
+ * Library stylesheet. Tailwind's global reset (preflight) is left out so the host page keeps
+ * its own styles; the few resets the designer needs are scoped to .zc-root, and the utilities
+ * are scoped to it as well (tailwind.lib.config.js).
+ */
+@tailwind components;
+@tailwind utilities;
+
+.zc-root {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+.zc-root *,
+.zc-root *::before,
+.zc-root *::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+  /* Defaults that ring and shadow utilities expect from Tailwind's base layer. */
+  --tw-ring-inset: ;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+}
+
+.zc-root button,
+.zc-root input,
+.zc-root select,
+.zc-root textarea {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+}
+
+.zc-root button {
+  background-color: transparent;
+  background-image: none;
+  cursor: pointer;
+}
+
+.zc-root h1, .zc-root h2, .zc-root h3, .zc-root h4, .zc-root p, .zc-root dl, .zc-root dd, .zc-root pre, .zc-root ul {
+  margin: 0;
+}
+
+.zc-root ul {
+  list-style: none;
+  padding: 0;
+}
+
+.zc-root img,
+.zc-root canvas {
+  display: block;
+  max-width: 100%;
+}

@@ -1,27 +1,56 @@
 import { useEffect, useState } from 'react';
+import { I18nextProvider } from 'react-i18next';
 import { Layout } from './components/Layout';
 import { Sidebar } from './components/Sidebar';
 import { Editor } from './components/Editor';
 import { PropertiesPanel } from './components/PropertiesPanel';
+import { createI18n, defaultLocale, type Language } from './i18n';
+import { type Catalog } from './lib/catalog';
 import { loadGrayBitmap } from './lib/imageUtils';
-import { createEditorStore, EditorStoreContext, type EditorStore, type EditorStoreOptions } from './store/editorStore';
+import { withFieldsUsed } from './lib/templateIO';
+import { generateTemplateZpl } from './lib/zplTemplate';
+import { cn } from './lib/utils';
+import { createEditorStore, EditorStoreContext, type EditorStore } from './store/editorStore';
 import { type Template } from './types';
 
-export interface ZComposerProps extends EditorStoreOptions {
+export interface ZComposerSaveResult {
+  /** The template with its `fieldsUsed` snapshot. */
+  template: Template;
+  /** The ZPL template (docs/OUTPUT_SPEC.md). */
+  zpl: string;
+}
+
+export interface ZComposerProps {
+  /** Template to edit. Passing a different object later replaces the design. */
+  template?: Template;
+  /** Field catalog. Passing a different object later replaces it. */
+  catalog?: Catalog;
+  /** Interface language; detected from the browser when omitted. */
+  language?: Language;
+  /** Culture for sample values on the canvas and in the preview, e.g. "tr-TR". */
+  locale?: string;
+  /** localStorage key for the saved-templates list; null hides the list. */
+  storageKey?: string | null;
+  /** Whether users can import, edit and replace the catalog. Defaults to true. */
+  catalogEditable?: boolean;
   /** Called after every change of the template. */
   onChange?: (template: Template) => void;
+  /** Shows a Save button that hands the template and its ZPL to the host. */
+  onSave?: (result: ZComposerSaveResult) => void;
+  className?: string;
 }
 
 /** Templates migrated from v1 carry their uploaded image but no bitmap for ZPL output yet. */
 function useBitmapRepair(store: EditorStore) {
   useEffect(() => {
+    const pending = new Set<string>();
     const repair = () => {
       const { template, updateElement } = store.getState();
       for (const band of template.bands) {
         for (const el of band.elements) {
-          if (el.type === 'image' && el.imageBase64 && !el.bitmap && !el.imageKey) {
-            loadGrayBitmap(el.imageBase64).then(({ bitmap }) => updateElement(band.id, el.id, { bitmap })).catch(() => undefined);
-          }
+          if (el.type !== 'image' || !el.imageBase64 || el.bitmap || el.imageKey || pending.has(el.id)) continue;
+          pending.add(el.id);
+          loadGrayBitmap(el.imageBase64).then(({ bitmap }) => updateElement(band.id, el.id, { bitmap })).catch(() => undefined);
         }
       }
     };
@@ -30,20 +59,35 @@ function useBitmapRepair(store: EditorStore) {
   }, [store]);
 }
 
-export function ZComposer({ onChange, ...options }: ZComposerProps) {
-  const [store] = useState(() => createEditorStore(options));
+export function ZComposer({ template, catalog, language, locale, storageKey, catalogEditable = true, onChange, onSave, className }: ZComposerProps) {
+  const [i18n] = useState(() => createI18n(language));
+  const [store] = useState(() => createEditorStore({ template, catalog, storageKey, locale: locale ?? defaultLocale(i18n.resolvedLanguage) }));
   useBitmapRepair(store);
+
+  useEffect(() => { if (language && i18n.resolvedLanguage !== language) void i18n.changeLanguage(language); }, [i18n, language]);
+  useEffect(() => { if (locale) store.getState().setPreviewLocale(locale); }, [store, locale]);
+  useEffect(() => { if (template && template !== store.getState().template) store.getState().setTemplate(template); }, [store, template]);
+  useEffect(() => { if (catalog && catalog !== store.getState().catalog) store.getState().setCatalog(catalog); }, [store, catalog]);
 
   useEffect(() => {
     if (!onChange) return;
     return store.subscribe((s, prev) => { if (s.template !== prev.template) onChange(s.template); });
   }, [store, onChange]);
 
+  const save = onSave && (() => {
+    const { template: current, catalog: currentCatalog } = store.getState();
+    onSave({ template: withFieldsUsed(current, currentCatalog), zpl: generateTemplateZpl(current) });
+  });
+
   return (
-    <EditorStoreContext.Provider value={store}>
-      <Layout sidebar={<Sidebar allowLocalTemplates={options.storageKey !== null} />} propertiesPanel={<PropertiesPanel />}>
-        <Editor />
-      </Layout>
-    </EditorStoreContext.Provider>
+    <I18nextProvider i18n={i18n}>
+      <EditorStoreContext.Provider value={store}>
+        <div className={cn('zc-root h-full', className)}>
+          <Layout sidebar={<Sidebar allowLocalTemplates={storageKey !== null} catalogEditable={catalogEditable} onSave={save} />} propertiesPanel={<PropertiesPanel />}>
+            <Editor />
+          </Layout>
+        </div>
+      </EditorStoreContext.Provider>
+    </I18nextProvider>
   );
 }

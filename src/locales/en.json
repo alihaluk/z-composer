@@ -61,7 +61,9 @@
     "presetName": "Invoice preset",
     "importFailed": "Template could not be opened: {{reason}}",
     "saveFailed": "Could not save: {{reason}}",
-    "saved": "\"{{name}}\" saved"
+    "saved": "\"{{name}}\" saved",
+    "save": "Save",
+    "handedOver": "Template saved"
   },
   "preview": {
     "button": "Preview ZPL",

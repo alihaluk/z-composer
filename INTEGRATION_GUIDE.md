@@ -1,66 +1,101 @@
-# Invoice Composer Integration Guide
+# Integration Guide
 
-This guide explains how to integrate the **Invoice Composer** (Z-Composer) into an existing web application.
+Z-Composer can be embedded into a React application (React 18 or 19). The host decides where templates and catalogs are stored; the designer hands them over through callbacks.
 
-## 1. Overview
-The Invoice Composer is a React-based component that allows users to design ZPL-based invoice templates visually. It outputs raw ZPL code that can be sent directly to supported thermal printers (e.g., Zebra).
+## 1. Build the package
 
-## 2. Technical Stack
-- **Framework:** React (18+)
-- **State Management:** Zustand
-- **Drag & Drop:** @dnd-kit/core
-- **Styling:** Tailwind CSS
-- **Icons:** lucide-react
-- **Internationalization:** i18next, react-i18next, i18next-browser-languagedetector
+```bash
+npm install
+npm run build:lib
+```
 
-## 3. Integration Steps
+This writes `dist-lib/`: an ES module (`z-composer.js`), a stylesheet (`style.css`), type declarations (`types/`) and a barcode chunk that is loaded on demand. React and React DOM are peer dependencies and are not bundled.
 
-### 3.1. Installation
-Ensure the host application supports React and Tailwind CSS.
-Copy the `src` folder components into your project (e.g., `src/components/invoice-composer`).
+The package is marked `private` in `package.json`; install it from a path, a Git URL or your own registry, for example:
 
-### 3.2. Embedding the Component
-The main entry point is `App.tsx` (can be renamed to `InvoiceDesigner.tsx`).
+```bash
+npm install ../z-composer
+```
+
+## 2. Embed the designer
 
 ```tsx
-import InvoiceDesigner from './components/invoice-composer/App';
+import { ZComposer, type Catalog, type Template } from 'z-composer';
+import 'z-composer/style.css';
 
-function MyPage() {
+export function TemplateDesigner({ template, catalog, onSaved }: {
+  template?: Template;
+  catalog: Catalog;
+  onSaved: (template: Template, zpl: string) => void;
+}) {
   return (
-    <div className="h-screen w-full">
-      <InvoiceDesigner />
+    <div style={{ height: '80vh' }}>
+      <ZComposer
+        template={template}
+        catalog={catalog}
+        language="tr"
+        locale="tr-TR"
+        storageKey={null}
+        catalogEditable={false}
+        onSave={({ template, zpl }) => onSaved(template, zpl)}
+      />
     </div>
   );
 }
 ```
 
-### 3.3. Key Components
-- **Sidebar**: Drag-and-drop source (Toolbox).
-- **Canvas**: Drop target (Design Area).
-- **PropertiesPanel**: Configuration for selected elements.
-- **PreviewModal**: Visualizes the ZPL output with the built-in renderer (`src/preview`), entirely in the browser.
+The designer fills its container; give the container a height.
 
-### 3.4. Data Sources (`dataSources.ts`)
-The template uses a centralized data definitions file.
-- **`GLOBAL_DATA_SOURCES`**: Header/Footer fields (e.g., Tenant Info, Invoice Date).
-- **`ROW_DATA_SOURCES`**: Body fields (e.g., Product Name, Price).
+### Props
 
-To connect real application data:
-1. Fetch your invoice data.
-2. Update the `MOCK_GLOBAL_DATA` and `MOCK_DATA_ROWS` in `dataSources.ts` OR inject data via props if refactoring `useStore` to accept external state.
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `template` | `Template` | empty template | Template to edit. Passing a different object later replaces the design. |
+| `catalog` | `Catalog` | generic invoice catalog | Fields the template can bind to. Passing a different object later replaces it. |
+| `language` | `'tr' \| 'en'` | detected | Interface language. |
+| `locale` | `string` | follows `language` | Culture used to show sample values, e.g. `tr-TR`. It is not stored in the template. |
+| `storageKey` | `string \| null` | `zcomposer_templates_v2` | `localStorage` key for the built-in saved-templates list; `null` hides the list. |
+| `catalogEditable` | `boolean` | `true` | Whether users can import, edit or replace the catalog. |
+| `onChange` | `(template) => void` | — | Called after every change of the template. |
+| `onSave` | `({ template, zpl }) => void` | — | Shows a Save button. `template` carries the `fieldsUsed` snapshot; `zpl` is the ZPL template. |
+| `className` | `string` | — | Extra class for the root element. |
 
-## 4. ZPL Output
-The `generateZPL` function (`src/lib/zplGenerator.ts`) converts the visual state into ZPL string.
+Each `ZComposer` has its own state and its own i18next instance, so several designers can live on one page and the host's translations are not touched.
 
-**Output Example:**
-```zpl
-^XA
-^PW832
-^FO10,10^A0N,24,24^FD[Tenant.Name]^FS
-...
-^XZ
+### Styles
+
+`style.css` contains no global reset: every rule is scoped to the designer's root element (`.zc-root`), so the host page keeps its own styles.
+
+## 3. Catalogs
+
+A catalog describes the data a template binds to: field paths, types, labels and optional sample data for previews (see [SCOPE.md](./docs/SCOPE.md), D2). Build one from your data structure:
+
+```ts
+import { catalogFromJsonSchema, catalogFromSample, parseCatalog } from 'z-composer';
+
+// From an example document (it also becomes the preview data):
+const { catalog, skipped } = catalogFromSample(exampleInvoice, 'Invoice');
+
+// From a JSON Schema, e.g. generated from a .NET or Java DTO:
+const fromSchema = catalogFromJsonSchema(invoiceSchema, 'Invoice').catalog;
+
+// From a saved catalog file:
+const saved = parseCatalog(JSON.parse(text));
 ```
-The output contains **markers** like `[Tenant.Name]` which should be replaced by the backend/printing service with actual values before sending to the printer.
 
-## 5. Future Considerations
-- **Line Print Mode**: Future versions will support text-based output for dot matrix printers.
+Arrays of objects (for example `Lines`) can drive repeating bands; arrays inside array items are not supported.
+
+## 4. Templates and output
+
+```ts
+import { fillTemplate, generateTemplateZpl, parseTemplate } from 'z-composer';
+
+const template = parseTemplate(JSON.parse(storedJson)); // also migrates v1 templates
+const zplTemplate = generateTemplateZpl(template);      // docs/OUTPUT_SPEC.md
+```
+
+Printing is outside Z-Composer's scope. The [output specification](./docs/OUTPUT_SPEC.md) defines how to fill a ZPL template in any language. `fillTemplate` is the reference implementation in TypeScript, used by the designer's preview:
+
+```ts
+const zpl = fillTemplate(zplTemplate, invoiceData, { locale: 'tr-TR' });
+```

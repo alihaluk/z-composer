@@ -1,69 +1,45 @@
-# Z-Composer (Invoice Designer)
+# Z-Composer
 
-A React-based visual designer for creating ZPL (Zebra Programming Language) invoice templates.
+A visual designer for ZPL receipt and invoice templates for Zebra thermal printers. Z-Composer produces the design; whoever prints fills the template with data ([scope](./docs/SCOPE.md)).
 
-![Project Status](https://img.shields.io/badge/Status-Phase%202%20Nearly%20Complete-brightgreen)
+**Live demo:** [alihaluk.github.io/z-composer](https://alihaluk.github.io/z-composer/)
 
 ## Features
-- **Visual Drag & Drop**: Add Text, Box, Barcode, Image elements with snap-to-grid and alignment guides.
-- **Dynamic Data Binding**: Bind elements to `[Product.Name]`, `[Total]`, etc.
-- **Canvas Zoom**: Scale the workspace (25% - 300%) for precise editing.
-- **Specific Invoice Layout**: Pre-built template matching GIB requirements (Logos, Totals, QR).
-- **ZPL Preview**: Built-in renderer that draws the ZPL output in the browser at printer resolution, with sample data or field names. No data leaves the browser.
-- **Custom Image Upload**: Upload images, convert to monochrome, and generate ZPL hex (`^GFA`) automatically.
-- **Keyboard Navigation**: Move selected elements with Arrow keys (Shift+Arrow for 10px steps).
-- **Line Print Mode**: Support for text-only output simulation.
-- **Real-time Code Preview**: View generated ZPL or Text output instantly in the properties panel.
-- **Internationalization (i18n)**: Full support for multiple languages with Turkish and English locales. Automatic language detection based on browser settings.
-- **Customizable**: Adjust canvas width (mm), font sizes, rotation, and more.
 
-## Installation
+- **Bands**: a template is a list of bands; a band is printed once or repeats for every item of an array (invoice lines, VAT breakdown, installments). Bands and elements can be hidden by conditions (not empty, not zero).
+- **Elements**: text, box, line, Code 128, QR and images, positioned in millimetres with snapping to other elements, the page centre and a 0.5 mm grid.
+- **Field catalog**: bind elements to the fields of your own data structure. Build the catalog from an example JSON document or a JSON Schema (.NET / Java DTOs), then adjust types and labels. A generic invoice catalog is included.
+- **Culture-independent formats**: numbers and dates keep a format code (`N2`, `d`, `dd.MM.yyyy` ...), not a culture; the printing side applies its culture. The designer previews any culture.
+- **Overflow**: text can stay as is, be truncated, or wrap; wrapped text can grow its band, and the canvas shows the grown rows.
+- **Printer profile**: printable width and 203 / 300 / 600 dpi per template; continuous receipt paper.
+- **Own preview**: the ZPL output is drawn in the browser at printer resolution, with real Code 128 and QR encoding. No data leaves the browser.
+- **Editing**: multi-select, group move and alignment, copy / paste / duplicate, layers, locking, undo / redo, keyboard shortcuts.
+- **Embeddable**: a React component with its own state, translations and scoped styles ([integration guide](./INTEGRATION_GUIDE.md)).
+- **Turkish and English** interface.
+
+## Output
+
+The designer saves a JSON template and produces a ZPL template with placeholders such as `{{Totals.Grand|fmt=N2}}`. The format, the escaping rules and the filling algorithm are defined in the [output specification](./docs/OUTPUT_SPEC.md).
+
+## Development
 
 ```bash
 npm install
-npm run dev
+npm run dev        # standalone app
+npm test           # unit tests
+npm run lint
+npm run build      # standalone app → dist/
+npm run build:lib  # embeddable package → dist-lib/
 ```
 
-## Live Demo
+Pushes to `main` run CI (lint, tests, both builds) and deploy the standalone app to GitHub Pages.
 
-Visit the live demo at: [https://alihaluk.github.io/z-composer/](https://alihaluk.github.io/z-composer/)
+## Documentation
 
-## Language Support
-
-The application supports multiple languages:
-- **Turkish (tr)**: Default language
-- **English (en)**: Full translation available
-
-The language is automatically detected based on your browser settings. You can also manually switch languages using the language selector in the top-right corner of the application.
-
-To manually set the language, add a query parameter to the URL: `?lng=en` or `?lng=tr`
-
-## Integration
-See [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md) for details on how to embed this component into your web application.
-
-## Deployment
-
-This project is automatically deployed to GitHub Pages when changes are pushed to the `main` branch.
-
-To deploy manually:
-1. Build the project: `npm run build`
-2. The built files will be in the `dist` folder
-3. The GitHub Actions workflow will handle the deployment automatically
-
-## Roadmap
-
-### Phase 2: Advanced Features & Refinements
-- [x] **Line Print Mode**: Support for Zebra Line Print Mode (Text-only output).
-- [x] **Custom Image Upload**: Allow users to upload images and convert to ZPL hex (`^GF`).
-- [x] **Internationalization (i18n)**: Multi-language support with Turkish and English.
-- [ ] **Refine ZPL Preview**: Context-aware preview (Element vs Document).
-- [x] **Enhanced Drag & Drop**: Fix zoom coordinate issues and implement element snapping.
-- [x] **Templates Management**: Save/Load/Delete different templates from local storage with export/import to JSON files.
-- [x] **Undo/Redo**: History management for actions with keyboard shortcuts (Ctrl+Z, Ctrl+Shift+Z).
-
-### Backlog
-- [ ] Multi-page support
-- [ ] Advanced Barcode properties (width ratio, check digit)
+- [Scope and design decisions](./docs/SCOPE.md), including the roadmap
+- [ZPL template output specification](./docs/OUTPUT_SPEC.md)
+- [Integration guide](./INTEGRATION_GUIDE.md)
+- [Review findings](./docs/REVIEW_FINDINGS.md)
 
 ## License
 

@@ -1,7 +1,8 @@
 // Draws a parsed ZPL label onto a canvas at printer resolution (1 px = 1 dot).
 // Text uses Roboto Condensed Bold as an open substitute for the printer's ^A0
 // font (CG Triumvirate Bold Condensed), so text widths are approximate.
-import '@fontsource/roboto-condensed/700.css';
+import '@fontsource/roboto-condensed/latin-700.css';
+import '@fontsource/roboto-condensed/latin-ext-700.css';
 import type { Code128Item, GraphicItem, Orientation, QrItem, TextItem, ZplLabel } from './zplParser';
 
 const FONT_FAMILY = '"Roboto Condensed"';

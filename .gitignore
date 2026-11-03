@@ -31,3 +31,4 @@ dist-ssr
 *.key
 coverage/
 JULES_TODO.md
+dist-lib

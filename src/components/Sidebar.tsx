@@ -39,7 +39,7 @@ function ToolItem({ tool, icon: Icon }: { tool: ToolType; icon: LucideIcon }) {
   );
 }
 
-export function Sidebar({ allowLocalTemplates = true }: { allowLocalTemplates?: boolean }) {
+export function Sidebar({ allowLocalTemplates = true, catalogEditable = true, onSave }: { allowLocalTemplates?: boolean; catalogEditable?: boolean; onSave?: () => void }) {
   const { t, i18n } = useTranslation();
   const store = useEditorStore();
   const templateName = useEditor(s => s.templateName);
@@ -99,7 +99,7 @@ export function Sidebar({ allowLocalTemplates = true }: { allowLocalTemplates?: 
         <p className="text-[10px] text-gray-400 mt-2">{t('toolbox.hint')}</p>
       </section>
 
-      <CatalogPanel />
+      <CatalogPanel editable={catalogEditable} />
 
       {allowLocalTemplates && (
         <section className="space-y-2">
@@ -134,6 +134,11 @@ export function Sidebar({ allowLocalTemplates = true }: { allowLocalTemplates?: 
 
       <section className="space-y-2 mt-auto">
         <h3 className="text-xs font-semibold text-gray-400 uppercase">{t('files.title')}</h3>
+        {onSave && (
+          <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => { onSave(); setMessage({ kind: 'info', text: t('files.handedOver') }); }}>
+            <Save size={14} className="mr-2" />{t('files.save')}
+          </Button>
+        )}
         {message && <p className={cn('text-[11px]', message.kind === 'error' ? 'text-red-600' : 'text-green-700')} role="status">{message.text}</p>}
         <div className="grid grid-cols-3 gap-2">
           <Button variant="outline" className="text-xs h-8 px-0" onClick={() => { if (window.confirm(t('files.confirmNew'))) s.setTemplate(emptyTemplate()); }}>

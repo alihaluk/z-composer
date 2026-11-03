@@ -12,7 +12,7 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | R4-4 | 4 | major | fixed | Catalog paths were not validated. A path containing a space, `\|` or `}` would break placeholders and band markers. Catalog files, imports and templates now reject invalid paths and formats (step 6). |
 | R4-5 | 4 | minor | open | Barcode and QR boxes on the canvas are not tied to the printed size: the QR size depends on its content and magnification, Code 128 on its data and bar width, and the Code 128 text line prints below the box. |
 | R4-6 | 4 | minor | open | Rotated text is only approximated on the canvas; the preview shows it exactly. |
-| R4-7 | 4 | minor | open | Images migrated from v1 are re-encoded in the background; if an image cannot be decoded, this is retried on every template change. |
+| R4-7 | 4 | minor | fixed | Images migrated from v1 are re-encoded in the background; an image that could not be decoded was retried on every template change. Each image is now tried once (step 10). |
 | R4-8 | 4 | minor | fixed | The "Import" control was a label around a hidden file input and could not be reached with the keyboard. File pickers are now real buttons (step 6). |
 | R4-9 | 4 | minor | fixed | New text elements got the English placeholder content "Text" in every language; it now follows the interface language (step 9). |
 | R5-1 | 5 | critical | fixed | `^BC` reads `>` plus the next character as a control code, even when escaped with `^FH`: "AB>CD" was encoded as "ABD". Static and filled Code 128 data now write `>` as `>0` (spec 5.2, step 7); the preview decodes it like a printer. |
@@ -25,7 +25,7 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | R6-4 | 6 | minor | open | The saved `fieldsUsed` snapshot is written but only missing fields are reported; a field whose type changed in the catalog is not flagged. |
 | R6-5 | 6 | minor | open | Arrays inside array items (e.g. line discounts) cannot be bound; they are skipped with a note. Nested repeating bands would be needed. |
 | R7-1 | 7 | minor | fixed | On the canvas a growing text wrapped but its band did not grow. In sample mode the canvas now breaks the text like the filler and grows the band (step 8). |
-| R7-2 | 7 | minor | open | The preview culture is not remembered across reloads and does not follow the interface language. |
+| R7-2 | 7 | minor | open | The preview culture now starts from the interface language (step 10) but is not remembered across reloads. |
 | R7-3 | 7 | minor | open | The preview culture list is fixed (tr-TR, en-US, en-GB, de-DE, fr-FR); other cultures cannot be entered. |
 | R8-1 | 8 | minor | open | In sample mode, dropping an element below a grown text measures its position from the grown layout, so it lands lower by the growth than it appears. |
 | R8-2 | 8 | minor | open | Sample mode shows only the first item of a repeating band; wrapping of later items is visible only in the preview. |
@@ -33,3 +33,7 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | R9-1 | 9 | minor | open | There is no rubber-band selection; several elements are selected with Shift or Ctrl click. |
 | R9-2 | 9 | minor | open | A selection is limited to one band; elements of different bands cannot be moved or aligned together. |
 | R9-3 | 9 | minor | open | The shortcut list names Ctrl only; on macOS the same shortcuts also work with Cmd. |
+| R10-1 | 10 | major | fixed | Without Tailwind's global reset the library's ring utilities had no default variables and `.container` was not scoped; both are now defined or disabled under `.zc-root`. |
+| R10-2 | 10 | minor | open | The package is `private`; publishing it to a registry is a separate decision. |
+| R10-3 | 10 | minor | open | The library stylesheet embeds the preview font (about 80 kB) and the barcode chunk is about 290 kB gzipped; both load only with the designer or the first barcode preview. |
+| R10-4 | 10 | minor | open | When the host fixes `language`, the language switcher is still shown and lets the user switch for the session. |

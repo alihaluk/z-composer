@@ -61,7 +61,9 @@
     "presetName": "Hazır Fatura",
     "importFailed": "Şablon açılamadı: {{reason}}",
     "saveFailed": "Kaydedilemedi: {{reason}}",
-    "saved": "\"{{name}}\" kaydedildi"
+    "saved": "\"{{name}}\" kaydedildi",
+    "save": "Kaydet",
+    "handedOver": "Şablon kaydedildi"
   },
   "preview": {
     "button": "ZPL Önizle",
