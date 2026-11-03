@@ -1,7 +1,7 @@
 {
   "name": "z-composer",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -63,5 +63,6 @@
   "peerDependencies": {
     "react": "^18.2.0 || ^19.0.0",
     "react-dom": "^18.2.0 || ^19.0.0"
-  }
+  },
+  "description": "Visual designer for ZPL receipt and invoice templates"
 }

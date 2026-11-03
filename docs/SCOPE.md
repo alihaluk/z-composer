@@ -1,6 +1,6 @@
 # Z-Composer — Scope & Design Decisions
 
-Status: Accepted (2026-11-03)
+Status: Accepted (2026-11-03) · Roadmap complete in version 1.0.0
 
 ## 1. Product Scope
 
@@ -150,7 +150,7 @@ Placeholder syntax and escaping, band and condition markers, length calculation,
 ## 5. Roadmap
 1. ~~Output specification~~ — done: [`docs/OUTPUT_SPEC.md`](./OUTPUT_SPEC.md).
 2. ~~Test baseline for the output and CI~~ — done: Vitest tests and `.github/workflows/ci.yml`.
-3. ~~Own preview renderer replacing Labelary (D7)~~ — done: `src/preview`. Still open: calibrating the font width table on the reference printer.
+3. ~~Own preview renderer replacing Labelary (D7)~~ — done: `src/preview`. Font width calibration on the reference printer moved to Later.
 4. ~~Template schema v2~~ — done: millimetre units, printer profile, bands, conditions, overflow and format, v1 migration; the ZPL output follows docs/OUTPUT_SPEC.md and line-print mode is removed.
 5. ~~Output correctness~~ — done: `^FH` escaping, bold text, images encoded at their current size, positions kept when moving between bands, plus `>` in Code 128 and `\` in field blocks (docs/REVIEW_FINDINGS.md).
 6. ~~Field catalog~~ — done: file format, import from a sample JSON or a JSON Schema, editor, generic default invoice catalog, missing-field warnings and the `fieldsUsed` snapshot.
@@ -160,5 +160,8 @@ Placeholder syntax and escaping, band and condition markers, length calculation,
 10. ~~Embedding API~~ — done: `<ZComposer>` with template, catalog, language, culture and save / change hooks, per-instance state and translations, scoped styles, `npm run build:lib` (INTEGRATION_GUIDE.md).
 
 ### Later (candidates)
+- Nested repeating bands, for arrays inside array items (e.g. discounts per line).
+- Selections across bands, to move or align elements of several bands together.
+- Font width table calibrated on the reference printer, for closer preview text widths.
 - Fixed-length label support (gap / black-mark media) as a separate mode next to receipts.
 - Content builder — compose the content of a text, barcode or QR element from catalog fields and static text. Presets sit on top of it, e.g. a GİB e-Fatura / e-Arşiv QR preset. Values inside such content can use culture-invariant formats (see D3).

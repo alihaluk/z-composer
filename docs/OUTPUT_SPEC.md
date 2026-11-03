@@ -1,6 +1,6 @@
 # Z-Composer — ZPL Template Output Specification
 
-Status: Reviewed draft (2026-11-03) · Spec version 1
+Status: Version 1 (2026-11-03), implemented by Z-Composer 1.0.0
 
 ## 1. Purpose
 

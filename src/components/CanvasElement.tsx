@@ -151,26 +151,42 @@ export function ElementBody({ element: el, text, dpi, preformatted }: { element:
   const wraps = el.overflow === 'wrap';
   const maxLines = Math.max(1, el.maxLines ?? 2);
   const rotation = el.rotation ?? 0;
+  // ^FO is the top-left corner of the rotated text, so the text is laid out unrotated in a box
+  // whose rotated outline is the element box, then turned into place.
+  const sideways = rotation === 90 || rotation === 270;
+  const boxW = mmToPx(sideways ? el.height : el.width);
+  const boxH = mmToPx(sideways ? el.width : el.height);
+  const placement = {
+    0: undefined,
+    90: `translate(${boxH}px, 0) rotate(90deg)`,
+    180: `translate(${boxW}px, ${boxH}px) rotate(180deg)`,
+    270: `translate(0, ${boxW}px) rotate(-90deg)`,
+  }[rotation];
   return (
-    <div
-      className="w-full h-full overflow-visible"
-      style={{
-        fontFamily: CANVAS_FONT,
-        fontWeight: 700,
-        fontSize: fontPx,
-        lineHeight: `${lineHeightPx}px`,
-        textAlign: el.align ?? 'left',
-        whiteSpace: preformatted ? 'pre' : wraps ? 'normal' : 'pre',
-        wordBreak: wraps ? 'break-word' : undefined,
-        WebkitTextStroke: el.fontBold ? `${mmToPx(1 / (mmToDots(1, dpi) || 8)) * 0.6}px #000` : undefined,
-        maxHeight: wraps && !el.grow ? lineHeightPx * maxLines : undefined,
-        overflow: wraps && !el.grow ? 'hidden' : 'visible',
-        transform: rotation ? `rotate(${rotation}deg)` : undefined,
-        transformOrigin: 'top left',
-        translate: rotation === 90 ? `${fontPx}px 0` : rotation === 180 ? '100% 100%' : rotation === 270 ? `0 100%` : undefined,
-      }}
-    >
-      {text}
+    <div className="w-full h-full relative overflow-visible">
+      <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: rotation ? boxW : '100%',
+          height: rotation ? boxH : '100%',
+          fontFamily: CANVAS_FONT,
+          fontWeight: 700,
+          fontSize: fontPx,
+          lineHeight: `${lineHeightPx}px`,
+          textAlign: el.align ?? 'left',
+          whiteSpace: preformatted ? 'pre' : wraps ? 'normal' : 'pre',
+          wordBreak: wraps ? 'break-word' : undefined,
+          WebkitTextStroke: el.fontBold ? `${mmToPx(1 / (mmToDots(1, dpi) || 8)) * 0.6}px #000` : undefined,
+          maxHeight: wraps && !el.grow ? lineHeightPx * maxLines : undefined,
+          overflow: wraps && !el.grow ? 'hidden' : 'visible',
+          transform: placement,
+          transformOrigin: 'top left',
+        }}
+      >
+        {text}
+      </div>
     </div>
   );
 }

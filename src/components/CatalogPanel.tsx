@@ -12,6 +12,8 @@ import { CatalogEditor } from './CatalogEditor';
 
 const REASON_KEYS: Record<string, string> = { name: 'name', 'array of values': 'values', 'nested array': 'nested', 'too deep': 'deep' };
 
+const DEFAULT_CATALOG_JSON = JSON.stringify(DEFAULT_CATALOG);
+
 const countFields = (catalog: Catalog) => catalog.fields.reduce((n, f) => n + (f.type === 'array' ? 1 + (f.items?.length ?? 0) : 1), 0);
 
 export function CatalogPanel({ editable = true }: { editable?: boolean }) {
@@ -23,6 +25,8 @@ export function CatalogPanel({ editable = true }: { editable?: boolean }) {
   const [editing, setEditing] = useState(false);
   const missing = useMemo(() => missingFields(template, catalog), [template, catalog]);
   const changed = useMemo(() => changedFields(template, catalog), [template, catalog]);
+  // A catalog restored from storage is a copy, so it is compared by content.
+  const isDefault = useMemo(() => catalog === DEFAULT_CATALOG || JSON.stringify(catalog) === DEFAULT_CATALOG_JSON, [catalog]);
   // Skipped keys come as "path: reason"; the reason is translated.
   const reason = (entry: string) => {
     const i = entry.lastIndexOf(': ');
@@ -72,7 +76,7 @@ export function CatalogPanel({ editable = true }: { editable?: boolean }) {
             <FileButton accept=".json,application/json" variant="outline" size="sm" className="h-7 text-[11px] px-1" onFile={f => void load(f, json => ({ catalog: parseCatalog(json), skipped: [] }))}>{t('catalog.openFile')}</FileButton>
             <Button variant="outline" size="sm" className="h-7 text-[11px] px-1" onClick={() => void saveJson(catalog, `${catalog.name || 'catalog'}.catalog.json`, 'Z-Composer catalog')}>{t('catalog.saveFile')}</Button>
           </div>
-          {catalog !== DEFAULT_CATALOG && (
+          {!isDefault && (
             <button type="button" className="text-[11px] text-gray-500 hover:text-gray-800 underline" onClick={() => { if (window.confirm(t('catalog.confirmReset'))) store.getState().setCatalog(DEFAULT_CATALOG); }}>
               {t('catalog.reset')}
             </button>

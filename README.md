@@ -40,6 +40,7 @@ Pushes to `main` run CI (lint, tests, both builds) and deploy the standalone app
 - [ZPL template output specification](./docs/OUTPUT_SPEC.md)
 - [Integration guide](./INTEGRATION_GUIDE.md)
 - [Review findings](./docs/REVIEW_FINDINGS.md)
+- [Changelog](./CHANGELOG.md)
 
 ## License
 
