@@ -1,0 +1,163 @@
+# Z-Composer — Scope & Design Decisions
+
+Status: Accepted (2026-11-03)
+
+## 1. Product Scope
+
+Z-Composer is a template **designer**. Our deliverable is the design output; what consumers do with that output is outside our scope.
+
+Users: tenant companies and our support team.
+
+### In scope
+- Visual editor — what the canvas shows is what the output produces (WYSIWYG).
+- Template file (JSON) — versioned and documented.
+- Design output — ZPL template, with a written output specification.
+- Field catalog — import, edit and use.
+- Preview with sample data, per culture, rendered entirely in the browser (see D7).
+- Running standalone and embedded in a host application.
+
+### Out of scope
+- Filling placeholders with real data, sending output to printers, printer management.
+- Server-side storage of templates and catalogs, users and permissions. These belong to the host application; we expose load/save hooks.
+- Computing business values (totals, VAT, the values inside the GİB QR code). The designer defines where and how values appear; the content builder (see Roadmap) composes content from fields but never computes values.
+- Translating static texts inside a template (see D4).
+- Line-print (text-only) output.
+- Fixed-length labels and pagination; only continuous roll paper is supported (see D6).
+
+## 2. Decisions
+
+### D1 — Outputs: JSON template + ZPL template
+- The JSON template is the editable source of truth. It carries a `schemaVersion` and is validated on load.
+- The ZPL template is the deliverable for printing systems. Its format is defined in `docs/OUTPUT_SPEC.md` (to be written).
+
+### D2 — Field catalog is a separate file
+Every company's data structure is different, so fields are not hardcoded.
+
+- The catalog is a separate file, typically one per company DTO, and can be shared by many templates.
+- Sources that are converted into the catalog format:
+  1. **Sample JSON** (primary) — one serialized example document. Provides field paths, inferred types and preview data.
+  2. **JSON Schema** (optional) — can be generated from .NET / Java DTOs.
+  3. **Host application** — passes the catalog directly when the designer is embedded.
+- An array of objects (e.g. `Lines`) can be chosen as the source of a repeating band (see D8). Fields in that band are relative to one array item, which removes ambiguity such as document `Total` vs. line `Lines[].Total`.
+- Inferred types and display labels are editable in the catalog editor.
+- The current company-specific field list is replaced by a generic default invoice catalog.
+- A template keeps a snapshot (path + type) of the fields it uses, so it can report missing or changed fields when opened with a newer catalog.
+
+Sketch (final schema to be defined):
+
+```json
+{
+  "catalogVersion": 1,
+  "name": "Acme invoice",
+  "fields": [
+    { "path": "DocNumber", "type": "string", "label": "Belge No" },
+    { "path": "DocDate", "type": "datetime", "label": "Tarih" },
+    { "path": "Total", "type": "number", "label": "Genel Toplam" },
+    { "path": "Lines", "type": "array", "label": "Satırlar", "items": [
+      { "path": "Product.Name", "type": "string", "label": "Ürün" },
+      { "path": "Price", "type": "number", "label": "Fiyat" },
+      { "path": "Total", "type": "number", "label": "Satır Toplamı" }
+    ]}
+  ],
+  "sample": {
+    "DocNumber": "FTR2026000123",
+    "DocDate": "2026-11-13T14:37:00",
+    "Total": 2401.0,
+    "Lines": [{ "Product": { "Name": "Laptop" }, "Price": 1200.5, "Total": 2401.0 }]
+  }
+}
+```
+
+### D3 — Culture independence
+A template stores the *meaning* of a format, never a culture-specific rendering.
+
+- Format codes follow .NET standard format strings (`N2`, `d`, `t`, …), which are culture-sensitive by design. The supported set and its Java / JavaScript equivalents are defined in the output spec.
+- Formatting is applied by whoever fills the template, using their culture.
+- A fixed custom pattern (e.g. `dd.MM.yyyy`) may be chosen explicitly; it renders the same in every culture.
+- The designer has a preview-culture selector (tr-TR, en-US, …).
+
+| Chosen in designer | tr-TR | en-US |
+|---|---|---|
+| Number, 2 decimals (`N2`) | 1.234,56 | 1,234.56 |
+| Short date (`d`) | 13.11.2026 | 11/13/2026 |
+| Short time (`t`) | 14:37 | 2:37 PM |
+
+### D4 — One template per language
+Static texts (e.g. "Ara Toplam", "SAYIN") are not translated inside a template. A separate template is created for each language.
+
+### D5 — Overflow behavior is the designer's choice
+Nothing is forced. Each text element has an overflow mode:
+
+- `none` (default) — printed as is.
+- `truncate` — at most N characters.
+- `wrap` — within the element width, at most N lines, aligned left / center / right.
+
+The canvas has a toggle between **field names** (e.g. `[Customer.Name]`) and **sample data**. In sample-data mode, format, preview culture, wrapping and truncation are applied live.
+
+Note: ZPL `^FB` prints excess text over the last line instead of cutting it, so truncation is carried in the placeholder and applied by whoever fills the template.
+
+### D6 — Printer profile per template
+Asked when a template is created and stored in its settings:
+
+- Paper width: 58 / 80 / 104 mm or custom.
+- Resolution: 203 / 300 / 600 dpi.
+- Media: continuous roll only. Fixed-length labels and pagination are out of scope.
+
+The template stores the printable width (`^PW`), which is narrower than the paper itself.
+
+Designs are measured in millimetres; ZPL coordinates are generated for the chosen resolution.
+
+### D7 — Own preview renderer, no external services
+The preview is rendered in the browser by our own ZPL renderer. Labelary or any other external service is not used.
+
+- Sample data may contain real company and customer data; it must never leave the browser. The preview must also work offline, without rate limits or third-party terms.
+- The renderer interprets the ZPL our output actually produces, so the preview shows the deliverable itself rather than a separate drawing of the model.
+- It supports the ZPL subset defined in the output spec (e.g. `^FO`, `^A0`, `^FB`, `^FD`, `^FH`, `^GB`, `^GFA`, `^BC`, `^BQ`, `^BY`, `^PW`, `^LL`, `^CI28`) and renders at printer resolution (1 px = 1 dot).
+- Barcodes and QR codes are really encoded (e.g. with bwip-js), so a previewed code can be scanned.
+- Known limit: the printer font behind `^A0` (CG Triumvirate) is licensed. The preview uses an open substitute with a width table matched to the printer font; text widths can still differ slightly from a real printer.
+- For preview only, the designer fills placeholders with catalog sample data in the preview culture. This filler is internal and doubles as a reference implementation of the output spec.
+
+### D8 — A template is a list of bands
+The fixed header / body / footer sections are replaced by an ordered list of bands, so one template can hold several repeating blocks (invoice lines, VAT breakdown, installments, …).
+
+- A band is either **static** (printed once) or **repeating** (printed once per item of an array field from the catalog, e.g. `Lines`, `VatBreakdown`).
+- Inside a repeating band, field paths are relative to the current item.
+- Each band has a designed height. Bands are printed top to bottom in order; each band starts where the previous one ends, and a repeating band stacks its copies.
+
+### D9 — Conditional visibility
+Elements and bands can be hidden based on a field value. Nothing is hidden unless the designer adds a condition.
+
+- Conditions in the first version: hide if empty, hide if zero.
+- A hidden band takes no space. A hidden element leaves its space empty; other elements do not move.
+- Conditions are carried in the ZPL output and evaluated by whoever fills the template. The designer evaluates them for the preview.
+
+## 3. Reference Printer
+
+Real-device checks are done on a Zebra ZQ521 (203 dpi, ZPL) with 3-inch roll paper.
+
+- Calibrates the preview font width table (D7) and verifies Turkish characters.
+- The printable width of the 3-inch roll is measured with a calibration template; the matching preset in D6 uses that value.
+- 300 / 600 dpi output can only be checked in the preview until such a printer is available.
+
+## 4. Open Items (for `docs/OUTPUT_SPEC.md`)
+- Placeholder syntax (field path, format code, max length) and escaping; it must not clash with the ZPL control characters `^` and `~`.
+- How bands, repeating bands and conditions are marked in the ZPL output, and how the filler computes each band's offset and the total length (`^LL`).
+- How dynamic images (e.g. a tenant logo supplied at print time) are referenced.
+- Character encoding (UTF-8 via `^CI28`) and Turkish character support in printer fonts.
+- Supported format codes and their Java / JavaScript equivalents.
+- Final catalog file schema.
+
+## 5. Roadmap
+1. Output specification (`docs/OUTPUT_SPEC.md`).
+2. Test baseline for the output and CI (lint, test, build) on pull requests.
+3. Own preview renderer replacing Labelary (D7).
+4. Template schema v2 — millimetre units, printer profile, bands, conditions, overflow, format — with v1 migration. Fixes the canvas/print font-size mismatch and removes line-print mode.
+5. Output correctness — ZPL escaping, bold text, image re-encoding on resize, element lost when dragged across sections.
+6. Field catalog — file format, sample JSON import, JSON Schema import, editor, generic default invoice catalog.
+7. Formats and preview — format codes, preview culture, sample-data canvas mode.
+8. Overflow modes (truncate / wrap / alignment).
+9. Editor ergonomics — multi-select, copy / paste / duplicate, Delete key, layer list, locking.
+10. Embedding API (catalog, template, save hooks, locale).
+
+### Later (candidates)
+- Content builder — compose the content of a text, barcode or QR element from catalog fields and static text. Presets sit on top of it, e.g. a GİB e-Fatura / e-Arşiv QR preset. Values inside such content can use culture-invariant formats (see D3).

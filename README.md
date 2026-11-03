@@ -64,3 +64,7 @@ To deploy manually:
 ### Backlog
 - [ ] Multi-page support
 - [ ] Advanced Barcode properties (width ratio, check digit)
+
+## License
+
+[MIT](./LICENSE)
