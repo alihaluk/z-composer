@@ -71,3 +71,24 @@ describe('wrapText', () => {
     expect(wrapText('a b c d e', 1, 2)).toEqual(['a', 'b']);
   });
 });
+
+describe('Code 128 data', () => {
+  it('writes > as >0 so the printer does not read it as a control code', () => {
+    const tpl = '^XA\n^LL10\n^FX ZC:BAND id=a height=10\n^LH0,0\n^FO0,0^BY2^BCN,50,Y,N,N^FH_^FD{{Code}}^FS\n^FO0,20^A0N,20,20^FH_^FD{{Code}}^FS\n^FX ZC:END\n^LH0,0\n^XZ';
+    const out = fillTemplate(tpl, { Code: 'A>B_C' }, { locale: 'tr-TR' });
+    expect(out).toContain('^BCN,50,Y,N,N^FH_^FDA>0B_5FC^FS');
+    expect(out).toContain('^A0N,20,20^FH_^FDA>B_5FC^FS');
+  });
+});
+
+describe('field block data', () => {
+  const tpl = (grow: boolean) => `^XA\n^LL10\n^FX ZC:BAND id=a height=10\n^LH0,0\n${grow ? '^FX ZC:GROW cpl=6 lines=3 lineHeight=24\n' : ''}^FO0,0^A0N,20,20^FB200,3,4,L^FH_^FDa\\\\b {{V}}^FS\n^FX ZC:END\n^LH0,0\n^XZ`;
+
+  it('doubles backslashes so ^FB prints them instead of reading \\& as a line break', () => {
+    expect(fillTemplate(tpl(false), { V: 'c\\&d' }, { locale: 'tr-TR' })).toContain('^FDa\\\\b c\\\\&d^FS');
+  });
+
+  it('keeps backslashes when it wraps growing text itself', () => {
+    expect(fillTemplate(tpl(true), { V: 'c\\d' }, { locale: 'tr-TR' })).toContain('^FDa\\\\b\\&c\\\\d^FS');
+  });
+});

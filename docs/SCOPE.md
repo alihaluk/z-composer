@@ -152,7 +152,7 @@ Placeholder syntax and escaping, band and condition markers, length calculation,
 2. ~~Test baseline for the output and CI~~ — done: Vitest tests and `.github/workflows/ci.yml`.
 3. ~~Own preview renderer replacing Labelary (D7)~~ — done: `src/preview`. Still open: calibrating the font width table on the reference printer.
 4. ~~Template schema v2~~ — done: millimetre units, printer profile, bands, conditions, overflow and format, v1 migration; the ZPL output follows docs/OUTPUT_SPEC.md and line-print mode is removed.
-5. Output correctness — ZPL escaping, bold text, image re-encoding on resize, element lost when dragged across sections.
+5. ~~Output correctness~~ — done: `^FH` escaping, bold text, images encoded at their current size, positions kept when moving between bands, plus `>` in Code 128 and `\` in field blocks (docs/REVIEW_FINDINGS.md).
 6. Field catalog — file format, sample JSON import, JSON Schema import, editor, generic default invoice catalog.
 7. Formats and preview — format codes, preview culture, sample-data canvas mode.
 8. Overflow modes (truncate / wrap / alignment).

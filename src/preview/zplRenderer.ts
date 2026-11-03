@@ -56,7 +56,7 @@ function drawText(ctx: CanvasRenderingContext2D, item: TextItem) {
     return;
   }
 
-  const lines = item.text.split('\\&').flatMap(part => wrapLine(ctx, part, block.width, scaleX));
+  const lines = item.text.split('\n').flatMap(part => wrapLine(ctx, part, block.width, scaleX));
   const lineHeight = item.height + block.lineSpacing;
   const visible = Math.min(lines.length, block.maxLines);
   withOrientation(ctx, item.orientation, item.x, item.y, block.width, visible * lineHeight, () => {

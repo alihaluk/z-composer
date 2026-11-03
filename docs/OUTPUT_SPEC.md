@@ -101,7 +101,11 @@ Examples: `{{DocNumber}}`, `{{Total|fmt=N2}}`, `{{DocDate|fmt=dd.MM.yyyy}}`, `{{
 4. **Format.** If `fmt` is given and the value matches its kind, it is formatted (section 6). Otherwise the converted value is used unformatted.
 5. **Truncate.** If `max` is given, the result is cut to its first `max` characters (Unicode code points). No ellipsis is added.
 6. **Sanitize.** Control characters (U+0000–U+001F, U+007F) are replaced with a space.
-7. **Escape (mandatory).** Replace `_` with `_5F` first, then `^` with `_5E` and `~` with `_7E`.
+7. **Escape (mandatory).** `^FH` escaping is decoded before the printer interprets the field, so two field types need an extra step first:
+   - In a Code 128 field (the line contains `^BC`), replace `>` with `>0`: `^BC` reads `>` plus the next character as a control code.
+   - In a field block (the line contains `^FB`), replace `\` with `\\`: `^FB` reads `\&` as a line break and drops a single `\`.
+
+   Then, in every field, replace `_` with `_5F`, `^` with `_5E` and `~` with `_7E`, in this order.
 
 ## 6. Formats
 

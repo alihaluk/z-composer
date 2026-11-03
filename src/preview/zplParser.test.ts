@@ -23,7 +23,7 @@ describe('parseZpl', () => {
   it('parses a text field with font, block and escapes', () => {
     const { items } = parseZpl('^XA^FO16,8^A0N,22,22^FB360,3,4,R^FH_^FDa_5Fb\\&c^FS^XZ');
     expect(items).toEqual([{
-      kind: 'text', x: 16, y: 8, height: 22, width: 22, orientation: 'N', text: 'a_b\\&c',
+      kind: 'text', x: 16, y: 8, height: 22, width: 22, orientation: 'N', text: 'a_b\nc',
       block: { width: 360, maxLines: 3, lineSpacing: 4, justify: 'R' },
     }]);
   });
@@ -60,5 +60,19 @@ describe('parseZpl', () => {
   it('parses QR codes and strips the error correction prefix', () => {
     const { items } = parseZpl('^XA^FO10,20^BQN,2,4^FH_^FDMA,a_5Fb^FS^XZ');
     expect(items).toEqual([{ kind: 'qr', x: 10, y: 20, magnification: 4, errorCorrection: 'M', text: 'a_b' }]);
+  });
+});
+
+describe('Code 128 invocation codes', () => {
+  it('reads >0 as > and drops other invocation codes, like the printer', () => {
+    const [item] = parseZpl('^XA^FO0,0^BCN,50,Y,N,N^FDA>0B>CD>:E^FS^XZ').items;
+    expect(item).toMatchObject({ kind: 'code128', text: 'A>BDE' });
+  });
+});
+
+describe('field block escapes', () => {
+  it('reads \\& as a line break and \\\\ as a backslash', () => {
+    const [item] = parseZpl('^XA^FO0,0^A0N,20,20^FB200,3,0,L^FDa\\\\b\\&c\\d^FS^XZ').items;
+    expect(item).toMatchObject({ text: 'a\\b\ncd' });
   });
 });

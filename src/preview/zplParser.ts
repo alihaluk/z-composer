@@ -96,6 +96,15 @@ export const decodeFieldData = (data: string, indicator?: string): string => {
   return new TextDecoder().decode(new Uint8Array(bytes));
 };
 
+/**
+ * ^BC treats `>` plus one character as an invocation code: `>0` is a literal `>`,
+ * the others select code sets or functions and print nothing themselves.
+ */
+export const decodeCode128Invocations = (data: string): string => data.replace(/>(.?)/g, (_, c: string) => (c === '0' ? '>' : ''));
+
+/** ^FB reads `\&` as a line break (returned as `\n`) and `\x` as `x`, so `\\` is a backslash. */
+export const decodeFieldBlock = (data: string): string => data.replace(/\\(.?)/g, (_, c: string) => (c === '&' ? '\n' : c));
+
 const hexToBytes = (hex: string): Uint8Array => {
   const clean = hex.replace(/[^0-9A-Fa-f]/g, '');
   const bytes = new Uint8Array(Math.floor(clean.length / 2));
@@ -128,13 +137,13 @@ export function parseZpl(zpl: string): ZplLabel {
     if (data !== null) {
       const text = decodeFieldData(data, hexIndicator);
       if (barcode?.type === 'code128') {
-        label.items.push({ kind: 'code128', ...origin, height: barcode.height, moduleWidth: barcodeDefaults.moduleWidth, orientation: barcode.orientation, printText: barcode.printText, text });
+        label.items.push({ kind: 'code128', ...origin, height: barcode.height, moduleWidth: barcodeDefaults.moduleWidth, orientation: barcode.orientation, printText: barcode.printText, text: decodeCode128Invocations(text) });
       } else if (barcode?.type === 'qr') {
         const match = /^([HQML])[AM],/.exec(text);
         label.items.push({ kind: 'qr', ...origin, magnification: barcode.magnification, errorCorrection: (match?.[1] ?? 'Q') as QrItem['errorCorrection'], text: match ? text.slice(3) : text });
       } else {
         const f = font ?? { ...DEFAULT_FONT, orientation: 'N' as Orientation };
-        label.items.push({ kind: 'text', ...origin, height: f.height, width: f.width, orientation: f.orientation, text, block });
+        label.items.push({ kind: 'text', ...origin, height: f.height, width: f.width, orientation: f.orientation, text: block ? decodeFieldBlock(text) : text, block });
       }
     }
     resetField();

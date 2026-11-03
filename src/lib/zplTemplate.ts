@@ -29,10 +29,21 @@ export function placeholder(el: TemplateElement): string {
   return `{{${body}}}`;
 }
 
+/** In ^BC data `>` starts an invocation code; `>0` stands for the character itself. */
+export const escapeCode128 = (s: string) => s.replace(/>/g, '>0');
+
+/** In ^FB data `\` starts an escape (`\&` is a line break); `\\` stands for the character itself. */
+export const escapeFieldBlock = (s: string) => s.replace(/\\/g, '\\\\');
+
+/** Whether a text element is printed with a ^FB field block. */
+export const usesFieldBlock = (el: TemplateElement) => el.type === 'text' && (el.overflow === 'wrap' || (el.align ?? 'left') !== 'left');
+
 function fieldData(el: TemplateElement): string {
   if (el.isDynamic && el.dataSource) return placeholder(el);
   let text = el.content ?? '';
   if (el.type === 'text' && el.overflow === 'truncate' && el.maxChars) text = [...text].slice(0, el.maxChars).join('');
+  if (el.type === 'barcode' && el.barcodeType !== 'qr') text = escapeCode128(text);
+  if (usesFieldBlock(el)) text = escapeFieldBlock(text);
   return escapeStatic(text);
 }
 

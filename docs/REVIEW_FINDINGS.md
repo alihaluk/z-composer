@@ -15,3 +15,7 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | R4-7 | 4 | minor | open | Images migrated from v1 are re-encoded in the background; if an image cannot be decoded, this is retried on every template change. |
 | R4-8 | 4 | minor | open | The "Import" control is a label around a hidden file input and cannot be reached with the keyboard. |
 | R4-9 | 4 | minor | open | New text elements get the English placeholder content "Text" in every language. |
+| R5-1 | 5 | critical | fixed | `^BC` reads `>` plus the next character as a control code, even when escaped with `^FH`: "AB>CD" was encoded as "ABD". Static and filled Code 128 data now write `>` as `>0` (spec 5.2, step 7); the preview decodes it like a printer. |
+| R5-2 | 5 | major | fixed | `^FB` reads `\&` as a line break and drops a single `\`, also after `^FH` decoding. Aligned and wrapped fields now write `\` as `\\` (spec 5.2, step 7). |
+| R5-3 | 5 | minor | open | The printer font draws `\` like `¢` (seen in Labelary with `^CI28`). This is a property of the resident font, not of the output. |
+| R5-4 | 5 | minor | open | A filled template longer than the printer's maximum label length (`^LL` up to 32000 dots) is not split; the spec leaves this to the filler. |

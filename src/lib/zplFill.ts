@@ -22,7 +22,10 @@ export function lookup(context: Data, root: Data, path: string): unknown {
 }
 
 export const escapeFieldData = (s: string) => s.replace(/_/g, '_5F').replace(/\^/g, '_5E').replace(/~/g, '_7E');
-const decodeStatic = (s: string) => s.replace(/_([0-9A-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+const escapeBlock = (s: string) => s.replace(/\\/g, '\\\\');
+// Static text of a growing field: ^FH escapes decoded, then ^FB backslash escapes.
+const decodeStatic = (s: string) =>
+  s.replace(/_([0-9A-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16))).replace(/\\(.)/g, '$1');
 
 export function evaluateCondition(value: unknown, op: string): boolean {
   if (op === 'notEmpty') return !(value === undefined || value === null || (typeof value === 'string' && !value.trim()) || (Array.isArray(value) && value.length === 0));
@@ -102,8 +105,16 @@ export function fillTemplate(template: string, root: Data, options: FillOptions)
   const out = prologue.filter(l => !l.startsWith('^FX '));
   let offset = 0;
 
-  const fillLine = (line: string, ctx: Data) =>
-    line.replace(/\{\{(.*?)\}\}/g, (_, inner: string) => escapeFieldData(resolvePlaceholder(inner, ctx, root, options.locale)));
+  const fillLine = (line: string, ctx: Data) => {
+    const code128 = line.includes('^BC');
+    const block = line.includes('^FB');
+    return line.replace(/\{\{(.*?)\}\}/g, (_, inner: string) => {
+      let value = resolvePlaceholder(inner, ctx, root, options.locale);
+      if (code128) value = value.replace(/>/g, '>0');
+      if (block) value = escapeBlock(value);
+      return escapeFieldData(value);
+    });
+  };
 
   const content = (nodes: Node[], ctx: Data, acc: { lines: string[]; growY: number; extra: number }) => {
     for (const node of nodes) {
@@ -118,7 +129,7 @@ export function fillTemplate(template: string, root: Data, options: FillOptions)
         if (!m) { acc.lines.push(fillLine(node.text, ctx)); continue; }
         const text = m[2].split(/(\{\{.*?\}\})/).map(part => part.startsWith('{{') ? resolvePlaceholder(part.slice(2, -2), ctx, root, options.locale) : decodeStatic(part)).join('');
         const lines = wrapText(text, Number(node.grow.cpl), Number(node.grow.lines));
-        acc.lines.push(m[1] + lines.map(escapeFieldData).join('\\&') + m[3]);
+        acc.lines.push(m[1] + lines.map(l => escapeFieldData(escapeBlock(l))).join('\\&') + m[3]);
         acc.growY = yOf(node.text);
         acc.extra = Math.max(0, lines.length - 1) * Number(node.grow.lineHeight);
       } else {

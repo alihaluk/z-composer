@@ -87,3 +87,26 @@ describe('generateTemplateZpl', () => {
     expect(markerId('head')).toBe('head');
   });
 });
+
+describe('Code 128 static data', () => {
+  it('escapes > for ^BC but not for text', () => {
+    expect(elementLines({ id: 'c', type: 'barcode', x: 0, y: 0, width: 30, height: 10, content: 'A>B' }, 203)[0]).toContain('^FDA>0B^FS');
+    expect(elementLines({ id: 't', type: 'text', x: 0, y: 0, width: 30, height: 4, content: 'A>B' }, 203)[0]).toContain('^FDA>B^FS');
+  });
+});
+
+describe('field block static data', () => {
+  it('doubles backslashes only when the text uses ^FB', () => {
+    expect(elementLines(text({ content: 'a\\b', align: 'right' }), 203)[0]).toContain('^FDa\\\\b^FS');
+    expect(elementLines(text({ content: 'a\\b' }), 203)[0]).toContain('^FDa\\b^FS');
+  });
+});
+
+describe('uploaded images', () => {
+  it('are encoded at the element size, so resizing changes the printed graphic', () => {
+    const bitmap = { width: 4, height: 2, data: btoa(String.fromCharCode(...new Array(8).fill(0))) };
+    const line = (width: number) => elementLines({ id: 'i', type: 'image', x: 0, y: 0, width, height: 10, bitmap }, 203)[0];
+    expect(line(4)).toMatch(/^\^FO0,0\^GFA,64,64,4,F{128}\^FS$/);
+    expect(line(8)).toMatch(/^\^FO0,0\^GFA,256,256,8,F{512}\^FS$/);
+  });
+});
