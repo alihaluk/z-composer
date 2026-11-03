@@ -9,7 +9,7 @@ A React-based visual designer for creating ZPL (Zebra Programming Language) invo
 - **Dynamic Data Binding**: Bind elements to `[Product.Name]`, `[Total]`, etc.
 - **Canvas Zoom**: Scale the workspace (25% - 300%) for precise editing.
 - **Specific Invoice Layout**: Pre-built template matching GIB requirements (Logos, Totals, QR).
-- **ZPL Preview**: Instant visual preview using Labelary API.
+- **ZPL Preview**: Built-in renderer that draws the ZPL output in the browser at printer resolution, with sample data or field names. No data leaves the browser.
 - **Custom Image Upload**: Upload images, convert to monochrome, and generate ZPL hex (`^GFA`) automatically.
 - **Keyboard Navigation**: Move selected elements with Arrow keys (Shift+Arrow for 10px steps).
 - **Line Print Mode**: Support for text-only output simulation.

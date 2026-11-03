@@ -68,7 +68,10 @@
     "close": "Close",
     "generatedCode": "Generated Code",
     "rendering": "Rendering Label...",
-    "failed": "Failed to load preview. Check console."
+    "failed": "Failed to render preview. Check console.",
+    "sampleData": "Sample data",
+    "fieldNames": "Field names",
+    "approximate": "The preview is drawn in the browser. Text widths are approximate; a similar open font stands in for the printer font."
   },
   "sections": {
     "header": "Header",

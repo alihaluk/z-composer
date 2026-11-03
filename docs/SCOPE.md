@@ -149,8 +149,8 @@ Placeholder syntax and escaping, band and condition markers, length calculation,
 
 ## 5. Roadmap
 1. ~~Output specification~~ — done: [`docs/OUTPUT_SPEC.md`](./OUTPUT_SPEC.md).
-2. Test baseline for the output and CI (lint, test, build) on pull requests.
-3. Own preview renderer replacing Labelary (D7).
+2. ~~Test baseline for the output and CI~~ — done: Vitest tests and `.github/workflows/ci.yml`.
+3. ~~Own preview renderer replacing Labelary (D7)~~ — done: `src/preview`. Still open: calibrating the font width table on the reference printer.
 4. Template schema v2 — millimetre units, printer profile, bands, conditions, overflow, format — with v1 migration. Fixes the canvas/print font-size mismatch and removes line-print mode.
 5. Output correctness — ZPL escaping, bold text, image re-encoding on resize, element lost when dragged across sections.
 6. Field catalog — file format, sample JSON import, JSON Schema import, editor, generic default invoice catalog.

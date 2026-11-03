@@ -38,7 +38,7 @@ function MyPage() {
 - **Sidebar**: Drag-and-drop source (Toolbox).
 - **Canvas**: Drop target (Design Area).
 - **PropertiesPanel**: Configuration for selected elements.
-- **PreviewModal**: Visualizes the ZPL output using Labelary API.
+- **PreviewModal**: Visualizes the ZPL output with the built-in renderer (`src/preview`), entirely in the browser.
 
 ### 3.4. Data Sources (`dataSources.ts`)
 The template uses a centralized data definitions file.

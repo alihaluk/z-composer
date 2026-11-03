@@ -68,7 +68,10 @@
     "close": "Kapat",
     "generatedCode": "Oluşturulan Kod",
     "rendering": "Etiket Oluşturuluyor...",
-    "failed": "Önizleme yüklenemedi. Konsolu kontrol edin."
+    "failed": "Önizleme oluşturulamadı. Konsolu kontrol edin.",
+    "sampleData": "Örnek veri",
+    "fieldNames": "Alan adları",
+    "approximate": "Önizleme tarayıcıda çizilir. Metin genişlikleri yaklaşıktır; yazıcı fontu yerine benzer açık bir font kullanılır."
   },
   "sections": {
     "header": "Üst Bilgi",
