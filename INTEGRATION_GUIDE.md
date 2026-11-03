@@ -56,7 +56,7 @@ The designer fills its container; give the container a height.
 | `catalog` | `Catalog` | generic invoice catalog | Fields the template can bind to. Passing a different object later replaces it. |
 | `language` | `'tr' \| 'en'` | detected | Interface language. |
 | `locale` | `string` | follows `language` | Culture used to show sample values, e.g. `tr-TR`. It is not stored in the template. |
-| `storageKey` | `string \| null` | `zcomposer_templates_v2` | `localStorage` key for the built-in saved-templates list; `null` hides the list. |
+| `storageKey` | `string \| null` | `zcomposer_templates_v2` | `localStorage` key for the built-in saved-templates list and, when no `template` is passed, for the draft that reopens the last design after a reload; `null` hides the list and keeps nothing. |
 | `catalogEditable` | `boolean` | `true` | Whether users can import, edit or replace the catalog. |
 | `onChange` | `(template) => void` | — | Called after every change of the template. |
 | `onSave` | `({ template, zpl }) => void` | — | Shows a Save button. `template` carries the `fieldsUsed` snapshot; `zpl` is the ZPL template. |

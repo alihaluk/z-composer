@@ -60,4 +60,5 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | C-3 | conformance | minor | documented | The specification did not say what `^LL` is when nothing is printed (the filler wrote 1), nor that unknown markers are ignored; both are now stated. |
 | C-4 | conformance | minor | fixed | A negative value that rounds to zero printed as `-0,00`; it now prints `0,00` (specification 6.1, two new cases). |
 | D-1 | dependencies | minor | fixed | `npm audit` reports a moderate advisory for `minimatch` inside ESLint (development only; the fix needs ESLint 10). The shipped dependencies have no known vulnerabilities. (1.3.0: ESLint 10 and a `minimatch` override; `npm audit` reports no vulnerabilities) |
-
+| U-15 | 1.4.0 | minor | fixed | Upper-case section titles used the English rule in the Turkish interface (`İÇERIK`, `METIN`); the component root now carries the interface language. |
+| U-16 | 1.4.0 | major | fixed | A reload or a closed tab lost the design being edited unless it had been saved; the standalone designer now keeps it as a draft. |

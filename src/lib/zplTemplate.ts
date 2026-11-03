@@ -2,7 +2,7 @@
 import { mmToDots } from './constants';
 import { bitmapToZpl } from './imageUtils';
 import { A0_AVERAGE_ADVANCE } from '../preview/fontMetrics';
-import { type Band, type Condition, type Dpi, type Rotation, type Template, type TemplateElement } from '../types';
+import { type Band, type Condition, type ContentPart, type Dpi, type FieldPart, type Rotation, type Template, type TemplateElement } from '../types';
 
 export const DEFAULT_FONT_MM = 3;
 export const DEFAULT_THICKNESS_MM = 0.25;
@@ -23,12 +23,24 @@ export const markerId = (id: string) => {
 };
 
 export function placeholder(el: TemplateElement): string {
-  let body = el.dataSource ?? '';
-  if (el.format) body += `|fmt=${el.format}`;
-  if (el.invariant) body += '|inv';
-  if (el.type === 'text' && el.overflow === 'truncate' && el.maxChars) body += `|max=${el.maxChars}`;
+  return fieldPlaceholder({
+    path: el.dataSource ?? '', format: el.format, invariant: el.invariant,
+    max: el.type === 'text' && el.overflow === 'truncate' ? el.maxChars : undefined,
+  });
+}
+
+export function fieldPlaceholder(part: FieldPart): string {
+  let body = part.path;
+  if (part.format) body += `|fmt=${part.format}`;
+  if (part.invariant) body += '|inv';
+  if (part.max) body += `|max=${part.max}`;
   return `{{${body}}}`;
 }
+
+export const isFieldPart = (part: ContentPart): part is FieldPart => 'path' in part;
+
+/** Whether an element's content is composed of parts. */
+export const isComposed = (el: TemplateElement) => !!el.isDynamic && el.parts !== undefined;
 
 /** In ^BC data `>` starts an invocation code; `>0` stands for the character itself. */
 export const escapeCode128 = (s: string) => s.replace(/>/g, '>0');
@@ -39,13 +51,20 @@ export const escapeFieldBlock = (s: string) => s.replace(/\\/g, '\\\\');
 /** Whether a text element is printed with a ^FB field block. */
 export const usesFieldBlock = (el: TemplateElement) => el.type === 'text' && (el.overflow === 'wrap' || (el.align ?? 'left') !== 'left');
 
-function fieldData(el: TemplateElement): string {
-  if (el.isDynamic && el.dataSource) return placeholder(el);
-  let text = el.content ?? '';
-  if (el.type === 'text' && el.overflow === 'truncate' && el.maxChars) text = [...text].slice(0, el.maxChars).join('');
+/** Field data of static text, escaped for the element's field type. */
+function staticData(el: TemplateElement, text: string): string {
   if (el.type === 'barcode' && el.barcodeType !== 'qr') text = escapeCode128(text);
   if (usesFieldBlock(el)) text = escapeFieldBlock(text);
   return escapeStatic(text);
+}
+
+function fieldData(el: TemplateElement): string {
+  // A composed field may mix static text and placeholders (docs/OUTPUT_SPEC.md 5.1).
+  if (isComposed(el)) return (el.parts ?? []).map(p => (!isFieldPart(p) ? staticData(el, p.text) : p.path ? fieldPlaceholder(p) : '')).join('');
+  if (el.isDynamic && el.dataSource) return placeholder(el);
+  let text = el.content ?? '';
+  if (el.type === 'text' && el.overflow === 'truncate' && el.maxChars) text = [...text].slice(0, el.maxChars).join('');
+  return staticData(el, text);
 }
 
 export interface TextMetrics {

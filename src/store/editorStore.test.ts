@@ -136,3 +136,39 @@ describe('preview culture', () => {
     expect(createEditorStore({ storageKey: null, defaultLocale: 'en-US' }).getState().previewLocale).toBe('en-US');
   });
 });
+
+describe('draft', () => {
+  afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
+
+  const memoryStorage = () => {
+    const data = new Map<string, string>();
+    vi.stubGlobal('localStorage', { getItem: (k: string) => data.get(k) ?? null, setItem: (k: string, v: string) => void data.set(k, v) });
+    return data;
+  };
+
+  it('reopens the last design and its name after a reload', () => {
+    memoryStorage();
+    vi.useFakeTimers();
+    const first = createEditorStore();
+    first.getState().setTemplate(template(), 'Fatura');
+    vi.runAllTimers();
+    const reopened = createEditorStore().getState();
+    expect(reopened.template.bands.map(b => b.id)).toEqual(['a', 'b']);
+    expect(reopened.templateName).toBe('Fatura');
+  });
+
+  it('is not used when the host passes a template or disables storage', () => {
+    memoryStorage();
+    vi.useFakeTimers();
+    createEditorStore().getState().setTemplate(template());
+    vi.runAllTimers();
+    const own = { ...template(), bands: [] };
+    expect(createEditorStore({ template: own }).getState().template).toBe(own);
+    expect(createEditorStore({ storageKey: null }).getState().template.bands).toHaveLength(3);
+  });
+
+  it('ignores a draft that is not a valid template', () => {
+    memoryStorage().set('zcomposer_templates_v2_draft', '{"template":{"bands":"x"}}');
+    expect(createEditorStore().getState().template.bands).toHaveLength(3);
+  });
+});

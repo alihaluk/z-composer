@@ -111,6 +111,15 @@ describe('missingFields and fieldsUsed', () => {
     expect(missingFields(t, DEFAULT_CATALOG)).toEqual(['Rows', 'Name', 'Customer.Name']);
   });
 
+  it('checks every field of composed content', () => {
+    const t: Template = parseTemplate({
+      schemaVersion: 2, printer: { widthMm: 72, dpi: 203 },
+      bands: [{ id: 'a', name: 'A', height: 5, elements: [{ id: 'e', type: 'text', x: 0, y: 0, width: 1, height: 1, isDynamic: true,
+        parts: [{ path: 'Document.Number' }, { text: 'x' }, { path: 'Document.Nope' }, { path: '' }] }] }],
+    });
+    expect(missingFields(t, DEFAULT_CATALOG)).toEqual(['Document.Nope']);
+  });
+
   it('records item fields with their array', () => {
     const used = fieldsUsed(invoicePreset(), DEFAULT_CATALOG);
     expect(used).toContainEqual({ path: 'Lines[].Product.Name', type: 'string' });

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { ArrowDown, ArrowUp, Lock, LockOpen, Plus, Trash2 } from 'lucide-react';
 import { arrayFields, fieldLabel } from '../../lib/catalog';
+import { displayText } from '../../lib/elementDisplay';
 import { useEditor, useEditorStore } from '../../store/editorStore';
 import { type Band } from '../../types';
 import { Button } from '../ui/Button';
@@ -49,7 +50,7 @@ export function BandProperties({ band }: { band: Band }) {
             <li key={el.id} className="flex items-center gap-1 text-xs">
               <button type="button" className="flex-1 truncate text-left px-1.5 py-1 rounded hover:bg-gray-100" onClick={() => s.select({ bandId: band.id, ids: [el.id] })}>
                 <span className="text-gray-500 mr-1">{t(`tools.${el.type === 'barcode' && el.barcodeType === 'qr' ? 'qr' : el.type}`)}</span>
-                {el.isDynamic ? `[${el.dataSource ?? ''}]` : el.content ?? el.imageKey ?? ''}
+                {el.type === 'text' || el.type === 'barcode' ? displayText(el, band, catalog, 'fields', 'en-US') : el.imageKey ?? ''}
               </button>
               <button type="button" aria-label={el.locked ? t('layers.unlock') : t('layers.lock')} className="p-1 text-gray-500 hover:text-gray-800" onClick={() => s.updateElement(band.id, el.id, { locked: !el.locked })}>
                 {el.locked ? <Lock size={12} /> : <LockOpen size={12} />}

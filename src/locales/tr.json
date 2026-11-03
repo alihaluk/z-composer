@@ -158,6 +158,7 @@
     "content": "İçerik",
     "static": "Sabit",
     "dynamic": "Alan",
+    "composed": "Birleşik",
     "dataSource": "Alan",
     "format": "Biçim",
     "formatHint": "Kültüre göre basılır (tr-TR, en-US ...).",
@@ -242,6 +243,21 @@
     "undo": "Geri al / yinele",
     "deselectKeys": "Esc",
     "deselect": "Seçimi kaldır"
+  },
+  "builder": {
+    "title": "Sabit metin ve alanları sırayla birleştirir",
+    "empty": "Henüz parça yok. Metin ya da alan ekleyin.",
+    "text": "Metin",
+    "field": "Alan",
+    "textPlaceholder": "Sabit metin, boşluklar dahil",
+    "addText": "Metin",
+    "addField": "Alan",
+    "moveUp": "Yukarı taşı",
+    "moveDown": "Aşağı taşı",
+    "remove": "Parçayı sil",
+    "max": "En fazla karakter",
+    "maxHint": "0: sınır yok",
+    "truncateHint": "Birleşik içerikte kesme her alanın kendi \"En fazla karakter\" ayarıyla yapılır; taşmayı \"Olduğu gibi\" ya da \"Satırlara böl\" yapın."
   },
   "panels": {
     "hideTools": "Araç panelini gizle",

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { I18nextProvider } from 'react-i18next';
+import { useEffect, useState, type ReactNode } from 'react';
+import { I18nextProvider, useTranslation } from 'react-i18next';
 import { Layout } from './components/Layout';
 import { Sidebar } from './components/Sidebar';
 import { Editor } from './components/Editor';
@@ -60,9 +60,15 @@ function useBitmapRepair(store: EditorStore) {
   }, [store]);
 }
 
+/** The root element carries the interface language, so upper-case titles follow its rules (i → İ in Turkish). */
+function LanguageRoot({ className, children }: { className: string; children: ReactNode }) {
+  const { i18n } = useTranslation();
+  return <div lang={i18n.resolvedLanguage} className={className}>{children}</div>;
+}
+
 export function ZComposer({ template, catalog, language, locale, storageKey, catalogEditable = true, onChange, onSave, className }: ZComposerProps) {
   const [i18n] = useState(() => createI18n(language));
-  const [store] = useState(() => createEditorStore({ template: template ?? emptyTemplate(bandNames(i18n.t)), catalog, storageKey, locale, defaultLocale: defaultLocale(i18n.resolvedLanguage) }));
+  const [store] = useState(() => createEditorStore({ template, emptyTemplate: emptyTemplate(bandNames(i18n.t)), catalog, storageKey, locale, defaultLocale: defaultLocale(i18n.resolvedLanguage) }));
   useBitmapRepair(store);
 
   useEffect(() => { if (language && i18n.resolvedLanguage !== language) void i18n.changeLanguage(language); }, [i18n, language]);
@@ -83,11 +89,11 @@ export function ZComposer({ template, catalog, language, locale, storageKey, cat
   return (
     <I18nextProvider i18n={i18n}>
       <EditorStoreContext.Provider value={store}>
-        <div className={cn('zc-root h-full', className)}>
+        <LanguageRoot className={cn('zc-root h-full', className)}>
           <Layout sidebar={<Sidebar allowLocalTemplates={storageKey !== null} catalogEditable={catalogEditable} showLanguageSwitch={!language} onSave={save} />} propertiesPanel={<PropertiesPanel />}>
             <Editor />
           </Layout>
-        </div>
+        </LanguageRoot>
       </EditorStoreContext.Provider>
     </I18nextProvider>
   );

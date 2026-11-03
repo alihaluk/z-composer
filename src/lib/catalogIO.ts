@@ -195,7 +195,8 @@ export function templateBindings(template: Template): { path: string; repeat?: s
     if (band.repeat) out.push({ path: band.repeat, kind: 'repeat' });
     if (band.condition?.path) out.push({ path: band.condition.path, kind: 'condition' });
     for (const el of band.elements) {
-      if (el.isDynamic && el.dataSource) out.push({ path: el.dataSource, repeat: band.repeat, kind: 'field' });
+      if (el.isDynamic && el.parts) for (const p of el.parts) { if ('path' in p && p.path) out.push({ path: p.path, repeat: band.repeat, kind: 'field' }); }
+      else if (el.isDynamic && el.dataSource) out.push({ path: el.dataSource, repeat: band.repeat, kind: 'field' });
       if (el.condition?.path) out.push({ path: el.condition.path, repeat: band.repeat, kind: 'condition' });
       if (el.type === 'image' && el.imageKey) out.push({ path: el.imageKey, repeat: band.repeat, kind: 'image' });
     }

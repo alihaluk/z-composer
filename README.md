@@ -9,11 +9,12 @@ A visual designer for ZPL receipt and invoice templates for Zebra thermal printe
 - **Bands**: a template is a list of bands; a band is printed once or repeats for every item of an array (invoice lines, VAT breakdown, installments). Bands and elements can be hidden by conditions (not empty, not zero).
 - **Elements**: text, box, line, Code 128, QR and images, positioned in millimetres with snapping to other elements, the page centre and a 0.5 mm grid.
 - **Field catalog**: bind elements to the fields of your own data structure. Build the catalog from an example JSON document or a JSON Schema (.NET / Java DTOs), then adjust types and labels. A generic invoice catalog is included.
+- **Content builder**: join static text and several fields in one text, Code 128 or QR element, each field with its own format (e.g. QR content in the invariant culture).
 - **Culture-independent formats**: numbers and dates keep a format code (`N2`, `d`, `dd.MM.yyyy` ...), not a culture; the printing side applies its culture. The designer previews any culture.
 - **Overflow**: text can stay as is, be truncated, or wrap; wrapped text can grow its band, and the canvas shows the grown rows.
 - **Printer profile**: printable width and 203 / 300 / 600 dpi per template; continuous receipt paper.
 - **Own preview**: the ZPL output is drawn in the browser at printer resolution, with real Code 128 and QR encoding. No data leaves the browser.
-- **Editing**: multi-select, group move and alignment, copy / paste / duplicate, layers, locking, undo / redo, keyboard shortcuts.
+- **Editing**: multi-select across bands, group move and alignment, copy / paste / duplicate, layers, locking, undo / redo, keyboard shortcuts.
 - **Embeddable**: a React component with its own state, translations and scoped styles ([integration guide](./INTEGRATION_GUIDE.md)).
 - **Turkish and English** interface.
 

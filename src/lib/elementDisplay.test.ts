@@ -17,6 +17,12 @@ describe('displayText', () => {
     expect(displayText(lines.elements[1], lines, DEFAULT_CATALOG, 'sample', 'tr-TR')).toBe('1.200,50');
     expect(displayText(lines.elements[1], lines, DEFAULT_CATALOG, 'sample', 'en-US')).toBe('1,200.50');
   });
+
+  it('joins composed parts, with item and document fields', () => {
+    const el = { ...lines.elements[1], format: undefined, parts: [{ text: '#' }, { path: 'LineNumber' }, { text: ' ' }, { path: 'Total', format: 'N2' }, { text: ' ' }, { path: '$.Document.Currency' }, { path: '' }] };
+    expect(displayText(el, lines, DEFAULT_CATALOG, 'fields', 'tr-TR')).toBe('#[LineNumber] [Total] [$.Document.Currency]');
+    expect(displayText(el, lines, DEFAULT_CATALOG, 'sample', 'tr-TR')).toBe('#1 1.200,50 TRY');
+  });
 });
 
 describe('sampleGrowth', () => {

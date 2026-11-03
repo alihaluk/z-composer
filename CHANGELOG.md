@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.0 — 2026-11-04
+
+### Added
+- Content builder: the content of a text, Code 128 or QR element can join static text and catalog fields in order, each field with its own format, culture and maximum length. The output uses the existing placeholders (specification 5.1), so fillers need no change.
+- The standalone designer keeps the design being edited as a draft and reopens it after a reload.
+
+### Fixed
+- Upper-case titles follow the interface language (`İÇERİK`, not `İÇERIK`); the component root carries `lang`.
+
 ## 1.3.0 — 2026-11-03
 
 ### Added

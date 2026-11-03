@@ -76,6 +76,8 @@ export interface EditorStoreOptions {
   locale?: string;
   /** Preview culture when neither the host nor an earlier session chose one. */
   defaultLocale?: string;
+  /** Template for a new design when neither the host nor a draft gives one. */
+  emptyTemplate?: Template;
   /** localStorage key for saved templates; null disables local saving. */
   storageKey?: string | null;
 }
@@ -146,6 +148,22 @@ const withoutIds = (selection: Selection | null, ids: string[]): Selection | nul
 const cloneElements = (elements: TemplateElement[], offset: number) =>
   elements.map(el => ({ ...structuredClone(el), id: newId(), x: el.x + offset, y: el.y + offset }));
 
+interface Draft { template: Template; templateName: string | null }
+
+/** The design being edited, kept so that a reload or a closed tab does not lose it. */
+function readDraft(key: string | null): Draft | null {
+  const raw = key ? storageGet(key) : null;
+  if (!raw) return null;
+  try {
+    const draft = JSON.parse(raw) as { template: unknown; templateName?: unknown };
+    return { template: parseTemplate(draft.template), templateName: typeof draft.templateName === 'string' ? draft.templateName : null };
+  } catch {
+    return null;
+  }
+}
+
+const DRAFT_SAVE_DELAY_MS = 500;
+
 function readCatalog(key: string | null): Catalog | null {
   const raw = key ? storageGet(key) : null;
   if (!raw) return null;
@@ -161,13 +179,16 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
   // A catalog passed in by the host wins; otherwise the standalone app keeps the last one used.
   const catalogKey = storageKey === null ? null : `${storageKey}_catalog`;
   const localeKey = storageKey === null || options.locale ? null : `${storageKey}_locale`;
+  // A template passed in by the host wins; otherwise the standalone app reopens the last design.
+  const draftKey = storageKey === null || options.template ? null : `${storageKey}_draft`;
+  const draft = readDraft(draftKey);
 
-  return createStore<EditorState>()(
+  const store = createStore<EditorState>()(
     temporal(
       (set, get) => ({
-        template: options.template ?? emptyTemplate(),
+        template: options.template ?? draft?.template ?? options.emptyTemplate ?? emptyTemplate(),
         catalog: options.catalog ?? readCatalog(catalogKey) ?? DEFAULT_CATALOG,
-        templateName: options.templateName ?? null,
+        templateName: options.templateName ?? draft?.templateName ?? null,
         selection: null,
         zoom: 1.5,
         // Sample data shows the design as it prints; without a sample, field names are clearer.
@@ -324,6 +345,22 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
       },
     ),
   ) as EditorStore;
+
+  if (draftKey) {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    store.subscribe((s, prev) => {
+      if (s.template === prev.template && s.templateName === prev.templateName) return;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        try {
+          localStorage.setItem(draftKey, JSON.stringify({ template: s.template, templateName: s.templateName }));
+        } catch {
+          // Keeping the draft is a convenience; a full or blocked storage only loses it.
+        }
+      }, DRAFT_SAVE_DELAY_MS);
+    });
+  }
+  return store;
 }
 
 export const EditorStoreContext = createContext<EditorStore | null>(null);

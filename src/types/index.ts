@@ -20,6 +20,18 @@ export interface GrayBitmap {
   data: string;
 }
 
+/** One piece of composed content: static text, or a catalog field with its own options. */
+export type ContentPart = { text: string } | FieldPart;
+
+export interface FieldPart {
+  path: string;
+  /** Format code (docs/OUTPUT_SPEC.md section 6). */
+  format?: string;
+  invariant?: boolean;
+  /** Maximum characters of this value. */
+  max?: number;
+}
+
 export interface TemplateElement {
   id: string;
   type: ElementType;
@@ -38,6 +50,8 @@ export interface TemplateElement {
   format?: string;
   /** Format with the invariant culture. */
   invariant?: boolean;
+  /** Composed content of a dynamic element: static text and fields in order; replaces `dataSource`. */
+  parts?: ContentPart[];
 
   // Text
   /** Character height in millimetres. */

@@ -110,3 +110,27 @@ describe('uploaded images', () => {
     expect(line(8)).toMatch(/^\^FO0,0\^GFA,256,256,8,F{512}\^FS$/);
   });
 });
+
+describe('composed content', () => {
+  const parts = [{ text: 'No: ' }, { path: 'Doc.No', max: 8 }, { text: ' / ' }, { path: 'Total', format: 'F2', invariant: true }, { path: '' }];
+
+  it('writes static parts escaped and fields as placeholders, leaving out unchosen fields', () => {
+    expect(elementLines(text({ isDynamic: true, parts: [{ text: '{_' }, ...parts] }), 203)[0])
+      .toBe('^FO16,8^A0N,24,24^FH_^FD_7B_5FNo: {{Doc.No|max=8}} / {{Total|fmt=F2|inv}}^FS');
+  });
+
+  it('escapes static parts for Code 128 and field blocks', () => {
+    expect(elementLines(text({ type: 'barcode', barcodeType: 'code128', isDynamic: true, parts: [{ text: 'A>' }, { path: 'Code' }] }), 203)[0]).toContain('^FDA>0{{Code}}^FS');
+    expect(elementLines(text({ overflow: 'wrap', isDynamic: true, parts: [{ text: 'a\\b ' }, { path: 'X' }] }), 203)[0]).toContain('^FDa\\\\b {{X}}^FS');
+  });
+
+  it('fills like any field with several placeholders', () => {
+    const tpl = template({ bands: [{ id: 'a', name: 'A', height: 5, elements: [text({ isDynamic: true, parts })] }] });
+    expect(fillTemplate(generateTemplateZpl(tpl), { Doc: { No: 'FTR_2026000123' }, Total: 2751.5 }, { locale: 'tr-TR' }))
+      .toContain('^FDNo: FTR_5F2026 / 2751.50^FS');
+  });
+
+  it('uses static content again when the element is no longer dynamic', () => {
+    expect(elementLines(text({ isDynamic: false, parts, content: 'Hi' }), 203)[0]).toContain('^FDHi^FS');
+  });
+});

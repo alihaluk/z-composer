@@ -158,6 +158,7 @@
     "content": "Content",
     "static": "Static",
     "dynamic": "Field",
+    "composed": "Composed",
     "dataSource": "Field",
     "format": "Format",
     "formatHint": "Printed in the filler's culture (tr-TR, en-US ...).",
@@ -242,6 +243,21 @@
     "undo": "Undo / redo",
     "deselectKeys": "Esc",
     "deselect": "Clear the selection"
+  },
+  "builder": {
+    "title": "Joins static text and fields in order",
+    "empty": "No parts yet. Add text or a field.",
+    "text": "Text",
+    "field": "Field",
+    "textPlaceholder": "Static text, spaces included",
+    "addText": "Text",
+    "addField": "Field",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "remove": "Remove part",
+    "max": "Maximum characters",
+    "maxHint": "0: no limit",
+    "truncateHint": "Composed content is cut by each field's own \"Maximum characters\"; set overflow to \"As is\" or \"Wrap\"."
   },
   "panels": {
     "hideTools": "Hide tools panel",

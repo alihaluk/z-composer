@@ -79,8 +79,8 @@ export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) 
   const hidden = hiddenInSample(el, band, catalog, mode);
   // A field without a sample value would be invisible; its name is shown faded instead.
   const sampleText = displayText(el, band, catalog, mode, locale);
-  const emptySample = mode === 'sample' && el.isDynamic && !!el.dataSource && sampleText === '';
-  const shownText = emptySample ? `[${el.dataSource}]` : sampleText;
+  const emptySample = mode === 'sample' && el.isDynamic && (!!el.dataSource || !!el.parts?.length) && sampleText === '';
+  const shownText = emptySample ? displayText(el, band, catalog, 'fields', locale) : sampleText;
   const style: CSSProperties = {
     position: 'absolute',
     left: mmToPx(el.x),

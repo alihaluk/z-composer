@@ -42,6 +42,18 @@ function checkPath(path: unknown, where: string) {
   if (path !== undefined && path !== '' && (typeof path !== 'string' || !isValidPath(path))) fail(`${where}: invalid field path ${JSON.stringify(path)}`);
 }
 
+function checkParts(parts: unknown, where: string) {
+  if (!Array.isArray(parts)) fail(`${where}: parts must be an array`);
+  parts.forEach((p, k) => {
+    const at = `${where} part ${k}`;
+    if (isObject(p) && typeof p.text === 'string' && p.path === undefined) return;
+    // An empty path is a field part whose field is not chosen yet; it is left out of the output.
+    if (!isObject(p) || typeof p.path !== 'string' || (p.path !== '' && !isValidPath(p.path))) fail(`${at}: needs static text or a valid field path`);
+    if (p.format !== undefined && !isValidFormat(p.format)) fail(`${at}: invalid format`);
+    if (p.max !== undefined && !(Number.isInteger(p.max) && (p.max as number) > 0)) fail(`${at}: max must be a positive whole number`);
+  });
+}
+
 function checkCondition(condition: unknown, where: string) {
   if (condition === undefined) return;
   if (!isObject(condition) || !['notEmpty', 'notZero'].includes(condition.op as string)) fail(`${where}: invalid condition`);
@@ -62,6 +74,7 @@ function validateV2(t: Record<string, unknown>): Template {
       if (!isObject(e) || typeof e.id !== 'string' || !ELEMENT_TYPES.includes(e.type as ElementType)) fail(`${where} needs an id and a known type`);
       for (const key of ['x', 'y', 'width', 'height']) if (!isNumber(e[key])) fail(`${where}: ${key} must be a number`);
       checkPath(e.dataSource, `${where} dataSource`);
+      if (e.parts !== undefined) checkParts(e.parts, where);
       checkPath(e.imageKey, `${where} imageKey`);
       checkCondition(e.condition, where);
       if (e.format !== undefined && !isValidFormat(e.format)) fail(`${where}: invalid format`);

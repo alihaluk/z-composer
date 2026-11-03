@@ -48,3 +48,24 @@ describe('parseTemplate', () => {
     expect(() => parseTemplate(json)).toThrow(message);
   });
 });
+
+describe('composed content parts', () => {
+  const withParts = (parts: unknown) => ({
+    schemaVersion: 2, printer: { widthMm: 72, dpi: 203 },
+    bands: [{ id: 'a', name: 'A', height: 5, elements: [{ id: 'e', type: 'text', x: 0, y: 0, width: 10, height: 3, isDynamic: true, parts }] }],
+  });
+
+  it('accepts text parts, field parts and fields not chosen yet', () => {
+    expect(() => parseTemplate(withParts([{ text: 'a' }, { path: 'Doc.No', format: 'N2', invariant: true, max: 4 }, { path: '' }]))).not.toThrow();
+  });
+
+  it.each([
+    ['not an array', 'x'],
+    ['an invalid path', [{ path: 'a b' }]],
+    ['an invalid format', [{ path: 'A', format: 'a|b' }]],
+    ['a bad max', [{ path: 'A', max: 0 }]],
+    ['a part that is neither', [{ foo: 1 }]],
+  ])('rejects %s', (_, parts) => {
+    expect(() => parseTemplate(withParts(parts))).toThrow();
+  });
+});

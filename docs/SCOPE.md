@@ -163,4 +163,4 @@ Placeholder syntax and escaping, band and condition markers, length calculation,
 - Publishing the package to npm; it stays `private` for now (owner decision, 2026-11-03).
 - Nested repeating bands, for arrays inside array items (e.g. discounts per line). Owner decision (2026-11-04): not now, as it needs specification version 2.
 - Fixed-length label support (gap / black-mark media) as a separate mode next to receipts.
-- Content builder — compose the content of a text, barcode or QR element from catalog fields and static text. Presets sit on top of it, e.g. a GİB e-Fatura / e-Arşiv QR preset. The owner will provide the official GİB QR field list for the preset. Values inside such content can use culture-invariant formats (see D3).
+- Content presets on top of the content builder (done in 1.4.0), e.g. a GİB e-Fatura / e-Arşiv QR preset. The owner will provide the official GİB QR field list for the preset. Values inside such content can use culture-invariant formats (see D3).

@@ -1,20 +1,21 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlignCenter, AlignLeft, AlignRight, BringToFront, Copy, SendToBack, Trash2 } from 'lucide-react';
-import { findField } from '../../lib/catalog';
 import { mmToDots } from '../../lib/constants';
-import { DATE_FORMATS, NUMBER_FORMATS, formatValue } from '../../lib/formats';
-import { displayText, sampleContext } from '../../lib/elementDisplay';
-import { lookup } from '../../lib/zplFill';
+import { displayText } from '../../lib/elementDisplay';
 import { loadGrayBitmap } from '../../lib/imageUtils';
-import { DEFAULT_FONT_MM, DEFAULT_THICKNESS_MM, elementLines, textMetrics } from '../../lib/zplTemplate';
+import { DEFAULT_FONT_MM, DEFAULT_THICKNESS_MM, elementLines, isComposed, textMetrics } from '../../lib/zplTemplate';
 import { useEditor, useEditorStore } from '../../store/editorStore';
 import { type Align, type Band, type OverflowMode, type Rotation, type TemplateElement } from '../../types';
 import { Button } from '../ui/Button';
 import { Checkbox, Field, NumberInput, Section, Segmented, SelectInput, TextInput } from '../ui/Field';
 import { ConditionEditor, FieldPicker } from './FieldPicker';
 import { ZplCode } from './ZplCode';
+import { ContentBuilder } from './ContentBuilder';
+import { FormatPicker } from './FormatPicker';
 import { BarcodeSize } from './BarcodeSize';
+
+type ContentMode = 'static' | 'dynamic' | 'composed';
 
 export function ElementProperties({ band, element: el }: { band: Band; element: TemplateElement }) {
   const { t } = useTranslation();
@@ -27,11 +28,17 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
   const update = (patch: Partial<TemplateElement>) => s.updateElement(band.id, el.id, patch);
   const locked = !!el.locked;
   const isQr = el.type === 'barcode' && el.barcodeType === 'qr';
-  const fieldType = el.isDynamic && el.dataSource ? findField(catalog, el.dataSource, band.repeat)?.type : undefined;
-  const formats = fieldType === 'number' ? NUMBER_FORMATS : fieldType === 'date' || fieldType === 'datetime' ? DATE_FORMATS : [];
-  // Format options show the element's own sample value in the preview culture.
-  const sampleValue = el.dataSource ? lookup(sampleContext(catalog, band), catalog.sample, el.dataSource) : undefined;
-  const exampleValue = sampleValue ?? (fieldType === 'number' ? 1234.5 : '2026-11-13T14:37:00');
+  const contentMode: ContentMode = isComposed(el) ? 'composed' : el.isDynamic ? 'dynamic' : 'static';
+  const setContentMode = (mode: ContentMode) => {
+    if (mode === contentMode) return;
+    if (mode === 'static') update({ isDynamic: false, parts: undefined });
+    else if (mode === 'dynamic') update({ isDynamic: true, parts: undefined });
+    // Composing starts from what the element shows now.
+    else update({
+      isDynamic: true,
+      parts: el.isDynamic && el.dataSource ? [{ path: el.dataSource, format: el.format, invariant: el.invariant }] : el.content ? [{ text: el.content }] : [],
+    });
+  };
 
   const uploadImage = async (file: File | undefined) => {
     if (!file) return;
@@ -67,33 +74,24 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
 
       {(el.type === 'text' || el.type === 'barcode') && (
         <Section title={t('properties.content')}>
-          <Segmented<'static' | 'dynamic'> label={t('properties.content')} value={el.isDynamic ? 'dynamic' : 'static'}
-            onChange={v => update({ isDynamic: v === 'dynamic' })}
-            options={[{ value: 'static', label: t('properties.static') }, { value: 'dynamic', label: t('properties.dynamic') }]} />
-          {el.isDynamic ? (
+          <Segmented<ContentMode> label={t('properties.content')} value={contentMode} onChange={setContentMode}
+            options={[
+              { value: 'static', label: t('properties.static') },
+              { value: 'dynamic', label: t('properties.dynamic') },
+              { value: 'composed', label: t('properties.composed'), title: t('builder.title') },
+            ]} />
+          {contentMode === 'composed' ? (
+            <>
+              <ContentBuilder band={band} parts={el.parts ?? []} onChange={parts => update({ parts })} />
+              <p className="text-[11px] text-gray-500">
+                {t('properties.sampleValue', { locale })}: <span className="font-mono text-gray-800">{displayText(el, band, catalog, 'sample', locale) || '—'}</span>
+              </p>
+            </>
+          ) : contentMode === 'dynamic' ? (
             <>
               <FieldPicker band={band} label={t('properties.dataSource')} value={el.dataSource} types={['string', 'number', 'date', 'datetime', 'boolean']}
                 onChange={dataSource => update({ dataSource: dataSource || undefined, format: undefined })} />
-              {(formats.length > 0 || el.format) && (
-                <Field label={t('properties.format')} hint={t('properties.formatHint')}>
-                  {id => (
-                    <div className="space-y-1">
-                      <SelectInput id={id} value={el.format && (formats as readonly string[]).includes(el.format) ? el.format : el.format ? 'custom' : ''}
-                        onChange={v => update({ format: v === 'custom' ? el.format || 'dd.MM.yyyy' : v || undefined })}>
-                        <option value="">{t('properties.formatNone')}</option>
-                        {formats.map(f => (
-                          <option key={f} value={f}>{f} · {formatValue(exampleValue, f, locale, !!el.invariant) ?? '—'} ({t(`formats.${f}`, { defaultValue: t('properties.formatPattern') })})</option>
-                        ))}
-                        {fieldType !== 'number' && <option value="custom">{t('properties.formatCustom')}</option>}
-                      </SelectInput>
-                      {el.format && !(formats as readonly string[]).includes(el.format) && (
-                        <TextInput value={el.format} placeholder="dd.MM.yyyy HH:mm" onChange={format => update({ format: format.replace(/[|}\r\n]/g, '') || undefined })} />
-                      )}
-                    </div>
-                  )}
-                </Field>
-              )}
-              {el.format && <Checkbox label={t('properties.invariant')} checked={!!el.invariant} onChange={v => update({ invariant: v || undefined })} />}
+              <FormatPicker band={band} path={el.dataSource} format={el.format} invariant={el.invariant} onChange={update} />
               {el.dataSource && (
                 <p className="text-[11px] text-gray-500">
                   {t('properties.sampleValue', { locale: el.invariant ? 'invariant' : locale })}: <span className="font-mono text-gray-800">{displayText(el, band, catalog, 'sample', locale) || '—'}</span>
@@ -132,12 +130,13 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
             {id => (
               <SelectInput<OverflowMode> id={id} value={el.overflow ?? 'none'} onChange={overflow => update({ overflow, maxChars: el.maxChars ?? 20, maxLines: el.maxLines ?? 2 })}>
                 <option value="none">{t('overflow.none')}</option>
-                <option value="truncate">{t('overflow.truncate')}</option>
+                {(contentMode !== 'composed' || el.overflow === 'truncate') && <option value="truncate">{t('overflow.truncate')}</option>}
                 <option value="wrap">{t('overflow.wrap')}</option>
               </SelectInput>
             )}
           </Field>
-          {el.overflow === 'truncate' && (
+          {el.overflow === 'truncate' && contentMode === 'composed' && <p className="text-[11px] text-amber-700">{t('builder.truncateHint')}</p>}
+          {el.overflow === 'truncate' && contentMode !== 'composed' && (
             <Field label={t('overflow.maxChars')}>{id => <NumberInput id={id} value={el.maxChars} min={1} step={1} onChange={maxChars => update({ maxChars: Math.round(maxChars) })} />}</Field>
           )}
           {el.overflow === 'wrap' && (

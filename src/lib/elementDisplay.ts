@@ -3,7 +3,7 @@
 import { type Catalog } from './catalog';
 import { dotsPerMm } from './constants';
 import { evaluateCondition, lookup, resolvePlaceholder, wrapText } from './zplFill';
-import { placeholder, textMetrics } from './zplTemplate';
+import { fieldPlaceholder, isComposed, isFieldPart, placeholder, textMetrics } from './zplTemplate';
 import { type Band, type Dpi, type TemplateElement } from '../types';
 import { type CanvasMode } from '../store/editorStore';
 
@@ -15,6 +15,14 @@ export function sampleContext(catalog: Catalog, band: Band): unknown {
 }
 
 export function displayText(el: TemplateElement, band: Band, catalog: Catalog, mode: CanvasMode, locale: string): string {
+  if (isComposed(el)) {
+    return (el.parts ?? []).map(p => {
+      if (!isFieldPart(p)) return p.text;
+      if (!p.path) return '';
+      if (mode === 'fields') return `[${p.path}]`;
+      return resolvePlaceholder(fieldPlaceholder(p).slice(2, -2), sampleContext(catalog, band), catalog.sample, locale);
+    }).join('');
+  }
   if (!el.isDynamic || !el.dataSource) {
     const text = el.content ?? '';
     return el.overflow === 'truncate' && el.maxChars ? [...text].slice(0, el.maxChars).join('') : text;
