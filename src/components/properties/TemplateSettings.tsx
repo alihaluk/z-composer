@@ -60,7 +60,7 @@ export function TemplateSettings() {
             <li key={b.id}>
               <button type="button" className="w-full text-left text-xs px-2 py-1 rounded hover:bg-gray-100 flex justify-between" onClick={() => s.select({ bandId: b.id, ids: [] })}>
                 <span>{b.name}{b.repeat ? ` ↻ ${b.repeat}` : ''}</span>
-                <span className="text-gray-400">{b.height} mm</span>
+                <span className="text-gray-500">{b.height} mm</span>
               </button>
             </li>
           ))}

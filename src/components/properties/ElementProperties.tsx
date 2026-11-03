@@ -109,7 +109,7 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
       {el.type === 'text' && (
         <Section title={t('properties.text')}>
           <div className="grid grid-cols-2 gap-2">
-            <Field label={t('properties.fontSize')} hint={`${textMetrics(el, dpi).height} dots`}>
+            <Field label={t('properties.fontSize')} hint={t('properties.dots', { count: textMetrics(el, dpi).height })}>
               {id => <NumberInput id={id} value={el.fontSize ?? DEFAULT_FONT_MM} min={0.5} max={50} step={0.1} onChange={fontSize => update({ fontSize })} />}
             </Field>
             <Field label={t('properties.rotation')}>
@@ -146,7 +146,7 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
               <Checkbox label={t('overflow.grow')} checked={!!el.grow} onChange={grow => update({ grow: grow || undefined, fontBold: grow ? undefined : el.fontBold })} />
               {el.grow && (
                 <>
-                  <p className="text-[10px] text-gray-400">{t('overflow.growHint')}</p>
+                  <p className="text-[10px] text-gray-500">{t('overflow.growHint')}</p>
                   <Field label={t('overflow.charsPerLine')} hint={t('overflow.charsPerLineHint', { n: textMetrics({ ...el, charsPerLine: undefined }, dpi).charsPerLine })}>
                     {id => <NumberInput id={id} value={el.charsPerLine} min={1} step={1} onChange={cpl => update({ charsPerLine: Math.round(cpl) || undefined })} />}
                   </Field>
@@ -159,7 +159,7 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
 
       {el.type === 'box' && (
         <Section title={t('tools.box')}>
-          <Field label={t('properties.thickness')} hint={`${Math.max(1, mmToDots(el.thickness ?? DEFAULT_THICKNESS_MM, dpi))} dots`}>
+          <Field label={t('properties.thickness')} hint={t('properties.dots', { count: Math.max(1, mmToDots(el.thickness ?? DEFAULT_THICKNESS_MM, dpi)) })}>
             {id => <NumberInput id={id} value={el.thickness ?? DEFAULT_THICKNESS_MM} min={0.1} step={0.05} onChange={thickness => update({ thickness })} />}
           </Field>
         </Section>
@@ -196,7 +196,7 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
         <Section title={t('tools.image')}>
           <FieldPicker band={band} types={['image']} label={t('properties.imageField')} value={el.imageKey}
             onChange={imageKey => update({ imageKey: imageKey || undefined })} />
-          <p className="text-[10px] text-gray-400">{t('properties.imageFieldHint')}</p>
+          <p className="text-[10px] text-gray-500">{t('properties.imageFieldHint')}</p>
           {!el.imageKey && (
             <>
               <Field label={t('properties.upload')}>

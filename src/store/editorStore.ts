@@ -162,7 +162,8 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
         templateName: options.templateName ?? null,
         selection: null,
         zoom: 1.5,
-        canvasMode: 'fields',
+        // Sample data shows the design as it prints; without a sample, field names are clearer.
+        canvasMode: (options.catalog ?? readCatalog(catalogKey) ?? DEFAULT_CATALOG).sample ? 'sample' : 'fields',
         previewLocale: options.locale ?? (localeKey ? storageGet(localeKey) : null) ?? options.defaultLocale ?? 'tr-TR',
         savedTemplates: readSaved(storageKey),
         clipboard: [],

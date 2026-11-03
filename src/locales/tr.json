@@ -5,7 +5,8 @@
   },
   "toolbox": {
     "title": "Araç Kutusu",
-    "hint": "Bir aracı tuvaldeki bir banda sürükleyin."
+    "hint": "Bir araca tıklayın (seçili banda eklenir) ya da tuvaldeki bir banda sürükleyin.",
+    "itemHint": "Tıklayın veya bir banda sürükleyin"
   },
   "tools": {
     "text": "Metin",
@@ -118,7 +119,15 @@
     "moveDown": "Aşağı",
     "addBelow": "Altına ekle",
     "delete": "Sil",
-    "confirmDelete": "\"{{name}}\" bandı ve içindeki öğeler silinsin mi?"
+    "confirmDelete": "\"{{name}}\" bandı ve içindeki öğeler silinsin mi?",
+    "names": {
+      "header": "Üst bilgi",
+      "lines": "Satırlar",
+      "footer": "Alt bilgi",
+      "vatTitle": "KDV başlığı",
+      "vatLines": "KDV satırları",
+      "totals": "Toplamlar"
+    }
   },
   "condition": {
     "title": "Koşul",
@@ -182,7 +191,8 @@
     "sampleValue": "Örnek ({{locale}})",
     "formatPattern": "kalıp",
     "printedSize": "Basılı boyut (örnek veriyle): {{width}} × {{height}} mm",
-    "fitBox": "Kutuyu uydur"
+    "fitBox": "Kutuyu uydur",
+    "dots": "{{count}} nokta"
   },
   "overflow": {
     "title": "Taşma",
@@ -231,5 +241,15 @@
     "undo": "Geri al / yinele",
     "deselectKeys": "Esc",
     "deselect": "Seçimi kaldır"
+  },
+  "zoom": {
+    "in": "Yakınlaştır",
+    "out": "Uzaklaştır",
+    "fit": "Sayfayı sığdır"
+  },
+  "empty": {
+    "title": "Tasarıma başlayın",
+    "text": "Soldaki araçlara tıklayın ya da bir banda sürükleyin. Ya da hazır fatura şablonuyla başlayın.",
+    "preset": "Hazır şablonu yükle"
   }
 }

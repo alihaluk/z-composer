@@ -67,7 +67,7 @@ export const PreviewModal = () => {
                     options={[{ value: 'sample', label: t('preview.sampleData') }, { value: 'fields', label: t('preview.fieldNames') }]} />
                 </div>
                 <div className="w-28"><CultureInput label={t('preview.culture')} value={locale} onChange={l => store.getState().setPreviewLocale(l)} /></div>
-                <Button variant="ghost" onClick={() => setIsOpen(false)}>{t('preview.close')}</Button>
+                <Button variant="ghost" autoFocus onClick={() => setIsOpen(false)}>{t('preview.close')}</Button>
               </div>
             </div>
             <div className="flex-1 flex overflow-hidden">

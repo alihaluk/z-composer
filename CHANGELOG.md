@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.2 — 2026-11-03
+
+### Fixed
+- Selected and hovered elements are outlined again; buttons show hover and keyboard focus.
+- The canvas stays reachable on narrow screens, zooms to fit on first show and has zoom buttons.
+
+### Changed
+- Tools can be added by click, Enter or Space, not only by dragging.
+- Empty designs show how to start; band names follow the interface language; the canvas opens with sample data.
+- Higher text contrast, translated leftovers, dialogs focus their close button.
+
 ## 1.0.1 — 2026-11-03
 
 ### Changed

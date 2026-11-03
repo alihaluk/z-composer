@@ -41,3 +41,17 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | R10-4 | 10 | minor | fixed | When the host fixes `language`, the language switcher is still shown and lets the user switch for the session. (final pass: the switcher is hidden when the host fixes the language) |
 | R11-1 | final | minor | documented | The Labelary emulator draws nothing for `₺` with `^A0`; the resident font may not contain the Turkish lira sign. Templates should print the currency code (e.g. `TRY`, `TL`) instead. |
 | R11-2 | final | minor | fixed | Preview text widths came from the substitute font. They now come from the printer font's measured advance widths; text edges are within about 1 dot of the emulator on the invoice preset. |
+| U-1 | UI review | critical | fixed | The selection outline was invisible: tailwind-merge dropped the `outline` style class, so neither the selected element nor the hover state was outlined. |
+| U-2 | UI review | major | fixed | Button tokens (`accent`, `ring`, `input`, `background`) were not defined, so outline and ghost buttons had no hover state and keyboard focus was not visible. |
+| U-3 | UI review | major | fixed | Elements could only be added by dragging. Tools now also add their element to the selected band on click, Enter or Space. |
+| U-4 | UI review | major | fixed | The canvas was centred with flexbox, so on narrow screens the left part (band labels) could not be scrolled to and the page was cut off. It now centres safely, zooms to fit on first show, and has zoom buttons with "fit page". |
+| U-5 | UI review | major | fixed | An empty design gave no guidance. It now shows how to start and offers the invoice preset. |
+| U-6 | UI review | minor | fixed | Default band names were English in the Turkish interface; new templates and the preset use the interface language. |
+| U-7 | UI review | minor | fixed | The canvas opened in field-name mode, where long placeholders overlap their neighbours. It now opens with sample data when the catalog has one; fields without a sample value show their name faded. |
+| U-8 | UI review | minor | fixed | Hints and section titles used gray-400 (about 2.5:1 contrast); they use gray-500 (about 4.8:1). |
+| U-9 | UI review | minor | fixed | The title wrapped onto two lines, "dots" was not translated, and the default catalog name was English. |
+| U-10 | UI review | minor | fixed | Dialogs did not move focus; they now focus their close / cancel button. |
+| U-11 | UI review | minor | accepted | Dialogs do not trap Tab focus inside them. |
+| U-12 | UI review | minor | accepted | Below about 1000 px width the fixed side panels leave little room for the canvas; the designer is a desktop tool. |
+| U-13 | UI review | minor | accepted | Band labels mark conditions with the text "if" rather than an icon. |
+

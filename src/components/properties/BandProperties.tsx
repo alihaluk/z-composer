@@ -38,17 +38,17 @@ export function BandProperties({ band }: { band: Band }) {
       </Section>
 
       <Section title={t('condition.title')}>
-        <p className="text-[10px] text-gray-400">{t('bands.conditionHint')}</p>
+        <p className="text-[10px] text-gray-500">{t('bands.conditionHint')}</p>
         <ConditionEditor band={{ ...band, repeat: undefined }} value={band.condition} onChange={condition => update({ condition })} />
       </Section>
 
       <Section title={t('layers.title')}>
-        {band.elements.length === 0 && <p className="text-[11px] text-gray-400">{t('layers.empty')}</p>}
+        {band.elements.length === 0 && <p className="text-[11px] text-gray-500">{t('layers.empty')}</p>}
         <ul className="space-y-0.5 max-h-48 overflow-auto">
           {[...band.elements].reverse().map(el => (
             <li key={el.id} className="flex items-center gap-1 text-xs">
               <button type="button" className="flex-1 truncate text-left px-1.5 py-1 rounded hover:bg-gray-100" onClick={() => s.select({ bandId: band.id, ids: [el.id] })}>
-                <span className="text-gray-400 mr-1">{t(`tools.${el.type === 'barcode' && el.barcodeType === 'qr' ? 'qr' : el.type}`)}</span>
+                <span className="text-gray-500 mr-1">{t(`tools.${el.type === 'barcode' && el.barcodeType === 'qr' ? 'qr' : el.type}`)}</span>
                 {el.isDynamic ? `[${el.dataSource ?? ''}]` : el.content ?? el.imageKey ?? ''}
               </button>
               <button type="button" aria-label={el.locked ? t('layers.unlock') : t('layers.lock')} className="p-1 text-gray-500 hover:text-gray-800" onClick={() => s.updateElement(band.id, el.id, { locked: !el.locked })}>

@@ -23,7 +23,7 @@ function FieldRows({ fields, onChange, nested }: { fields: CatalogField[]; onCha
               </select>
             )}
             <input aria-label={t('catalog.label')} className="h-7 text-xs border rounded px-1.5" placeholder={f.path} value={f.label ?? ''} onChange={e => update(i, { label: e.target.value || undefined })} />
-            <button type="button" aria-label={t('properties.delete')} className="p-1 text-gray-400 hover:text-red-600" onClick={() => onChange(fields.filter((_, j) => j !== i))}><Trash2 size={13} /></button>
+            <button type="button" aria-label={t('properties.delete')} className="p-1 text-gray-500 hover:text-red-600" onClick={() => onChange(fields.filter((_, j) => j !== i))}><Trash2 size={13} /></button>
           </div>
           {f.type === 'array' && <FieldRows nested fields={f.items ?? []} onChange={items => update(i, { items })} />}
         </div>
@@ -84,7 +84,7 @@ export function CatalogEditor({ catalog, onSave, onClose }: { catalog: Catalog; 
         <div className="p-3 border-b flex justify-between items-center bg-gray-50">
           <h2 className="text-lg font-bold text-gray-800">{t('catalog.editorTitle')}</h2>
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={onClose}>{t('catalog.cancel')}</Button>
+            <Button variant="ghost" autoFocus onClick={onClose}>{t('catalog.cancel')}</Button>
             <Button onClick={save}>{t('catalog.apply')}</Button>
           </div>
         </div>
@@ -92,14 +92,14 @@ export function CatalogEditor({ catalog, onSave, onClose }: { catalog: Catalog; 
         <div className="flex-1 grid grid-cols-[3fr_2fr] overflow-hidden">
           <div className="p-4 overflow-auto space-y-3 border-r">
             <Field label={t('catalog.name')}>{id => <TextInput id={id} value={draft.name} onChange={name => setDraft({ ...draft, name })} />}</Field>
-            <div className="grid grid-cols-[1fr_7rem_1fr_auto] gap-1 text-[10px] uppercase text-gray-400">
+            <div className="grid grid-cols-[1fr_7rem_1fr_auto] gap-1 text-[10px] uppercase text-gray-500">
               <span>{t('catalog.path')}</span><span>{t('catalog.type')}</span><span>{t('catalog.label')}</span><span />
             </div>
             <FieldRows fields={draft.fields} onChange={fields => setDraft({ ...draft, fields })} />
           </div>
           <div className="p-4 flex flex-col gap-2 overflow-hidden">
             <label htmlFor="catalog-sample" className="text-xs font-medium text-gray-600">{t('catalog.sample')}</label>
-            <p className="text-[10px] text-gray-400">{t('catalog.sampleHint')}</p>
+            <p className="text-[10px] text-gray-500">{t('catalog.sampleHint')}</p>
             <textarea id="catalog-sample" spellCheck={false} className="flex-1 font-mono text-[11px] border rounded p-2 resize-none" value={sampleText} onChange={e => setSampleText(e.target.value)} />
           </div>
         </div>

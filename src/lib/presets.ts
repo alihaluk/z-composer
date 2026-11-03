@@ -18,13 +18,19 @@ const band = (name: string, height: number, elements: TemplateElement[], extra: 
 const right = { align: 'right' as const };
 const money = { format: 'N2', align: 'right' as const };
 
-export function invoicePreset(): Template {
+export interface PresetBandNames {
+  header: string; lines: string; vatTitle: string; vatLines: string; totals: string; footer: string;
+}
+
+const ENGLISH_NAMES: PresetBandNames = { header: 'Header', lines: 'Lines', vatTitle: 'VAT title', vatLines: 'VAT lines', totals: 'Totals', footer: 'Footer' };
+
+export function invoicePreset(names: PresetBandNames = ENGLISH_NAMES): Template {
   const labelX = PAD;
   const valueX = 16;
   const rightLabelX = 38;
   const rightValueX = 48;
 
-  const header = band('Header', 64, [
+  const header = band(names.header, 64, [
     { id: newId(), type: 'image', x: (W - 24) / 2, y: 1, width: 24, height: 10, imageKey: 'Company.Logo' },
     text(0, 12, W, 'e-Fatura', { align: 'center', fontSize: 2.8, height: 3.4 }),
     field(PAD, 16, W - 2 * PAD, 'Company.Name', { fontSize: 3, height: 3.6, fontBold: true, overflow: 'truncate', maxChars: 40 }),
@@ -54,28 +60,28 @@ export function invoicePreset(): Template {
     line(62),
   ]);
 
-  const lines = band('Lines', 4.5, [
+  const lines = band(names.lines, 4.5, [
     field(PAD, 0.8, 33, 'Product.Name', { overflow: 'wrap', maxLines: 3, grow: true }),
     field(36, 0.8, 8, 'Quantity', right),
     field(45, 0.8, 12, 'Price', money),
     field(58, 0.8, 12, 'Total', money),
   ], { repeat: 'Lines' });
 
-  const vatTitle = band('VAT title', 6, [
+  const vatTitle = band(names.vatTitle, 6, [
     line(1),
     text(PAD, 2.5, 30, 'KDV Dökümü', { fontBold: true }),
     text(36, 2.5, 14, 'Matrah', right),
     text(56, 2.5, 14, 'KDV', right),
   ], { condition: { path: 'VatBreakdown', op: 'notEmpty' } });
 
-  const vatLines = band('VAT lines', 3.6, [
+  const vatLines = band(names.vatLines, 3.6, [
     text(PAD, 0.4, 8, '% KDV'),
     field(10, 0.4, 10, 'Rate'),
     field(30, 0.4, 20, 'Base', money),
     field(52, 0.4, 18, 'Amount', money),
   ], { repeat: 'VatBreakdown' });
 
-  const totals = band('Totals', 18, [
+  const totals = band(names.totals, 18, [
     line(1),
     text(30, 2.5, 22, 'Ara Toplam:'),
     field(50, 2.5, 20, 'Totals.Subtotal', money),
@@ -87,7 +93,7 @@ export function invoicePreset(): Template {
     field(48, 12.5, 22, 'Totals.Grand', { ...money, fontSize: 3.2, height: 3.8, fontBold: true }),
   ]);
 
-  const footer = band('Footer', 40, [
+  const footer = band(names.footer, 40, [
     field(PAD, 1, W - 2 * PAD, 'Document.Note', { overflow: 'wrap', maxLines: 2, height: 6, condition: { path: 'Document.Note', op: 'notEmpty' } }),
     { id: newId(), type: 'barcode', barcodeType: 'qr', x: (W - 21) / 2, y: 8, width: 21, height: 21, magnification: 4, isDynamic: true, dataSource: 'Document.QrContent' },
     text(0, 33, W, 'e-Fatura izni kapsamında elektronik ortamda iletilmiştir.', { align: 'center', fontSize: 2, height: 2.6 }),

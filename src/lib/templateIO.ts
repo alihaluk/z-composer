@@ -6,14 +6,22 @@ import { type Band, type ElementType, type Template, type TemplateElement } from
 
 export const newId = (prefix = 'e') => `${prefix}${Math.random().toString(36).slice(2, 10)}`;
 
-export function emptyTemplate(): Template {
+export interface BandNames {
+  header: string;
+  lines: string;
+  footer: string;
+}
+
+export const ENGLISH_BAND_NAMES: BandNames = { header: 'Header', lines: 'Lines', footer: 'Footer' };
+
+export function emptyTemplate(names: BandNames = ENGLISH_BAND_NAMES): Template {
   return {
     schemaVersion: 2,
     printer: { widthMm: 72, dpi: 203 },
     bands: [
-      { id: newId('b'), name: 'Header', height: 30, elements: [] },
-      { id: newId('b'), name: 'Lines', repeat: 'Lines', height: 8, elements: [] },
-      { id: newId('b'), name: 'Footer', height: 30, elements: [] },
+      { id: newId('b'), name: names.header, height: 30, elements: [] },
+      { id: newId('b'), name: names.lines, repeat: 'Lines', height: 8, elements: [] },
+      { id: newId('b'), name: names.footer, height: 30, elements: [] },
     ],
   };
 }

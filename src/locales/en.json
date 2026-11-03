@@ -5,7 +5,8 @@
   },
   "toolbox": {
     "title": "Toolbox",
-    "hint": "Drag a tool onto a band on the canvas."
+    "hint": "Click a tool to add it to the selected band, or drag it onto a band.",
+    "itemHint": "Click, or drag onto a band"
   },
   "tools": {
     "text": "Text",
@@ -118,7 +119,15 @@
     "moveDown": "Down",
     "addBelow": "Add below",
     "delete": "Delete",
-    "confirmDelete": "Delete the \"{{name}}\" band and its elements?"
+    "confirmDelete": "Delete the \"{{name}}\" band and its elements?",
+    "names": {
+      "header": "Header",
+      "lines": "Lines",
+      "footer": "Footer",
+      "vatTitle": "VAT title",
+      "vatLines": "VAT lines",
+      "totals": "Totals"
+    }
   },
   "condition": {
     "title": "Condition",
@@ -182,7 +191,8 @@
     "sampleValue": "Sample ({{locale}})",
     "formatPattern": "pattern",
     "printedSize": "Printed size (sample data): {{width}} × {{height}} mm",
-    "fitBox": "Fit box"
+    "fitBox": "Fit box",
+    "dots": "{{count}} dots"
   },
   "overflow": {
     "title": "Overflow",
@@ -231,5 +241,15 @@
     "undo": "Undo / redo",
     "deselectKeys": "Esc",
     "deselect": "Clear the selection"
+  },
+  "zoom": {
+    "in": "Zoom in",
+    "out": "Zoom out",
+    "fit": "Fit page"
+  },
+  "empty": {
+    "title": "Start designing",
+    "text": "Click a tool on the left or drag it onto a band, or start from the invoice preset.",
+    "preset": "Load the preset"
   }
 }

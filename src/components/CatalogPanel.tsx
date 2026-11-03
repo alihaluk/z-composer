@@ -47,7 +47,7 @@ export function CatalogPanel({ editable = true }: { editable?: boolean }) {
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-gray-400 uppercase">{t('catalog.title')}</h3>
+        <h3 className="text-xs font-semibold text-gray-500 uppercase">{t('catalog.title')}</h3>
         {editable && (
           <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setEditing(true)}><Pencil size={12} className="mr-1" />{t('catalog.edit')}</Button>
         )}

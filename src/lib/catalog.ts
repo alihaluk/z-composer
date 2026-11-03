@@ -46,7 +46,7 @@ export const fieldLabel = (field: CatalogField) => field.label || field.path;
 
 export const DEFAULT_CATALOG: Catalog = {
   catalogVersion: 1,
-  name: 'Generic invoice',
+  name: 'Genel fatura',
   fields: [
     { path: 'Company.Name', type: 'string', label: 'Firma adı' },
     { path: 'Company.Address', type: 'string', label: 'Firma adresi' },

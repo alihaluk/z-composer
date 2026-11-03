@@ -20,7 +20,7 @@ export function Field({ label, children, hint }: { label: string; children: (id:
     <div className="space-y-1">
       <Label htmlFor={id} className="text-xs text-gray-600">{label}</Label>
       {children(id)}
-      {hint && <p className="text-[10px] text-gray-400">{hint}</p>}
+      {hint && <p className="text-[10px] text-gray-500">{hint}</p>}
     </div>
   );
 }

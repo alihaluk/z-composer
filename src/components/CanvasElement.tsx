@@ -75,12 +75,18 @@ export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) 
   };
 
   const hidden = hiddenInSample(el, band, catalog, mode);
+  // A field without a sample value would be invisible; its name is shown faded instead.
+  const sampleText = displayText(el, band, catalog, mode, locale);
+  const emptySample = mode === 'sample' && el.isDynamic && !!el.dataSource && sampleText === '';
+  const shownText = emptySample ? `[${el.dataSource}]` : sampleText;
   const style: CSSProperties = {
     position: 'absolute',
     left: mmToPx(el.x),
     top: mmToPx(el.y + offsetY),
     width: mmToPx(width),
     height: mmToPx(height),
+    // Set here because tailwind-merge drops the `outline` style class next to `outline-2`.
+    outlineStyle: 'solid',
   };
 
   return (
@@ -88,17 +94,17 @@ export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) 
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group select-none outline outline-1 outline-transparent hover:outline-blue-300',
+        'group select-none outline-1 outline-transparent hover:outline-blue-300',
         el.locked ? 'cursor-default' : 'cursor-move',
         selected && 'outline-blue-500 outline-2 bg-blue-50/40 z-10',
         isDragging && 'opacity-20',
-        hidden && 'opacity-30',
+        (hidden || emptySample) && 'opacity-30',
       )}
       onClick={select}
       {...listeners}
       {...attributes}
     >
-      <ElementBody element={el} band={band} text={lines ? lines.join('\n') : displayText(el, band, catalog, mode, locale)} dpi={dpi} preformatted={!!lines} />
+      <ElementBody element={el} band={band} text={lines ? lines.join('\n') : shownText} dpi={dpi} preformatted={!!lines} />
       {el.condition?.path && (
         <span title={`${el.condition.path} ${el.condition.op}`} className="absolute top-0 left-0 w-0 h-0 border-t-[5px] border-r-[5px] border-t-amber-500 border-r-transparent" />
       )}

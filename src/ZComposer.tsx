@@ -7,7 +7,8 @@ import { PropertiesPanel } from './components/PropertiesPanel';
 import { createI18n, defaultLocale, type Language } from './i18n';
 import { type Catalog } from './lib/catalog';
 import { loadGrayBitmap } from './lib/imageUtils';
-import { withFieldsUsed } from './lib/templateIO';
+import { emptyTemplate, withFieldsUsed } from './lib/templateIO';
+import { bandNames } from './lib/bandNames';
 import { generateTemplateZpl } from './lib/zplTemplate';
 import { cn } from './lib/utils';
 import { createEditorStore, EditorStoreContext, type EditorStore } from './store/editorStore';
@@ -61,7 +62,7 @@ function useBitmapRepair(store: EditorStore) {
 
 export function ZComposer({ template, catalog, language, locale, storageKey, catalogEditable = true, onChange, onSave, className }: ZComposerProps) {
   const [i18n] = useState(() => createI18n(language));
-  const [store] = useState(() => createEditorStore({ template, catalog, storageKey, locale, defaultLocale: defaultLocale(i18n.resolvedLanguage) }));
+  const [store] = useState(() => createEditorStore({ template: template ?? emptyTemplate(bandNames(i18n.t)), catalog, storageKey, locale, defaultLocale: defaultLocale(i18n.resolvedLanguage) }));
   useBitmapRepair(store);
 
   useEffect(() => { if (language && i18n.resolvedLanguage !== language) void i18n.changeLanguage(language); }, [i18n, language]);

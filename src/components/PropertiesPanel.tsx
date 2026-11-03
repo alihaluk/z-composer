@@ -47,7 +47,7 @@ function MultiSelection({ band, elements }: { band: Band; elements: TemplateElem
           <Trash2 size={14} className="mr-1" />{t('properties.delete')}
         </Button>
       </div>
-      <p className="text-[10px] text-gray-400">{t('selection.hint')}</p>
+      <p className="text-[10px] text-gray-500">{t('selection.hint')}</p>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, pointerWithin, useSensor, useSensors,
   type DragEndEvent, type DragMoveEvent, type DragStartEvent,
@@ -7,6 +7,11 @@ import { useTranslation } from 'react-i18next';
 import { mmToPx, pxToMm } from '../lib/constants';
 import { sampleGrowth } from '../lib/elementDisplay';
 import { snapPosition, type Guide } from '../lib/snapping';
+import { fitZoom } from '../lib/zoom';
+import { invoicePreset } from '../lib/presets';
+import { presetBandNames } from '../lib/bandNames';
+import { Button } from './ui/Button';
+import { Maximize, Minus, Plus } from 'lucide-react';
 import { createElement, type ToolType } from '../lib/tools';
 import { useEditor, useEditorStore, type EditorStore } from '../store/editorStore';
 import { type TemplateElement } from '../types';
@@ -24,6 +29,7 @@ interface Drop {
 type DragData = { type: 'tool'; tool: ToolType } | { type: 'element'; bandId: string; id: string };
 
 const KEY_STEP_MM = 0.5;
+
 const KEY_STEP_LARGE_MM = 5;
 
 const isTyping = () => {
@@ -74,6 +80,17 @@ export function Editor() {
   const [drag, setDrag] = useState<DragData | null>(null);
   const [drop, setDrop] = useState<Drop | null>(null);
   useKeyboard(store);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const isEmpty = template.bands.every(b => b.elements.length === 0);
+
+  // On first show, zoom so that the page and its band labels fit the canvas area.
+  useEffect(() => {
+    const area = scrollRef.current?.parentElement;
+    if (!area) return;
+    const fit = fitZoom(area.clientWidth, widthPx);
+    if (fit < store.getState().zoom) store.getState().setZoom(fit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only once, the user controls zoom afterwards
+  }, []);
 
   const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 4 } }), useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }));
   const widthPx = mmToPx(template.printer.widthMm);
@@ -156,8 +173,16 @@ export function Editor() {
 
   return (
     <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={onStart} onDragMove={onMove} onDragEnd={onEnd} onDragCancel={() => { setDrag(null); setDrop(null); }}>
-      <div className="min-h-full flex justify-center py-8 pl-32 pr-8" onClick={() => store.getState().select(null)}>
-        <div style={{ width: widthPx * zoom, minHeight: '100%' }}>
+      {/* w-max + mx-auto centres the page but keeps all of it reachable by scrolling when it is wider. */}
+      <div ref={scrollRef} className="min-h-full w-max min-w-full py-8 pl-32 pr-8" onClick={() => store.getState().select(null)}>
+        <div className="mx-auto" style={{ width: widthPx * zoom, minHeight: '100%' }}>
+          {isEmpty && (
+            <div className="mb-4 rounded-lg border border-dashed border-blue-300 bg-white/90 p-4 text-center" onClick={e => e.stopPropagation()}>
+              <p className="font-semibold text-gray-800">{t('empty.title')}</p>
+              <p className="mt-1 text-sm text-gray-500">{t('empty.text')}</p>
+              <Button size="sm" variant="outline" className="mt-3" onClick={() => store.getState().setTemplate(invoicePreset(presetBandNames(t)), t('files.presetName'))}>{t('empty.preset')}</Button>
+            </div>
+          )}
           <div className="relative shadow-lg bg-white" style={{ width: widthPx, transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
             {template.bands.map((band, i) => <BandView key={band.id} band={band} widthPx={widthPx} growth={growth[i]} />)}
             {drop && dropBandIndex >= 0 && (
@@ -183,6 +208,13 @@ export function Editor() {
             )}
           </div>
         </div>
+      </div>
+      <div className="sticky bottom-3 float-right mr-3 -mt-12 flex items-center gap-0.5 bg-white border rounded-md shadow px-1 py-0.5 z-40" role="group" aria-label={t('settings.zoom')}>
+        <button type="button" className="p-1 rounded hover:bg-gray-100" aria-label={t('zoom.out')} title={t('zoom.out')} onClick={() => store.getState().setZoom(Math.round((zoom - 0.25) * 4) / 4)}><Minus size={14} /></button>
+        <span className="text-xs w-10 text-center tabular-nums">{Math.round(zoom * 100)}%</span>
+        <button type="button" className="p-1 rounded hover:bg-gray-100" aria-label={t('zoom.in')} title={t('zoom.in')} onClick={() => store.getState().setZoom(Math.round((zoom + 0.25) * 4) / 4)}><Plus size={14} /></button>
+        <button type="button" className="p-1 rounded hover:bg-gray-100" aria-label={t('zoom.fit')} title={t('zoom.fit')}
+          onClick={() => { const area = scrollRef.current?.parentElement; if (area) store.getState().setZoom(fitZoom(area.clientWidth, widthPx)); }}><Maximize size={14} /></button>
       </div>
       <DragOverlay dropAnimation={null}>
         {drag?.type === 'tool' ? <div className="px-3 py-2 bg-white border rounded shadow text-sm capitalize opacity-90">{drag.tool}</div> : null}
