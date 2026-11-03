@@ -259,6 +259,11 @@
     "maxHint": "0: no limit",
     "truncateHint": "Composed content is cut by each field's own \"Maximum characters\"; set overflow to \"As is\" or \"Wrap\"."
   },
+  "gibQr": {
+    "hint": "GİB e-Fatura / e-Arşiv karekod: the firm's system produces its content as JSON, following the Karekod Standardı Kılavuzu. This binds the QR to that field and places it in the top-right corner of the band.",
+    "apply": "Set up as GİB karekod",
+    "pickField": "Choose the catalog field that holds the karekod JSON above."
+  },
   "panels": {
     "hideTools": "Hide tools panel",
     "showTools": "Show tools panel",

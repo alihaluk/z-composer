@@ -65,7 +65,7 @@ export const DEFAULT_CATALOG: Catalog = {
     { path: 'Document.Ettn', type: 'string', label: 'ETTN' },
     { path: 'Document.Currency', type: 'string', label: 'Para birimi' },
     { path: 'Document.Note', type: 'string', label: 'Not' },
-    { path: 'Document.QrContent', type: 'string', label: 'Karekod içeriği' },
+    { path: 'Document.QrContent', type: 'string', label: 'Karekod içeriği (GİB JSON)' },
     { path: 'Totals.Subtotal', type: 'number', label: 'Ara toplam' },
     { path: 'Totals.Discount', type: 'number', label: 'Toplam indirim' },
     { path: 'Totals.Vat', type: 'number', label: 'Toplam KDV' },
@@ -96,19 +96,23 @@ export const DEFAULT_CATALOG: Catalog = {
     Company: { Name: 'Örnek Gıda A.Ş.', Address: 'Atatürk Cad. No:1 Kadıköy / İstanbul', Phone: '0216 000 00 00', TaxOffice: 'Kadıköy', TaxNumber: '1234567890' },
     Customer: { Name: 'Deniz Market Ltd. Şti.', Address: 'İnönü Sok. No:5 Çankaya / Ankara', TaxOffice: 'Çankaya', TaxNumber: '9876543210' },
     Document: {
-      Number: 'FTR2026000123', Date: '2026-11-13T14:37:00', DueDate: '2026-12-13', Type: 'SATIŞ',
+      Number: 'FTR2026000000123', Date: '2026-11-13T14:37:00', DueDate: '2026-12-13', Type: 'SATIŞ',
       Ettn: '1f2e3d4c-5b6a-4789-8abc-def012345678', Currency: 'TRY', Note: 'Teşekkür ederiz.',
-      QrContent: '{"vkntckn":"1234567890","no":"FTR2026000123","tarih":"2026-11-13","odenecek":"2751.50"}',
+      // Karekod content as the GİB guide defines it (docs/GIB_QR.md); amounts match the lines below.
+      QrContent: '{"vkntckn":"1234567890","avkntckn":"9876543210","senaryo":"TEMELFATURA","tip":"SATIS","tarih":"2026-11-13",'
+        + '"no":"FTR2026000000123","ettn":"1f2e3d4c-5b6a-4789-8abc-def012345678","parabirimi":"TRY","malhizmettoplam":"2751.50",'
+        + '"kdvmatrah(1)":"2401.50","hesaplanankdv(1)":"24.02","kdvmatrah(20)":"350.00","hesaplanankdv(20)":"70.00",'
+        + '"vergidahil":"2845.52","odenecek":"2845.52"}',
     },
-    Totals: { Subtotal: 2318.22, Discount: 0, Vat: 433.28, Grand: 2751.5 },
+    Totals: { Subtotal: 2751.5, Discount: 0, Vat: 94.02, Grand: 2845.52 },
     Lines: [
       { LineNumber: 1, Product: { Code: 'SUT-1L', Name: 'Süt 1L', Barcode: '8690000000011' }, Quantity: 10, Unit: 'Adet', Price: 120.05, VatRate: 1, Discount: 0, Total: 1200.5 },
       { LineNumber: 2, Product: { Code: 'PEY-500', Name: 'Beyaz Peynir 500 g', Barcode: '8690000000028' }, Quantity: 5, Unit: 'Paket', Price: 240.2, VatRate: 1, Discount: 0, Total: 1201 },
       { LineNumber: 3, Product: { Code: 'PEY-1KG', Name: 'Tam Yağlı Beyaz Peynir Ezine 1 kg Vakumlu', Barcode: '8690000000035' }, Quantity: 1, Unit: 'Adet', Price: 350, VatRate: 20, Discount: 0, Total: 350 },
     ],
     VatBreakdown: [
-      { Rate: 1, Base: 2377.72, Amount: 23.78 },
-      { Rate: 20, Base: 291.67, Amount: 58.33 },
+      { Rate: 1, Base: 2401.5, Amount: 24.02 },
+      { Rate: 20, Base: 350, Amount: 70 },
     ],
   },
 };

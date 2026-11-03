@@ -40,6 +40,7 @@ Pushes to `main` run CI (lint, tests, both builds) and deploy the standalone app
 - [Scope and design decisions](./docs/SCOPE.md), including the roadmap
 - [ZPL template output specification](./docs/OUTPUT_SPEC.md)
 - [Conformance suite for fillers](./conformance/README.md)
+- [GİB karekod (e-Fatura / e-Arşiv)](./docs/GIB_QR.md)
 - [Integration guide](./INTEGRATION_GUIDE.md)
 - [Review findings](./docs/REVIEW_FINDINGS.md)
 - [Changelog](./CHANGELOG.md)

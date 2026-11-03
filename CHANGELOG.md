@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.0 — 2026-11-04
+
+### Added
+- GİB karekod setup for QR elements: binds the QR to the field that holds the karekod JSON and places it in the top-right corner, following the GİB *Karekod Standardı Kılavuzu* 1.1 ([docs/GIB_QR.md](./docs/GIB_QR.md)).
+
+### Changed
+- The invoice preset prints the karekod in the top-right corner at 2 dots per module (about 22 mm) instead of 44 mm in the footer.
+- The default catalog's sample data is consistent (line totals, VAT breakdown and totals agree), uses a 16-character document number and a complete GİB karekod JSON.
+
 ## 1.4.0 — 2026-11-04
 
 ### Added

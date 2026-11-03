@@ -1,5 +1,6 @@
 // Ready-made templates built on the default catalog.
 import { newId } from './templateIO';
+import { GIB_QR_FIELD, GIB_QR_MAGNIFICATION } from './gibQr';
 import { type Band, type Template, type TemplateElement } from '../types';
 
 const W = 72;
@@ -18,6 +19,11 @@ const band = (name: string, height: number, elements: TemplateElement[], extra: 
 const right = { align: 'right' as const };
 const money = { format: 'N2', align: 'right' as const };
 
+// The GİB guide puts the karekod in the top-right corner of the document (docs/GIB_QR.md).
+const QR_SIZE = 22.5;
+const QR_X = W - PAD - QR_SIZE;
+const LEFT_W = QR_X - PAD - 1;
+
 export interface PresetBandNames {
   header: string; lines: string; vatTitle: string; vatLines: string; totals: string; footer: string;
 }
@@ -26,15 +32,16 @@ const ENGLISH_NAMES: PresetBandNames = { header: 'Header', lines: 'Lines', vatTi
 
 export function invoicePreset(names: PresetBandNames = ENGLISH_NAMES): Template {
   const labelX = PAD;
-  const valueX = 16;
+  const valueX = 14;
   const rightLabelX = 38;
   const rightValueX = 48;
 
   const header = band(names.header, 64, [
-    { id: newId(), type: 'image', x: (W - 24) / 2, y: 1, width: 24, height: 10, imageKey: 'Company.Logo' },
-    text(0, 12, W, 'e-Fatura', { align: 'center', fontSize: 2.8, height: 3.4 }),
-    field(PAD, 16, W - 2 * PAD, 'Company.Name', { fontSize: 3, height: 3.6, fontBold: true, overflow: 'truncate', maxChars: 40 }),
-    field(PAD, 20, W - 2 * PAD, 'Company.Address', { overflow: 'wrap', maxLines: 2, height: 6 }),
+    { id: newId(), type: 'image', x: PAD, y: 1, width: 24, height: 10, imageKey: 'Company.Logo' },
+    { id: newId(), type: 'barcode', barcodeType: 'qr', x: QR_X, y: 1, width: QR_SIZE, height: QR_SIZE, magnification: GIB_QR_MAGNIFICATION, isDynamic: true, dataSource: GIB_QR_FIELD },
+    text(PAD, 12, LEFT_W, 'e-Fatura', { fontSize: 2.8, height: 3.4 }),
+    field(PAD, 16, LEFT_W, 'Company.Name', { fontSize: 3, height: 3.6, fontBold: true, overflow: 'truncate', maxChars: 28 }),
+    field(PAD, 20, LEFT_W, 'Company.Address', { overflow: 'wrap', maxLines: 2, height: 6 }),
     text(labelX, 26.5, 12, 'Tel:'),
     field(8, 26.5, 28, 'Company.Phone'),
     text(rightLabelX, 26.5, 10, 'VKN:'),
@@ -93,10 +100,9 @@ export function invoicePreset(names: PresetBandNames = ENGLISH_NAMES): Template 
     field(48, 12.5, 22, 'Totals.Grand', { ...money, fontSize: 3.2, height: 3.8, fontBold: true }),
   ]);
 
-  const footer = band(names.footer, 40, [
+  const footer = band(names.footer, 12, [
     field(PAD, 1, W - 2 * PAD, 'Document.Note', { overflow: 'wrap', maxLines: 2, height: 6, condition: { path: 'Document.Note', op: 'notEmpty' } }),
-    { id: newId(), type: 'barcode', barcodeType: 'qr', x: (W - 21) / 2, y: 8, width: 21, height: 21, magnification: 4, isDynamic: true, dataSource: 'Document.QrContent' },
-    text(0, 33, W, 'e-Fatura izni kapsamında elektronik ortamda iletilmiştir.', { align: 'center', fontSize: 2, height: 2.6 }),
+    text(0, 8, W, 'e-Fatura izni kapsamında elektronik ortamda iletilmiştir.', { align: 'center', fontSize: 2, height: 2.6 }),
   ]);
 
   return { schemaVersion: 2, printer: { widthMm: W, dpi: 203 }, bands: [header, lines, vatTitle, vatLines, totals, footer] };

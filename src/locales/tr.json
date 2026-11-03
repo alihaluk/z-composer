@@ -259,6 +259,11 @@
     "maxHint": "0: sınır yok",
     "truncateHint": "Birleşik içerikte kesme her alanın kendi \"En fazla karakter\" ayarıyla yapılır; taşmayı \"Olduğu gibi\" ya da \"Satırlara böl\" yapın."
   },
+  "gibQr": {
+    "hint": "GİB e-Fatura / e-Arşiv karekodu: içeriği firmanın sistemi Karekod Standardı Kılavuzu'na göre JSON olarak üretir. Ayar, QR'yi bu alana bağlar ve bandın sağ üst köşesine yerleştirir.",
+    "apply": "GİB karekodu olarak ayarla",
+    "pickField": "Katalogda karekod JSON'unu tutan alanı yukarıdan seçin."
+  },
   "panels": {
     "hideTools": "Araç panelini gizle",
     "showTools": "Araç panelini göster",

@@ -12,6 +12,7 @@ import { Checkbox, Field, NumberInput, Section, Segmented, SelectInput, TextInpu
 import { ConditionEditor, FieldPicker } from './FieldPicker';
 import { ZplCode } from './ZplCode';
 import { ContentBuilder } from './ContentBuilder';
+import { GIB_QR_FIELD, gibQrPatch } from '../../lib/gibQr';
 import { FormatPicker } from './FormatPicker';
 import { BarcodeSize } from './BarcodeSize';
 
@@ -22,6 +23,7 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
   const store = useEditorStore();
   const catalog = useEditor(s => s.catalog);
   const dpi = useEditor(s => s.template.printer.dpi);
+  const widthMm = useEditor(s => s.template.printer.widthMm);
   const locale = useEditor(s => s.previewLocale);
   const [imageError, setImageError] = useState<string | null>(null);
   const s = store.getState();
@@ -188,6 +190,13 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
             </>
           )}
           <BarcodeSize band={band} element={el} />
+          {isQr && (
+            <div className="rounded border border-dashed p-2 space-y-1.5">
+              <p className="text-[11px] text-gray-600">{t('gibQr.hint')}</p>
+              <Button size="sm" variant="outline" className="w-full" disabled={locked} onClick={() => update(gibQrPatch(el, band, catalog, widthMm))}>{t('gibQr.apply')}</Button>
+              {el.dataSource !== GIB_QR_FIELD && el.dataSource !== `$.${GIB_QR_FIELD}` && <p className="text-[10px] text-gray-500">{t('gibQr.pickField')}</p>}
+            </div>
+          )}
         </Section>
       )}
 
