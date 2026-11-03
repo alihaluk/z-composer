@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0 — 2026-11-03
+
+### Fixed
+- Canvas shortcuts no longer act on the design while a dialog is open.
+- A negative value that rounds to zero prints without a minus sign (`0,00`, not `-0,00`); the specification and the conformance suite say so.
+
+### Changed
+- Dialogs keep Tab focus inside and give focus back to the button that opened them.
+- Both side panels can be hidden to give the canvas room on narrow screens.
+- Band labels mark conditions with an icon; the tooltip names the repeat list or the condition.
+- Dependencies updated within their ranges; `npm audit` fixes applied.
+
 ## 1.1.0 — 2026-11-03
 
 ### Added

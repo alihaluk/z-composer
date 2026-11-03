@@ -242,6 +242,12 @@
     "deselectKeys": "Esc",
     "deselect": "Seçimi kaldır"
   },
+  "panels": {
+    "hideTools": "Araç panelini gizle",
+    "showTools": "Araç panelini göster",
+    "hideProperties": "Özellik panelini gizle",
+    "showProperties": "Özellik panelini göster"
+  },
   "zoom": {
     "in": "Yakınlaştır",
     "out": "Uzaklaştır",

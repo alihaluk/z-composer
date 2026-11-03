@@ -35,9 +35,11 @@ export function formatValue(value: unknown, format: string, locale: string, inva
   const loc = invariant ? INVARIANT_LOCALE : locale;
   const numberCode = NUMBER_CODE.exec(format);
   if (numberCode) {
-    const n = toNumber(value);
+    let n = toNumber(value);
     if (n === null) return null;
     const digits = +numberCode[2];
+    // A value that rounds to zero prints without a minus sign (docs/OUTPUT_SPEC.md 6.1).
+    if (Math.abs(n) < 0.5 / 10 ** digits) n = 0;
     return new Intl.NumberFormat(loc, { minimumFractionDigits: digits, maximumFractionDigits: digits, useGrouping: numberCode[1] === 'N' }).format(n);
   }
 

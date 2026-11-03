@@ -51,10 +51,13 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | U-8 | UI review | minor | fixed | Hints and section titles used gray-400 (about 2.5:1 contrast); they use gray-500 (about 4.8:1). |
 | U-9 | UI review | minor | fixed | The title wrapped onto two lines, "dots" was not translated, and the default catalog name was English. |
 | U-10 | UI review | minor | fixed | Dialogs did not move focus; they now focus their close / cancel button. |
-| U-11 | UI review | minor | accepted | Dialogs do not trap Tab focus inside them. |
-| U-12 | UI review | minor | accepted | Below about 1000 px width the fixed side panels leave little room for the canvas; the designer is a desktop tool. |
-| U-13 | UI review | minor | accepted | Band labels mark conditions with the text "if" rather than an icon. |
+| U-11 | UI review | minor | fixed | Dialogs do not trap Tab focus inside them. (1.2.0: Tab stays inside, focus returns to the opener on close) |
+| U-12 | UI review | minor | fixed | Below about 1000 px width the fixed side panels leave little room for the canvas; the designer is a desktop tool. (1.2.0: both side panels can be hidden) |
+| U-13 | UI review | minor | fixed | Band labels mark conditions with the text "if" rather than an icon. (1.2.0: a filter icon; the tooltip names the field and the operator) |
+| U-14 | UI review | major | fixed | While a dialog was open, canvas shortcuts still worked: Delete, the arrow keys or Ctrl+Z changed the design behind the preview. |
 | C-1 | conformance | major | fixed | The reference filler did not reject templates with a newer `spec` version, although section 13 requires it. |
 | C-2 | conformance | minor | fixed | `notZero` treated `"1e3"`, `"0x0"` or `"Infinity"` as numbers while the number formats did not; both now use the numeric string definition of section 6.1. |
 | C-3 | conformance | minor | documented | The specification did not say what `^LL` is when nothing is printed (the filler wrote 1), nor that unknown markers are ignored; both are now stated. |
+| C-4 | conformance | minor | fixed | A negative value that rounds to zero printed as `-0,00`; it now prints `0,00` (specification 6.1, two new cases). |
+| D-1 | dependencies | minor | accepted | `npm audit` reports a moderate advisory for `minimatch` inside ESLint (development only; the fix needs ESLint 10). The shipped dependencies have no known vulnerabilities. |
 

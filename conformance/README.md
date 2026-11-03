@@ -63,6 +63,7 @@ These are the points where fillers most often differ from the specification:
 
 - **Booleans** print as `true` / `false` in lower case (.NET `bool.ToString()` gives `True`).
 - **Rounding** is half away from zero: `2.5` → `3`, `-2.5` → `-3` (.NET `Math.Round` defaults to banker's rounding).
+- **Negative zero**: a value that rounds to zero prints without a minus sign (`-0.004` with `N2` → `0.00`); .NET, Java and JavaScript print `-0.00` by default.
 - **Numeric strings** are only `-?digits[.digits]` with optional surrounding white space; `1e3` and `1234,5` are not numbers.
 - **Dates** are printed with the clock time as written; an offset (`+03:00`, `Z`) is never converted.
 - **`max`** counts Unicode code points, not UTF-16 units: `😀` is one character.

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 import { type Catalog, type CatalogField, type FieldType } from '../lib/catalog';
 import { isValidPath, parseCatalog } from '../lib/catalogIO';
 import { Button } from './ui/Button';
+import { Dialog } from './ui/Dialog';
 import { Field, TextInput } from './ui/Field';
 
 const SCALAR_TYPES: FieldType[] = ['string', 'number', 'date', 'datetime', 'boolean', 'image'];
@@ -63,12 +64,6 @@ export function CatalogEditor({ catalog, onSave, onClose }: { catalog: Catalog; 
   const [sampleText, setSampleText] = useState(() => JSON.stringify(catalog.sample ?? null, null, 2));
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   const save = () => {
     try {
       const sample = sampleText.trim() ? JSON.parse(sampleText) : null;
@@ -79,31 +74,29 @@ export function CatalogEditor({ catalog, onSave, onClose }: { catalog: Catalog; 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-label={t('catalog.editorTitle')}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden">
-        <div className="p-3 border-b flex justify-between items-center bg-gray-50">
-          <h2 className="text-lg font-bold text-gray-800">{t('catalog.editorTitle')}</h2>
-          <div className="flex gap-2">
-            <Button variant="ghost" autoFocus onClick={onClose}>{t('catalog.cancel')}</Button>
-            <Button onClick={save}>{t('catalog.apply')}</Button>
-          </div>
-        </div>
-        {error && <p className="px-4 py-2 text-sm text-red-700 bg-red-50" role="alert">{error}</p>}
-        <div className="flex-1 grid grid-cols-[3fr_2fr] overflow-hidden">
-          <div className="p-4 overflow-auto space-y-3 border-r">
-            <Field label={t('catalog.name')}>{id => <TextInput id={id} value={draft.name} onChange={name => setDraft({ ...draft, name })} />}</Field>
-            <div className="grid grid-cols-[1fr_7rem_1fr_auto] gap-1 text-[10px] uppercase text-gray-500">
-              <span>{t('catalog.path')}</span><span>{t('catalog.type')}</span><span>{t('catalog.label')}</span><span />
-            </div>
-            <FieldRows fields={draft.fields} onChange={fields => setDraft({ ...draft, fields })} />
-          </div>
-          <div className="p-4 flex flex-col gap-2 overflow-hidden">
-            <label htmlFor="catalog-sample" className="text-xs font-medium text-gray-600">{t('catalog.sample')}</label>
-            <p className="text-[10px] text-gray-500">{t('catalog.sampleHint')}</p>
-            <textarea id="catalog-sample" spellCheck={false} className="flex-1 font-mono text-[11px] border rounded p-2 resize-none" value={sampleText} onChange={e => setSampleText(e.target.value)} />
-          </div>
+    <Dialog label={t('catalog.editorTitle')} onClose={onClose} className="max-w-4xl">
+      <div className="p-3 border-b flex justify-between items-center bg-gray-50">
+        <h2 className="text-lg font-bold text-gray-800">{t('catalog.editorTitle')}</h2>
+        <div className="flex gap-2">
+          <Button variant="ghost" autoFocus onClick={onClose}>{t('catalog.cancel')}</Button>
+          <Button onClick={save}>{t('catalog.apply')}</Button>
         </div>
       </div>
-    </div>
+      {error && <p className="px-4 py-2 text-sm text-red-700 bg-red-50" role="alert">{error}</p>}
+      <div className="flex-1 grid grid-cols-[3fr_2fr] overflow-hidden">
+        <div className="p-4 overflow-auto space-y-3 border-r">
+          <Field label={t('catalog.name')}>{id => <TextInput id={id} value={draft.name} onChange={name => setDraft({ ...draft, name })} />}</Field>
+          <div className="grid grid-cols-[1fr_7rem_1fr_auto] gap-1 text-[10px] uppercase text-gray-500">
+            <span>{t('catalog.path')}</span><span>{t('catalog.type')}</span><span>{t('catalog.label')}</span><span />
+          </div>
+          <FieldRows fields={draft.fields} onChange={fields => setDraft({ ...draft, fields })} />
+        </div>
+        <div className="p-4 flex flex-col gap-2 overflow-hidden">
+          <label htmlFor="catalog-sample" className="text-xs font-medium text-gray-600">{t('catalog.sample')}</label>
+          <p className="text-[10px] text-gray-500">{t('catalog.sampleHint')}</p>
+          <textarea id="catalog-sample" spellCheck={false} className="flex-1 font-mono text-[11px] border rounded p-2 resize-none" value={sampleText} onChange={e => setSampleText(e.target.value)} />
+        </div>
+      </div>
+    </Dialog>
   );
 }

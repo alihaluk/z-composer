@@ -1,6 +1,6 @@
 # Z-Composer — ZPL Template Output Specification
 
-Status: Version 1 (2026-11-03), implemented by Z-Composer 1.0.0; clarified in 1.1.0 (numeric strings, minimum length, unknown markers) and checked by the [conformance suite](../conformance/README.md)
+Status: Version 1 (2026-11-03), implemented by Z-Composer 1.0.0; clarified in 1.1.0 (numeric strings, minimum length, unknown markers) and 1.2.0 (negative zero) and checked by the [conformance suite](../conformance/README.md)
 
 ## 1. Purpose
 
@@ -114,7 +114,7 @@ A template stores the meaning of a format; the filler applies its own culture (S
 
 ### 6.1 Numbers
 
-Applies to JSON numbers and to numeric strings: an optional `-`, digits, optionally `.` and digits, with optional surrounding white space (`"1234.5"`, `" 42 "`). Strings in other forms (`"1234,5"`, `"1e3"`, `"+5"`) are not numbers. Rounding is half away from zero (`2.5` → `3`, `-2.5` → `-3`).
+Applies to JSON numbers and to numeric strings: an optional `-`, digits, optionally `.` and digits, with optional surrounding white space (`"1234.5"`, `" 42 "`). Strings in other forms (`"1234,5"`, `"1e3"`, `"+5"`) are not numbers. Rounding is half away from zero (`2.5` → `3`, `-2.5` → `-3`). A value that rounds to zero is printed without a minus sign (`-0.004` with `N2` → `0,00`, not `-0,00`).
 
 | Code | Meaning | tr-TR (1234.5) | en-US (1234.5) | `inv` |
 |---|---|---|---|---|

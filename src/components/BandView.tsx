@@ -1,6 +1,6 @@
 import { useRef, useState, type PointerEvent } from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { Repeat } from 'lucide-react';
+import { Filter, Repeat } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 import { mmToPx, pxToMm } from '../lib/constants';
@@ -59,10 +59,14 @@ export function BandView({ band, widthPx, growth }: { band: Band; widthPx: numbe
           'absolute right-full top-0 mr-1 max-w-[120px] text-[10px] leading-tight px-1.5 py-0.5 rounded-l border text-left whitespace-nowrap overflow-hidden text-ellipsis',
           bandSelected ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400',
         )}
-        title={band.name}
+        title={[
+          band.name,
+          band.repeat && `${t('bands.repeat')}: ${band.repeat}`,
+          band.condition?.path && `${t('condition.title')}: ${band.condition.path} · ${t(`condition.${band.condition.op}`)}`,
+        ].filter(Boolean).join('\n')}
       >
-        {band.repeat && <Repeat size={9} className="inline mr-0.5 -mt-0.5" />}
-        {band.condition?.path && <span className="mr-0.5">if</span>}
+        {band.repeat && <Repeat size={9} aria-hidden className="inline mr-0.5 -mt-0.5" />}
+        {band.condition?.path && <Filter size={9} aria-hidden className="inline mr-0.5 -mt-0.5" />}
         {band.name}
         <span className="opacity-60"> · {band.height}mm</span>
       </button>

@@ -242,6 +242,12 @@
     "deselectKeys": "Esc",
     "deselect": "Clear the selection"
   },
+  "panels": {
+    "hideTools": "Hide tools panel",
+    "showTools": "Show tools panel",
+    "hideProperties": "Hide properties panel",
+    "showProperties": "Show properties panel"
+  },
   "zoom": {
     "in": "Zoom in",
     "out": "Zoom out",

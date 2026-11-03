@@ -40,7 +40,8 @@ const isTyping = () => {
 function useKeyboard(store: EditorStore) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isTyping()) return;
+      // Shortcuts act on the canvas; a modal dialog has the keyboard while it is open.
+      if (isTyping() || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
       const s = store.getState();
       const mod = e.metaKey || e.ctrlKey;
       const key = e.key.toLowerCase();
@@ -82,6 +83,7 @@ export function Editor() {
   useKeyboard(store);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isEmpty = template.bands.every(b => b.elements.length === 0);
+  const widthPx = mmToPx(template.printer.widthMm);
 
   // On first show, zoom so that the page and its band labels fit the canvas area.
   useEffect(() => {
@@ -93,7 +95,6 @@ export function Editor() {
   }, []);
 
   const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 4 } }), useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }));
-  const widthPx = mmToPx(template.printer.widthMm);
   const catalog = useEditor(s => s.catalog);
   const mode = useEditor(s => s.canvasMode);
   const locale = useEditor(s => s.previewLocale);

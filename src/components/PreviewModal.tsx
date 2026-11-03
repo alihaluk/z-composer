@@ -8,6 +8,7 @@ import { parseZpl } from '../preview/zplParser';
 import { renderZpl } from '../preview/zplRenderer';
 import { useEditor, useEditorStore, type CanvasMode } from '../store/editorStore';
 import { Button } from './ui/Button';
+import { Dialog } from './ui/Dialog';
 import { Segmented } from './ui/Field';
 import { CultureInput } from './ui/CultureInput';
 import { ZplCode } from './properties/ZplCode';
@@ -46,49 +47,40 @@ export const PreviewModal = () => {
     return () => { cancelled = true; };
   }, [isOpen, previewZpl]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setIsOpen(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen]);
-
   return (
     <>
       <Button onClick={() => setIsOpen(true)} className="w-full bg-green-600 hover:bg-green-700 text-white shadow-sm">{t('preview.button')}</Button>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-label={t('preview.title')}>
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden">
-            <div className="p-3 border-b flex justify-between items-center gap-3 bg-gray-50">
-              <h2 className="text-lg font-bold text-gray-800">{t('preview.title')}</h2>
-              <div className="flex items-center gap-3">
-                <div className="w-56">
-                  <Segmented<CanvasMode> label={t('preview.title')} value={mode} onChange={setMode}
-                    options={[{ value: 'sample', label: t('preview.sampleData') }, { value: 'fields', label: t('preview.fieldNames') }]} />
-                </div>
-                <div className="w-28"><CultureInput label={t('preview.culture')} value={locale} onChange={l => store.getState().setPreviewLocale(l)} /></div>
-                <Button variant="ghost" autoFocus onClick={() => setIsOpen(false)}>{t('preview.close')}</Button>
+        <Dialog label={t('preview.title')} onClose={() => setIsOpen(false)} className="max-w-5xl">
+          <div className="p-3 border-b flex justify-between items-center gap-3 bg-gray-50">
+            <h2 className="text-lg font-bold text-gray-800">{t('preview.title')}</h2>
+            <div className="flex items-center gap-3">
+              <div className="w-56">
+                <Segmented<CanvasMode> label={t('preview.title')} value={mode} onChange={setMode}
+                  options={[{ value: 'sample', label: t('preview.sampleData') }, { value: 'fields', label: t('preview.fieldNames') }]} />
               </div>
-            </div>
-            <div className="flex-1 flex overflow-hidden">
-              <div className="w-1/2 p-4 border-r overflow-auto bg-gray-50">
-                <h3 className="font-bold mb-2 text-xs text-gray-500 uppercase">{t('preview.generatedCode')}</h3>
-                <ZplCode zpl={templateZpl} className="h-auto" />
-              </div>
-              <div className="w-1/2 p-4 flex flex-col items-center gap-3 bg-gray-200 overflow-auto">
-                <p className="text-[11px] text-gray-500 text-center">{t('preview.approximate')}</p>
-                {status === 'rendering' && (
-                  <div className="flex flex-col items-center gap-2 mt-20">
-                    <Loader2 className="animate-spin text-gray-500" size={32} />
-                    <span className="text-gray-500 text-sm">{t('preview.rendering')}</span>
-                  </div>
-                )}
-                {status === 'failed' && <span className="text-red-500 mt-20">{t('preview.failed')}</span>}
-                <canvas ref={canvasRef} aria-label={t('preview.image')} className={cn('shadow-2xl border-2 border-white max-w-full h-auto', status !== 'done' && 'hidden')} />
-              </div>
+              <div className="w-28"><CultureInput label={t('preview.culture')} value={locale} onChange={l => store.getState().setPreviewLocale(l)} /></div>
+              <Button variant="ghost" autoFocus onClick={() => setIsOpen(false)}>{t('preview.close')}</Button>
             </div>
           </div>
-        </div>
+          <div className="flex-1 flex overflow-hidden">
+            <div className="w-1/2 p-4 border-r overflow-auto bg-gray-50">
+              <h3 className="font-bold mb-2 text-xs text-gray-500 uppercase">{t('preview.generatedCode')}</h3>
+              <ZplCode zpl={templateZpl} className="h-auto" />
+            </div>
+            <div className="w-1/2 p-4 flex flex-col items-center gap-3 bg-gray-200 overflow-auto">
+              <p className="text-[11px] text-gray-500 text-center">{t('preview.approximate')}</p>
+              {status === 'rendering' && (
+                <div className="flex flex-col items-center gap-2 mt-20">
+                  <Loader2 className="animate-spin text-gray-500" size={32} />
+                  <span className="text-gray-500 text-sm">{t('preview.rendering')}</span>
+                </div>
+              )}
+              {status === 'failed' && <span className="text-red-500 mt-20">{t('preview.failed')}</span>}
+              <canvas ref={canvasRef} aria-label={t('preview.image')} className={cn('shadow-2xl border-2 border-white max-w-full h-auto', status !== 'done' && 'hidden')} />
+            </div>
+          </div>
+        </Dialog>
       )}
     </>
   );
