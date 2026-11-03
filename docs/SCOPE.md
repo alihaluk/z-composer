@@ -154,7 +154,7 @@ Placeholder syntax and escaping, band and condition markers, length calculation,
 4. ~~Template schema v2~~ — done: millimetre units, printer profile, bands, conditions, overflow and format, v1 migration; the ZPL output follows docs/OUTPUT_SPEC.md and line-print mode is removed.
 5. ~~Output correctness~~ — done: `^FH` escaping, bold text, images encoded at their current size, positions kept when moving between bands, plus `>` in Code 128 and `\` in field blocks (docs/REVIEW_FINDINGS.md).
 6. ~~Field catalog~~ — done: file format, import from a sample JSON or a JSON Schema, editor, generic default invoice catalog, missing-field warnings and the `fieldsUsed` snapshot.
-7. Formats and preview — format codes, preview culture, sample-data canvas mode.
+7. ~~Formats and preview~~ — done: format codes with live examples in the preview culture, culture selector on the canvas and in the preview, sample-data canvas mode.
 8. Overflow modes (truncate / wrap / alignment).
 9. Editor ergonomics — multi-select, copy / paste / duplicate, Delete key, layer list, locking.
 10. Embedding API (catalog, template, save hooks, locale).

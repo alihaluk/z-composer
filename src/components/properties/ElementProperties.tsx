@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { AlignCenter, AlignLeft, AlignRight, BringToFront, Copy, SendToBack, Trash2 } from 'lucide-react';
 import { findField } from '../../lib/catalog';
 import { mmToDots } from '../../lib/constants';
-import { DATE_FORMATS, NUMBER_FORMATS } from '../../lib/formats';
+import { DATE_FORMATS, NUMBER_FORMATS, formatValue } from '../../lib/formats';
+import { displayText, sampleContext } from '../../lib/elementDisplay';
+import { lookup } from '../../lib/zplFill';
 import { loadGrayBitmap } from '../../lib/imageUtils';
 import { DEFAULT_FONT_MM, DEFAULT_THICKNESS_MM, elementLines, textMetrics } from '../../lib/zplTemplate';
 import { useEditor, useEditorStore } from '../../store/editorStore';
@@ -18,6 +20,7 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
   const store = useEditorStore();
   const catalog = useEditor(s => s.catalog);
   const dpi = useEditor(s => s.template.printer.dpi);
+  const locale = useEditor(s => s.previewLocale);
   const [imageError, setImageError] = useState<string | null>(null);
   const s = store.getState();
   const update = (patch: Partial<TemplateElement>) => s.updateElement(band.id, el.id, patch);
@@ -25,6 +28,9 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
   const isQr = el.type === 'barcode' && el.barcodeType === 'qr';
   const fieldType = el.isDynamic && el.dataSource ? findField(catalog, el.dataSource, band.repeat)?.type : undefined;
   const formats = fieldType === 'number' ? NUMBER_FORMATS : fieldType === 'date' || fieldType === 'datetime' ? DATE_FORMATS : [];
+  // Format options show the element's own sample value in the preview culture.
+  const sampleValue = el.dataSource ? lookup(sampleContext(catalog, band), catalog.sample, el.dataSource) : undefined;
+  const exampleValue = sampleValue ?? (fieldType === 'number' ? 1234.5 : '2026-11-13T14:37:00');
 
   const uploadImage = async (file: File | undefined) => {
     if (!file) return;
@@ -74,7 +80,9 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
                       <SelectInput id={id} value={el.format && (formats as readonly string[]).includes(el.format) ? el.format : el.format ? 'custom' : ''}
                         onChange={v => update({ format: v === 'custom' ? el.format || 'dd.MM.yyyy' : v || undefined })}>
                         <option value="">{t('properties.formatNone')}</option>
-                        {formats.map(f => <option key={f} value={f}>{t(`formats.${f}`, { defaultValue: f })}</option>)}
+                        {formats.map(f => (
+                          <option key={f} value={f}>{f} · {formatValue(exampleValue, f, locale, !!el.invariant) ?? '—'} ({t(`formats.${f}`, { defaultValue: t('properties.formatPattern') })})</option>
+                        ))}
                         {fieldType !== 'number' && <option value="custom">{t('properties.formatCustom')}</option>}
                       </SelectInput>
                       {el.format && !(formats as readonly string[]).includes(el.format) && (
@@ -85,6 +93,11 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
                 </Field>
               )}
               {el.format && <Checkbox label={t('properties.invariant')} checked={!!el.invariant} onChange={v => update({ invariant: v || undefined })} />}
+              {el.dataSource && (
+                <p className="text-[11px] text-gray-500">
+                  {t('properties.sampleValue', { locale: el.invariant ? 'invariant' : locale })}: <span className="font-mono text-gray-800">{displayText(el, band, catalog, 'sample', locale) || '—'}</span>
+                </p>
+              )}
             </>
           ) : (
             <Field label={t('properties.text')}>{id => <TextInput id={id} value={el.content ?? ''} onChange={content => update({ content })} />}</Field>

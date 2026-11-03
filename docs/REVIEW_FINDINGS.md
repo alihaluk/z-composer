@@ -24,3 +24,6 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | R6-3 | 6 | minor | open | The catalog editor can change types and labels and remove fields, but not add a field by hand; new fields come from a sample or schema. |
 | R6-4 | 6 | minor | open | The saved `fieldsUsed` snapshot is written but only missing fields are reported; a field whose type changed in the catalog is not flagged. |
 | R6-5 | 6 | minor | open | Arrays inside array items (e.g. line discounts) cannot be bound; they are skipped with a note. Nested repeating bands would be needed. |
+| R7-1 | 7 | minor | open | On the canvas a growing text wraps but its band does not grow; only the preview shows the grown band. |
+| R7-2 | 7 | minor | open | The preview culture is not remembered across reloads and does not follow the interface language. |
+| R7-3 | 7 | minor | open | The preview culture list is fixed (tr-TR, en-US, en-GB, de-DE, fr-FR); other cultures cannot be entered. |

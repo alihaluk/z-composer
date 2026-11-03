@@ -6,7 +6,8 @@ import { fillTemplate } from '../lib/zplFill';
 import { generateTemplateZpl } from '../lib/zplTemplate';
 import { parseZpl } from '../preview/zplParser';
 import { renderZpl } from '../preview/zplRenderer';
-import { useEditor, type CanvasMode } from '../store/editorStore';
+import { PREVIEW_LOCALES } from '../lib/constants';
+import { useEditor, useEditorStore, type CanvasMode } from '../store/editorStore';
 import { Button } from './ui/Button';
 import { Segmented } from './ui/Field';
 import { ZplCode } from './properties/ZplCode';
@@ -20,6 +21,7 @@ export const PreviewModal = () => {
   const template = useEditor(s => s.template);
   const catalog = useEditor(s => s.catalog);
   const locale = useEditor(s => s.previewLocale);
+  const store = useEditorStore();
 
   // The code panel shows the template; the image shows what a printer would print.
   const templateZpl = useMemo(() => (isOpen ? generateTemplateZpl(template) : ''), [isOpen, template]);
@@ -64,7 +66,9 @@ export const PreviewModal = () => {
                   <Segmented<CanvasMode> label={t('preview.title')} value={mode} onChange={setMode}
                     options={[{ value: 'sample', label: t('preview.sampleData') }, { value: 'fields', label: t('preview.fieldNames') }]} />
                 </div>
-                <span className="text-xs text-gray-500">{locale}</span>
+                <select aria-label={t('preview.culture')} className="h-8 text-xs border rounded px-2 bg-white" value={locale} onChange={e => store.getState().setPreviewLocale(e.target.value)}>
+                  {PREVIEW_LOCALES.map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
                 <Button variant="ghost" onClick={() => setIsOpen(false)}>{t('preview.close')}</Button>
               </div>
             </div>

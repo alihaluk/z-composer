@@ -72,7 +72,8 @@
     "sampleData": "Örnek veri",
     "fieldNames": "Alan adları",
     "image": "Baskı önizlemesi",
-    "approximate": "Önizleme tarayıcıda çizilir. Metin genişlikleri yaklaşıktır; yazıcı fontu yerine benzer açık bir font kullanılır."
+    "approximate": "Önizleme tarayıcıda çizilir. Metin genişlikleri yaklaşıktır; yazıcı fontu yerine benzer açık bir font kullanılır.",
+    "culture": "Kültür"
   },
   "settings": {
     "printer": "Yazıcı",
@@ -163,7 +164,9 @@
     "duplicate": "Çoğalt",
     "toFront": "Öne getir",
     "toBack": "Arkaya gönder",
-    "delete": "Sil"
+    "delete": "Sil",
+    "sampleValue": "Örnek ({{locale}})",
+    "formatPattern": "kalıp"
   },
   "overflow": {
     "title": "Taşma",
@@ -178,14 +181,14 @@
     "charsPerLineHint": "Boş bırakılırsa genişlikten tahmin edilir ({{n}})."
   },
   "formats": {
-    "N0": "1.235 — gruplu, ondalıksız",
-    "N2": "1.234,50 — gruplu, 2 ondalık",
-    "F0": "1235 — ondalıksız",
-    "F2": "1234,50 — 2 ondalık",
-    "d": "Kısa tarih",
-    "D": "Uzun tarih",
-    "t": "Saat",
-    "g": "Kısa tarih ve saat"
+    "N0": "gruplu, ondalıksız",
+    "N2": "gruplu, 2 ondalık",
+    "F0": "ondalıksız",
+    "F2": "2 ondalık",
+    "d": "kısa tarih",
+    "D": "uzun tarih",
+    "t": "saat",
+    "g": "kısa tarih ve saat"
   },
   "selection": {
     "count": "{{count}} öğe seçili",
