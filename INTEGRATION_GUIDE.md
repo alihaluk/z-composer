@@ -11,11 +11,13 @@ npm run build:lib
 
 This writes `dist-lib/`: an ES module (`z-composer.js`), a stylesheet (`style.css`), type declarations (`types/`) and a barcode chunk that is loaded on demand. React and React DOM are peer dependencies and are not bundled.
 
-The package is marked `private` in `package.json`; install it from a path, a Git URL or your own registry, for example:
+The package is marked `private` in `package.json`, so it is not published by accident. Install it from a path, a Git URL or a tarball (`npm pack` builds the library first through the `prepack` script), for example:
 
 ```bash
 npm install ../z-composer
 ```
+
+To publish it to a registry, remove `"private": true` and run `npm publish`.
 
 ## 2. Embed the designer
 

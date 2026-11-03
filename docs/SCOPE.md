@@ -116,7 +116,7 @@ The preview is rendered in the browser by our own ZPL renderer. Labelary or any 
 - The renderer interprets the ZPL our output actually produces, so the preview shows the deliverable itself rather than a separate drawing of the model.
 - It supports the ZPL subset defined in the output spec (e.g. `^FO`, `^A0`, `^FB`, `^FD`, `^FH`, `^GB`, `^GFA`, `^BC`, `^BQ`, `^BY`, `^PW`, `^LL`, `^CI28`) and renders at printer resolution (1 px = 1 dot).
 - Barcodes and QR codes are really encoded (e.g. with bwip-js), so a previewed code can be scanned.
-- Known limit: the printer font behind `^A0` (CG Triumvirate) is licensed. The preview uses an open substitute with a width table matched to the printer font; text widths can still differ slightly from a real printer.
+- Known limit: the printer font behind `^A0` (CG Triumvirate) is licensed. The preview draws an open substitute and places every character with the printer font's advance widths, measured in the Labelary emulator (`src/preview/fontMetrics.ts`). On the invoice preset, text edges are on average within 1 dot of the emulator; glyph shapes differ.
 - For preview only, the designer fills placeholders with catalog sample data in the preview culture. This filler is internal and doubles as a reference implementation of the output spec.
 
 ### D8 — A template is a list of bands
@@ -137,7 +137,7 @@ Elements and bands can be hidden based on a field value. Nothing is hidden unles
 
 Real-device checks are done on a Zebra ZQ521 (203 dpi, ZPL) with 3-inch roll paper.
 
-- Calibrates the preview font width table (D7).
+- Confirms the preview font width table (D7) on real paper.
 - Turkish characters are confirmed to print.
 - 300 / 600 dpi output can only be checked in the preview until such a printer is available.
 
@@ -150,7 +150,7 @@ Placeholder syntax and escaping, band and condition markers, length calculation,
 ## 5. Roadmap
 1. ~~Output specification~~ — done: [`docs/OUTPUT_SPEC.md`](./OUTPUT_SPEC.md).
 2. ~~Test baseline for the output and CI~~ — done: Vitest tests and `.github/workflows/ci.yml`.
-3. ~~Own preview renderer replacing Labelary (D7)~~ — done: `src/preview`. Font width calibration on the reference printer moved to Later.
+3. ~~Own preview renderer replacing Labelary (D7)~~ — done: `src/preview`, with a width table for the printer font.
 4. ~~Template schema v2~~ — done: millimetre units, printer profile, bands, conditions, overflow and format, v1 migration; the ZPL output follows docs/OUTPUT_SPEC.md and line-print mode is removed.
 5. ~~Output correctness~~ — done: `^FH` escaping, bold text, images encoded at their current size, positions kept when moving between bands, plus `>` in Code 128 and `\` in field blocks (docs/REVIEW_FINDINGS.md).
 6. ~~Field catalog~~ — done: file format, import from a sample JSON or a JSON Schema, editor, generic default invoice catalog, missing-field warnings and the `fieldsUsed` snapshot.
@@ -162,6 +162,5 @@ Placeholder syntax and escaping, band and condition markers, length calculation,
 ### Later (candidates)
 - Nested repeating bands, for arrays inside array items (e.g. discounts per line).
 - Selections across bands, to move or align elements of several bands together.
-- Font width table calibrated on the reference printer, for closer preview text widths.
 - Fixed-length label support (gap / black-mark media) as a separate mode next to receipts.
 - Content builder — compose the content of a text, barcode or QR element from catalog fields and static text. Presets sit on top of it, e.g. a GİB e-Fatura / e-Arşiv QR preset. Values inside such content can use culture-invariant formats (see D3).

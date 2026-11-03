@@ -39,3 +39,5 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | R10-2 | 10 | minor | owner decision | The package is `private`; publishing it to a registry is a separate decision. |
 | R10-3 | 10 | minor | accepted | The library stylesheet embeds the preview font (about 80 kB) and the barcode chunk is about 290 kB gzipped; both load only with the designer or the first barcode preview. |
 | R10-4 | 10 | minor | fixed | When the host fixes `language`, the language switcher is still shown and lets the user switch for the session. (final pass: the switcher is hidden when the host fixes the language) |
+| R11-1 | final | minor | documented | The Labelary emulator draws nothing for `₺` with `^A0`; the resident font may not contain the Turkish lira sign. Templates should print the currency code (e.g. `TRY`, `TL`) instead. |
+| R11-2 | final | minor | fixed | Preview text widths came from the substitute font. They now come from the printer font's measured advance widths; text edges are within about 1 dot of the emulator on the invoice preset. |

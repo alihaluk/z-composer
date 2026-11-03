@@ -1,8 +1,9 @@
 // Draws a parsed ZPL label onto a canvas at printer resolution (1 px = 1 dot).
-// Text uses Roboto Condensed Bold as an open substitute for the printer's ^A0
-// font (CG Triumvirate Bold Condensed), so text widths are approximate.
+// Text uses Roboto Condensed Bold as an open substitute for the printer's ^A0 font
+// (CG Triumvirate Bold Condensed), placed with that font's measured widths (fontMetrics.ts).
 import '@fontsource/roboto-condensed/latin-700.css';
 import '@fontsource/roboto-condensed/latin-ext-700.css';
+import { A0_ADVANCE, a0Width } from './fontMetrics';
 import type { Code128Item, GraphicItem, Orientation, QrItem, TextItem, ZplLabel } from './zplParser';
 
 const FONT_FAMILY = '"Roboto Condensed"';
@@ -26,12 +27,43 @@ function withOrientation(ctx: CanvasRenderingContext2D, o: Orientation, x: numbe
   ctx.restore();
 }
 
-function wrapLine(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, scaleX: number): string[] {
+/** Printed width of a text: from the ^A0 width table, or measured with the preview font. */
+function textWidth(ctx: CanvasRenderingContext2D, text: string, item: TextItem): number {
+  return a0Width(text, item.height, item.width) ?? ctx.measureText(text).width * (item.width / item.height);
+}
+
+/**
+ * Draws one line starting at (0, 0). With width data for every character, each glyph is
+ * centred in the advance the printer gives it, so positions match the printer.
+ */
+function drawLine(ctx: CanvasRenderingContext2D, text: string, item: TextItem) {
+  const scaleX = item.width / item.height;
+  if (a0Width(text, item.height, item.width) === null) {
+    ctx.save();
+    ctx.scale(scaleX, 1);
+    ctx.fillText(text, 0, 0);
+    ctx.restore();
+    return;
+  }
+  let x = 0;
+  for (const c of text) {
+    const advance = A0_ADVANCE[c] * item.width;
+    const glyph = ctx.measureText(c).width * scaleX;
+    ctx.save();
+    ctx.translate(x + (advance - glyph) / 2, 0);
+    ctx.scale(scaleX, 1);
+    ctx.fillText(c, 0, 0);
+    ctx.restore();
+    x += advance;
+  }
+}
+
+function wrapLine(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, item: TextItem): string[] {
   const lines: string[] = [];
   let current = '';
   for (const word of text.split(' ')) {
     const candidate = current ? `${current} ${word}` : word;
-    if (current && ctx.measureText(candidate).width * scaleX > maxWidth) {
+    if (current && textWidth(ctx, candidate, item) > maxWidth) {
       lines.push(current);
       current = word;
     } else {
@@ -43,33 +75,27 @@ function wrapLine(ctx: CanvasRenderingContext2D, text: string, maxWidth: number,
 }
 
 function drawText(ctx: CanvasRenderingContext2D, item: TextItem) {
-  const scaleX = item.width / item.height;
   ctx.font = `700 ${item.height}px ${FONT_FAMILY}`;
   ctx.textBaseline = 'top';
 
   const { block } = item;
   if (!block) {
-    const width = ctx.measureText(item.text).width * scaleX;
-    withOrientation(ctx, item.orientation, item.x, item.y, width, item.height, () => {
-      ctx.scale(scaleX, 1);
-      ctx.fillText(item.text, 0, 0);
-    });
+    withOrientation(ctx, item.orientation, item.x, item.y, textWidth(ctx, item.text, item), item.height, () => drawLine(ctx, item.text, item));
     return;
   }
 
-  const lines = item.text.split('\n').flatMap(part => wrapLine(ctx, part, block.width, scaleX));
+  const lines = item.text.split('\n').flatMap(part => wrapLine(ctx, part, block.width, item));
   const lineHeight = item.height + block.lineSpacing;
   const visible = Math.min(lines.length, block.maxLines);
   withOrientation(ctx, item.orientation, item.x, item.y, block.width, visible * lineHeight, () => {
     lines.forEach((line, i) => {
       // ZPL prints lines beyond the block's maximum over the last line.
       const row = Math.min(i, block.maxLines - 1);
-      const width = ctx.measureText(line).width * scaleX;
+      const width = textWidth(ctx, line, item);
       const offset = block.justify === 'R' ? block.width - width : block.justify === 'C' ? (block.width - width) / 2 : 0;
       ctx.save();
       ctx.translate(offset, row * lineHeight);
-      ctx.scale(scaleX, 1);
-      ctx.fillText(line, 0, 0);
+      drawLine(ctx, line, item);
       ctx.restore();
     });
   });

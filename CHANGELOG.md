@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 — 2026-11-03
+
+### Changed
+- The preview places text with the printer font's advance widths, measured in the Labelary emulator; text edges are within about 1 dot of the emulator on the invoice preset.
+- Characters-per-line estimates for growing text use the same widths.
+- Package metadata and a `prepack` build; the package is ready for `npm publish` once `private` is removed.
+
 ## 1.0.0 — 2026-11-03
 
 First complete version of the designer described in [docs/SCOPE.md](./docs/SCOPE.md).

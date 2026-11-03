@@ -1,12 +1,13 @@
 // Generates the ZPL template defined in docs/OUTPUT_SPEC.md from a template model.
 import { mmToDots } from './constants';
 import { bitmapToZpl } from './imageUtils';
+import { A0_AVERAGE_ADVANCE } from '../preview/fontMetrics';
 import { type Band, type Condition, type Dpi, type Rotation, type Template, type TemplateElement } from '../types';
 
 export const DEFAULT_FONT_MM = 3;
 export const DEFAULT_THICKNESS_MM = 0.25;
-/** Average character width of the condensed printer font relative to its height. */
-const CHAR_WIDTH_RATIO = 0.5;
+/** Average character width of the printer font relative to its height (measured). */
+const CHAR_WIDTH_RATIO = A0_AVERAGE_ADVANCE;
 const LINE_SPACING_RATIO = 0.15;
 
 const ORIENTATION: Record<Rotation, string> = { 0: 'N', 90: 'R', 180: 'I', 270: 'B' };
