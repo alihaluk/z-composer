@@ -18,7 +18,7 @@ const snap = (val: number) => Math.round(val / SNAP_SIZE) * SNAP_SIZE;
 function App() {
     const { addElement, updateElement, removeElement, selectElement, canvasWidth, zoomLevel, header, body, footer } = useStore();
     const [activeId, setActiveId] = useState<string | null>(null);
-    const [dragData, setDragData] = useState<any>(null);
+    const [dragData, setDragData] = useState<DragStartEvent['active']['data']['current']>(undefined);
     const [dragPosition, setDragPosition] = useState<{ x: number, y: number } | null>(null);
     const [ghostBox, setGhostBox] = useState<{ x: number, y: number, width: number, height: number } | null>(null);
 
@@ -224,7 +224,7 @@ function App() {
         const { active, over, delta } = event;
 
         setActiveId(null);
-        setDragData(null);
+        setDragData(undefined);
         setDragPosition(null);
         setGhostBox(null);
         setAlignmentGuides([]);

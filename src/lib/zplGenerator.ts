@@ -31,7 +31,7 @@ export function generateElementZPL(
     el: CanvasElement,
     useMockData: boolean = false,
     offsetYMm: number = 0,
-    localData?: any
+    localData?: Record<string, string>
 ): string {
     const xDots = pxToDots(el.x);
     const yDots = mmToDots(offsetYMm) + pxToDots(el.y);
@@ -195,7 +195,7 @@ export function generateLinePrint(
     const COLS_PER_MM = 0.6;
 
     // Helper to render a section line-by-line using spatial layout
-    const processSection = (elements: CanvasElement[], rowData?: any) => {
+    const processSection = (elements: CanvasElement[], rowData?: Record<string, string>) => {
         // 1. Resolve content first
         const resolvedElements = elements.map(el => {
             let content = '';

@@ -1,19 +1,20 @@
 import { useDraggable } from '@dnd-kit/core';
 import { saveAs } from 'file-saver';
 import { useEffect, useState } from 'react';
-import { Type, Square, Barcode, Image, QrCode, RotateCcw, RotateCw, Save, Trash } from 'lucide-react';
+import { Type, Square, Barcode, Image, QrCode, RotateCcw, RotateCw, Save, Trash, type LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 import { PreviewModal } from './PreviewModal';
 import { useStore } from '../store/useStore';
 import { Button } from './ui/Button';
 import { MM_TO_PX } from '../lib/constants';
+import { type CanvasElement } from '../types';
 
 interface SidebarItemProps {
   type: string;
   label: string;
-  icon: any;
-  extraData?: Record<string, any>;
+  icon: LucideIcon;
+  extraData?: Partial<CanvasElement>;
 }
 
 export const SidebarItem = ({ type, label, icon: Icon, extraData }: SidebarItemProps) => {
@@ -89,8 +90,11 @@ export const Sidebar = () => {
       // Try Native File System Access API first (Chrome/Edge/Opera)
       if ('showSaveFilePicker' in window) {
         try {
-          // @ts-ignore - TS might not know about showSaveFilePicker yet
-          const handle = await window.showSaveFilePicker({
+          // File System Access API is not in TypeScript's DOM lib yet
+          const picker = window as Window & {
+            showSaveFilePicker: (options: object) => Promise<FileSystemFileHandle>;
+          };
+          const handle = await picker.showSaveFilePicker({
             suggestedName: fileName,
             types: [{
               description: 'Z-Composer Template',
@@ -101,9 +105,9 @@ export const Sidebar = () => {
           await writable.write(jsonString);
           await writable.close();
           return;
-        } catch (err: any) {
+        } catch (err) {
           // User cancelled or not allowed
-          if (err.name === 'AbortError') return;
+          if (err instanceof Error && err.name === 'AbortError') return;
           console.warn('File System Access API failed, falling back to file-saver', err);
         }
       }

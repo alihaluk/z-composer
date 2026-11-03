@@ -8,6 +8,7 @@ import { MM_TO_PX } from '../lib/constants';
 import { generateZPL, generateElementZPL, generateLinePrint } from '../lib/zplGenerator';
 import { GLOBAL_DATA_SOURCES, ALL_DATA_SOURCES } from '../lib/dataSources';
 import { imageToZPL } from '../lib/imageUtils';
+import { type CanvasElement } from '../types';
 
 export const PropertiesPanel = () => {
   const { t } = useTranslation();
@@ -152,13 +153,13 @@ export const PropertiesPanel = () => {
     ? zplCode.substring(0, 2000) + '\n... [Truncated for Preview]'
     : zplCode;
 
-  const handleChange = (key: string, value: any) => {
-    updateElement(selectedSection!, selectedElementId!, { [key]: value });
+  const handleChange = <K extends keyof CanvasElement>(key: K, value: CanvasElement[K]) => {
+    updateElement(selectedSection!, selectedElementId!, { [key]: value } as Partial<CanvasElement>);
 
     // If resizing an image, re-process the ZPL data to match new dimensions
     if (element.type === 'image' && element.imageBase64 && (key === 'width' || key === 'height')) {
-      const newWidth = key === 'width' ? value : element.width;
-      const newHeight = key === 'height' ? value : element.height;
+      const newWidth = Number(key === 'width' ? value : element.width);
+      const newHeight = Number(key === 'height' ? value : element.height);
 
       // Convert screen pixels (value) back to physical mm, then to ZPL dots
       // widthPx / MM_TO_PX = widthMm
@@ -395,7 +396,7 @@ export const PropertiesPanel = () => {
               <Select
                 id="prop-barcodetype"
                 value={element.barcodeType || 'code128'}
-                onChange={(e) => handleChange('barcodeType', e.target.value)}
+                onChange={(e) => handleChange('barcodeType', e.target.value as CanvasElement['barcodeType'])}
               >
                 <option value="code128">Code 128</option>
                 <option value="qr">QR Code</option>
