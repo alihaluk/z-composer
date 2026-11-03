@@ -54,11 +54,10 @@ function useKeyboard(store: EditorStore) {
 
       const sel = s.selection;
       if (!sel?.ids.length) return;
-      const band = s.template.bands.find(b => b.id === sel.bandId);
-      const movable = band?.elements.filter(el => sel.ids.includes(el.id) && !el.locked) ?? [];
+      const movable = s.template.bands.flatMap(b => b.elements).filter(el => sel.ids.includes(el.id) && !el.locked);
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
-        s.removeElements(sel.bandId, movable.map(el => el.id));
+        s.deleteElements(movable.map(el => el.id));
         return;
       }
       const step = e.shiftKey ? KEY_STEP_LARGE_MM : KEY_STEP_MM;
@@ -66,7 +65,7 @@ function useKeyboard(store: EditorStore) {
       if (!delta || !movable.length) return;
       e.preventDefault();
       const round = (v: number) => Math.round(v * 100) / 100;
-      s.updateElements(sel.bandId, Object.fromEntries(movable.map(el => [el.id, { x: round(Math.max(0, el.x + delta[0])), y: round(Math.max(0, el.y + delta[1])) }])));
+      s.patchElements(Object.fromEntries(movable.map(el => [el.id, { x: round(Math.max(0, el.x + delta[0])), y: round(Math.max(0, el.y + delta[1])) }])));
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -151,23 +150,24 @@ export function Editor() {
       s.addElement(result.bandId, createElement(data.tool, result.x, result.y, template.printer.widthMm, t('tools.defaultText')));
       return;
     }
-    if (data.bandId !== result.bandId) {
+    // Moving one of several selected elements moves them all by the same distance.
+    const group = s.selection?.ids.includes(data.id) ? s.selection.ids : [data.id];
+    if (data.bandId !== result.bandId && group.length === 1) {
       s.moveElementToBand(data.bandId, result.bandId, data.id, { x: result.x, y: result.y });
       return;
     }
-    // Moving one of several selected elements moves them all by the same distance.
-    const band = s.template.bands.find(b => b.id === data.bandId)!;
-    const moved = band.elements.find(el => el.id === data.id)!;
-    const group = s.selection?.bandId === band.id && s.selection.ids.includes(data.id) ? s.selection.ids : [data.id];
-    const dx = result.x - moved.x;
-    const dy = result.y - moved.y;
+    const moved = s.template.bands.find(b => b.id === data.bandId)!.elements.find(el => el.id === data.id)!;
+    // A group keeps its bands; dropped on another band it moves by the distance dragged.
+    const sameBand = data.bandId === result.bandId;
+    const dx = sameBand ? result.x - moved.x : pxToMm(e.delta.x / zoom);
+    const dy = sameBand ? result.y - moved.y : pxToMm(e.delta.y / zoom);
     const patches: Record<string, Partial<TemplateElement>> = {};
-    for (const el of band.elements) {
+    for (const el of s.template.bands.flatMap(b => b.elements)) {
       if (!group.includes(el.id) || el.locked) continue;
       patches[el.id] = { x: Math.round(Math.max(0, el.x + dx) * 100) / 100, y: Math.round(Math.max(0, el.y + dy) * 100) / 100 };
     }
-    s.updateElements(band.id, patches);
-    if (!group.includes(data.id) || group.length === 1) s.select({ bandId: band.id, ids: [data.id] });
+    s.patchElements(patches);
+    if (group.length === 1) s.select({ bandId: data.bandId, ids: [data.id] });
   };
 
   const dropBandIndex = drop ? template.bands.findIndex(b => b.id === drop.bandId) : -1;

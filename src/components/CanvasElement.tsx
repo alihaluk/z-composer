@@ -5,6 +5,7 @@ import { cn } from '../lib/utils';
 import { mmToDots, mmToPx, pxToMm, roundMm } from '../lib/constants';
 import { displayText, hiddenInSample } from '../lib/elementDisplay';
 import { DEFAULT_FONT_MM, DEFAULT_THICKNESS_MM, textMetrics } from '../lib/zplTemplate';
+import { A0_AVERAGE_ADVANCE, a0Width, fieldBlockLines } from '../preview/fontMetrics';
 import { useEditor, useEditorStore } from '../store/editorStore';
 import { type Band, type Dpi, type TemplateElement } from '../types';
 
@@ -22,7 +23,7 @@ interface Props {
 
 export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) {
   const store = useEditorStore();
-  const selected = useEditor(s => s.selection?.bandId === band.id && s.selection.ids.includes(el.id));
+  const selected = useEditor(s => !!s.selection?.ids.includes(el.id));
   const zoom = useEditor(s => s.zoom);
   const catalog = useEditor(s => s.catalog);
   const mode = useEditor(s => s.canvasMode);
@@ -66,7 +67,8 @@ export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) 
   const select = (e: React.MouseEvent) => {
     e.stopPropagation();
     const { selection, select } = store.getState();
-    if ((e.shiftKey || e.metaKey || e.ctrlKey) && selection?.bandId === band.id) {
+    if ((e.shiftKey || e.metaKey || e.ctrlKey) && selection) {
+      // The selection may take elements of several bands.
       const ids = selection.ids.includes(el.id) ? selection.ids.filter(id => id !== el.id) : [...selection.ids, el.id];
       select({ bandId: band.id, ids });
     } else if (!selected || (selection?.ids.length ?? 0) > 1) {
@@ -156,6 +158,10 @@ export function ElementBody({ element: el, text, dpi, preformatted }: { element:
   const lineHeightPx = (metrics.lineHeight / metrics.height) * fontPx;
   const wraps = el.overflow === 'wrap';
   const maxLines = Math.max(1, el.maxLines ?? 2);
+  // A wrapped field is broken where the printer's ^FB breaks it, with the printer font's widths.
+  const breaksLikePrinter = wraps && !preformatted;
+  const widthOf = (s: string) => a0Width(s, metrics.height) ?? [...s].length * A0_AVERAGE_ADVANCE * metrics.height;
+  const shown = breaksLikePrinter ? fieldBlockLines(text, metrics.width, widthOf).join('\n') : text;
   const rotation = el.rotation ?? 0;
   // ^FO is the top-left corner of the rotated text, so the text is laid out unrotated in a box
   // whose rotated outline is the element box, then turned into place.
@@ -182,8 +188,7 @@ export function ElementBody({ element: el, text, dpi, preformatted }: { element:
           fontSize: fontPx,
           lineHeight: `${lineHeightPx}px`,
           textAlign: el.align ?? 'left',
-          whiteSpace: preformatted ? 'pre' : wraps ? 'normal' : 'pre',
-          wordBreak: wraps ? 'break-word' : undefined,
+          whiteSpace: 'pre',
           WebkitTextStroke: el.fontBold ? `${mmToPx(1 / (mmToDots(1, dpi) || 8)) * 0.6}px #000` : undefined,
           maxHeight: wraps && !el.grow ? lineHeightPx * maxLines : undefined,
           overflow: wraps && !el.grow ? 'hidden' : 'visible',
@@ -191,7 +196,7 @@ export function ElementBody({ element: el, text, dpi, preformatted }: { element:
           transformOrigin: 'top left',
         }}
       >
-        {text}
+        {shown}
       </div>
     </div>
   );

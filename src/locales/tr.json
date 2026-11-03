@@ -223,7 +223,8 @@
     "alignCenter": "Ortalara",
     "alignRight": "Sağ kenarlara",
     "alignTop": "Üst kenarlara",
-    "hint": "Shift veya Ctrl ile tıklayarak seçime ekleyin; ok tuşlarıyla birlikte taşıyın."
+    "alignTopOneBand": "Üst kenarlara hizalama tek banttaki öğeler içindir",
+    "hint": "Shift veya Ctrl ile tıklayarak seçime ekleyin, başka bantlardan da; ok tuşlarıyla birlikte taşıyın."
   },
   "shortcuts": {
     "title": "Kısayollar",

@@ -14,8 +14,9 @@ export interface SavedTemplate {
 }
 
 export interface Selection {
+  /** The band in focus: the selected band, or the band of the element clicked last. */
   bandId: string;
-  /** Selected elements of the band; empty when the band itself is selected. */
+  /** Selected elements, possibly of several bands; empty when the band itself is selected. */
   ids: string[];
 }
 
@@ -47,6 +48,10 @@ export interface EditorState {
   updateElements: (bandId: string, patches: Record<string, Partial<TemplateElement>>) => void;
   removeElements: (bandId: string, ids: string[]) => void;
   moveElementToBand: (fromBandId: string, toBandId: string, id: string, patch: Partial<TemplateElement>) => void;
+  /** Patches elements by id, whatever band they are in. */
+  patchElements: (patches: Record<string, Partial<TemplateElement>>) => void;
+  /** Removes elements by id, whatever band they are in. */
+  deleteElements: (ids: string[]) => void;
   reorderElement: (bandId: string, id: string, to: 'front' | 'back') => void;
 
   select: (selection: Selection | null) => void;
@@ -135,6 +140,9 @@ const mapBand = (template: Template, bandId: string, fn: (band: Band) => Band): 
   bands: template.bands.map(b => (b.id === bandId ? fn(b) : b)),
 });
 
+const withoutIds = (selection: Selection | null, ids: string[]): Selection | null =>
+  selection && { ...selection, ids: selection.ids.filter(id => !ids.includes(id)) };
+
 const cloneElements = (elements: TemplateElement[], offset: number) =>
   elements.map(el => ({ ...structuredClone(el), id: newId(), x: el.x + offset, y: el.y + offset }));
 
@@ -192,7 +200,7 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
         updateBand: (bandId, patch) => set(s => ({ template: mapBand(s.template, bandId, b => ({ ...b, ...patch })) })),
         removeBand: (bandId) => set(s => ({
           template: { ...s.template, bands: s.template.bands.filter(b => b.id !== bandId) },
-          selection: s.selection?.bandId === bandId ? null : s.selection,
+          selection: s.selection?.bandId === bandId ? null : withoutIds(s.selection, s.template.bands.find(b => b.id === bandId)?.elements.map(el => el.id) ?? []),
         })),
         moveBand: (bandId, direction) => set(s => {
           const bands = [...s.template.bands];
@@ -215,7 +223,7 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
         })),
         removeElements: (bandId, ids) => set(s => ({
           template: mapBand(s.template, bandId, b => ({ ...b, elements: b.elements.filter(el => !ids.includes(el.id)) })),
-          selection: s.selection?.bandId === bandId ? { bandId, ids: s.selection.ids.filter(id => !ids.includes(id)) } : s.selection,
+          selection: withoutIds(s.selection, ids),
         })),
         moveElementToBand: (fromBandId, toBandId, id, patch) => set(s => {
           const element = s.template.bands.find(b => b.id === fromBandId)?.elements.find(el => el.id === id);
@@ -226,6 +234,17 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
             selection: { bandId: toBandId, ids: [id] },
           };
         }),
+        patchElements: (patches) => set(s => ({
+          template: { ...s.template, bands: s.template.bands.map(b => b.elements.some(el => patches[el.id])
+            ? { ...b, elements: b.elements.map(el => (patches[el.id] ? { ...el, ...patches[el.id] } : el)) }
+            : b) },
+        })),
+        deleteElements: (ids) => set(s => ({
+          template: { ...s.template, bands: s.template.bands.map(b => b.elements.some(el => ids.includes(el.id))
+            ? { ...b, elements: b.elements.filter(el => !ids.includes(el.id)) }
+            : b) },
+          selection: withoutIds(s.selection, ids),
+        })),
         reorderElement: (bandId, id, to) => set(s => ({
           template: mapBand(s.template, bandId, b => {
             const element = b.elements.find(el => el.id === id);
@@ -239,8 +258,7 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
         copySelection: () => {
           const { selection, template } = get();
           if (!selection?.ids.length) return;
-          const band = template.bands.find(b => b.id === selection.bandId);
-          set({ clipboard: structuredClone(band?.elements.filter(el => selection.ids.includes(el.id)) ?? []) });
+          set({ clipboard: structuredClone(template.bands.flatMap(b => b.elements.filter(el => selection.ids.includes(el.id)))) });
         },
         paste: (bandId) => {
           const { clipboard, selection, template } = get();
@@ -254,8 +272,18 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
           }));
         },
         duplicateSelection: () => {
-          get().copySelection();
-          get().paste();
+          const { selection } = get();
+          if (!selection?.ids.length) return;
+          // Every copy stays in the band of its original.
+          set(s => {
+            const ids: string[] = [];
+            const bands = s.template.bands.map(b => {
+              const copies = cloneElements(b.elements.filter(el => selection.ids.includes(el.id)), PASTE_OFFSET_MM);
+              ids.push(...copies.map(c => c.id));
+              return copies.length ? { ...b, elements: [...b.elements, ...copies] } : b;
+            });
+            return { template: { ...s.template, bands }, selection: { bandId: selection.bandId, ids } };
+          });
         },
 
         setZoom: (zoom) => set({ zoom: Math.max(0.5, Math.min(4, zoom)) }),
@@ -314,9 +342,10 @@ export function useSelectedBand(): Band | undefined {
   return useEditor(s => s.template.bands.find(b => b.id === s.selection?.bandId));
 }
 
+/** Selected elements of all bands, in band order. */
 export function useSelectedElements(): TemplateElement[] {
-  return useEditor(useShallow(s => {
-    const band = s.template.bands.find(b => b.id === s.selection?.bandId);
-    return band?.elements.filter(el => s.selection?.ids.includes(el.id)) ?? [];
-  }));
+  return useEditor(useShallow(s => (s.selection?.ids.length ? s.template.bands.flatMap(b => b.elements.filter(el => s.selection!.ids.includes(el.id))) : [])));
 }
+
+/** The band that contains an element. */
+export const bandOf = (template: Template, id: string): Band | undefined => template.bands.find(b => b.elements.some(el => el.id === id));

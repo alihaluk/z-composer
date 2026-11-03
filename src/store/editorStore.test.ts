@@ -45,6 +45,47 @@ describe('editor store', () => {
     expect(new Set(els.map(e => e.id)).size).toBe(3);
   });
 
+  describe('selection across bands', () => {
+    const twoBands = () => {
+      const s = store();
+      s.getState().addElement('b', { id: 'y', type: 'text', x: 2, y: 2, width: 10, height: 3, content: 'y' });
+      s.getState().select({ bandId: 'b', ids: ['x', 'y'] });
+      return s;
+    };
+
+    it('moves and deletes elements of several bands in one undo step', () => {
+      const s = twoBands();
+      const steps = s.temporal.getState().pastStates.length;
+      s.getState().patchElements({ x: { x: 4 }, y: { x: 5 } });
+      expect(s.getState().template.bands.map(b => b.elements[0].x)).toEqual([4, 5]);
+      s.getState().deleteElements(['x', 'y']);
+      expect(s.getState().template.bands.every(b => b.elements.length === 0)).toBe(true);
+      expect(s.getState().selection).toEqual({ bandId: 'b', ids: [] });
+      expect(s.temporal.getState().pastStates.length).toBe(steps + 2);
+    });
+
+    it('duplicates every element into its own band', () => {
+      const s = twoBands();
+      s.getState().duplicateSelection();
+      const [a, b] = s.getState().template.bands;
+      expect(a.elements).toHaveLength(2);
+      expect(b.elements).toHaveLength(2);
+      expect(s.getState().selection?.ids).toEqual([a.elements[1].id, b.elements[1].id]);
+    });
+
+    it('copies elements of all selected bands', () => {
+      const s = twoBands();
+      s.getState().copySelection();
+      expect(s.getState().clipboard.map(el => el.id)).toEqual(['x', 'y']);
+    });
+
+    it('drops the elements of a removed band from the selection', () => {
+      const s = twoBands();
+      s.getState().removeBand('a');
+      expect(s.getState().selection).toEqual({ bandId: 'b', ids: ['y'] });
+    });
+  });
+
   it('clears the selection when its band is removed', () => {
     const s = store();
     s.getState().select({ bandId: 'a', ids: ['x'] });

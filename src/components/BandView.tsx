@@ -43,7 +43,7 @@ export function BandView({ band, widthPx, growth }: { band: Band; widthPx: numbe
         return el.x < box.x + box.w && el.x + el.width > box.x && y < box.y + box.h && y + el.height > box.y;
       }).map(el => el.id);
       const { selection, select } = store.getState();
-      const previous = additive && selection?.bandId === band.id ? selection.ids : [];
+      const previous = additive ? selection?.ids ?? [] : [];
       select({ bandId: band.id, ids: [...new Set([...previous, ...hit])] });
     };
     window.addEventListener('pointermove', move);

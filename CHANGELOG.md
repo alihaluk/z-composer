@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.0 — 2026-11-03
+
+### Added
+- Selections across bands: Shift / Ctrl click or a rectangle adds elements of other bands; they move, align left / centre / right, duplicate and delete together.
+
+### Changed
+- The canvas breaks wrapped text where the printer's `^FB` breaks it, with the printer font widths, as the preview does.
+- The barcode chunk bundles only the Code 128 and QR encoders: about 34 kB instead of 290 kB gzipped, with the same output.
+- ESLint 10; `npm audit` reports no vulnerabilities.
+
 ## 1.2.0 — 2026-11-03
 
 ### Fixed

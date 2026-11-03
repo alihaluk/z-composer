@@ -223,7 +223,8 @@
     "alignCenter": "Centres",
     "alignRight": "Right edges",
     "alignTop": "Top edges",
-    "hint": "Shift or Ctrl click to add to the selection; move them together with the arrow keys."
+    "alignTopOneBand": "Aligning top edges needs elements of one band",
+    "hint": "Shift or Ctrl click to add to the selection, also from other bands; move them together with the arrow keys."
   },
   "shortcuts": {
     "title": "Shortcuts",

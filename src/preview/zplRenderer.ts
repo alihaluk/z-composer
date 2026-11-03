@@ -3,18 +3,16 @@
 // (CG Triumvirate Bold Condensed), placed with that font's measured widths (fontMetrics.ts).
 import '@fontsource/roboto-condensed/latin-700.css';
 import '@fontsource/roboto-condensed/latin-ext-700.css';
-import { A0_ADVANCE, a0Width } from './fontMetrics';
+import { A0_ADVANCE, a0Width, fieldBlockLines } from './fontMetrics';
 import type { Code128Item, GraphicItem, Orientation, QrItem, TextItem, ZplLabel } from './zplParser';
 
 const FONT_FAMILY = '"Roboto Condensed"';
 const INK = '#000';
 
-// The part of bwip-js we use; loaded on demand because the library is large.
-interface Bwip {
-  raw(bcid: string, text: string, options?: Record<string, unknown>): unknown[];
-}
-let bwipPromise: Promise<Bwip> | null = null;
-const loadBwip = () => (bwipPromise ??= import('bwip-js/browser').then(m => (m as unknown as { default: Bwip }).default));
+// Barcode encoders, loaded on demand.
+type Barcodes = typeof import('./barcodes');
+let barcodesPromise: Promise<Barcodes> | null = null;
+const loadBarcodes = () => (barcodesPromise ??= import('./barcodes'));
 
 // Places content of size w × h (unrotated) so that its rotated bounding box starts at (x, y).
 function withOrientation(ctx: CanvasRenderingContext2D, o: Orientation, x: number, y: number, w: number, h: number, draw: () => void) {
@@ -58,22 +56,6 @@ function drawLine(ctx: CanvasRenderingContext2D, text: string, item: TextItem) {
   }
 }
 
-function wrapLine(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, item: TextItem): string[] {
-  const lines: string[] = [];
-  let current = '';
-  for (const word of text.split(' ')) {
-    const candidate = current ? `${current} ${word}` : word;
-    if (current && textWidth(ctx, candidate, item) > maxWidth) {
-      lines.push(current);
-      current = word;
-    } else {
-      current = candidate;
-    }
-  }
-  lines.push(current);
-  return lines;
-}
-
 function drawText(ctx: CanvasRenderingContext2D, item: TextItem) {
   ctx.font = `700 ${item.height}px ${FONT_FAMILY}`;
   ctx.textBaseline = 'top';
@@ -84,7 +66,7 @@ function drawText(ctx: CanvasRenderingContext2D, item: TextItem) {
     return;
   }
 
-  const lines = item.text.split('\n').flatMap(part => wrapLine(ctx, part, block.width, item));
+  const lines = fieldBlockLines(item.text, block.width, s => textWidth(ctx, s, item));
   const lineHeight = item.height + block.lineSpacing;
   const visible = Math.min(lines.length, block.maxLines);
   withOrientation(ctx, item.orientation, item.x, item.y, block.width, visible * lineHeight, () => {
@@ -119,15 +101,14 @@ function drawGraphic(ctx: CanvasRenderingContext2D, item: GraphicItem) {
   ctx.putImageData(image, item.x, item.y);
 }
 
-function drawCode128(ctx: CanvasRenderingContext2D, bwip: Bwip, item: Code128Item) {
-  // ^BC without a mode encodes everything in subset B, so subset C must not be used.
-  const [encoded] = bwip.raw('code128', item.text, { newencoder: true, suppressc: true }) as Array<{ sbs: number[] }>;
-  const modules = encoded.sbs.reduce((sum, w) => sum + w, 0);
+function drawCode128(ctx: CanvasRenderingContext2D, barcodes: Barcodes, item: Code128Item) {
+  const sbs = barcodes.code128Widths(item.text);
+  const modules = sbs.reduce((sum, w) => sum + w, 0);
   const width = modules * item.moduleWidth;
   const textHeight = item.printText ? code128TextHeight(item.moduleWidth) : 0;
   withOrientation(ctx, item.orientation, item.x, item.y, width, item.height + textHeight, () => {
     let x = 0;
-    encoded.sbs.forEach((w, i) => {
+    sbs.forEach((w, i) => {
       if (i % 2 === 0) ctx.fillRect(x, 0, w * item.moduleWidth, item.height);
       x += w * item.moduleWidth;
     });
@@ -144,14 +125,14 @@ function drawCode128(ctx: CanvasRenderingContext2D, bwip: Bwip, item: Code128Ite
 // Zebra printers start a ^BQ symbol 10 dots below its ^FO position.
 const QR_TOP_OFFSET = 10;
 
-function drawQr(ctx: CanvasRenderingContext2D, bwip: Bwip, item: QrItem) {
+function drawQr(ctx: CanvasRenderingContext2D, barcodes: Barcodes, item: QrItem) {
   if (!item.text) return;
-  const [matrix] = bwip.raw('qrcode', item.text, { eclevel: item.errorCorrection }) as Array<{ pixs: number[]; pixx: number; pixy: number }>;
+  const matrix = barcodes.qrMatrix(item.text, item.errorCorrection);
   const m = item.magnification;
   const top = item.y + QR_TOP_OFFSET;
-  for (let row = 0; row < matrix.pixy; row++) {
-    for (let col = 0; col < matrix.pixx; col++) {
-      if (matrix.pixs[row * matrix.pixx + col]) ctx.fillRect(item.x + col * m, top + row * m, m, m);
+  for (let row = 0; row < matrix.size; row++) {
+    for (let col = 0; col < matrix.size; col++) {
+      if (matrix.pixs[row * matrix.size + col]) ctx.fillRect(item.x + col * m, top + row * m, m, m);
     }
   }
 }
@@ -167,17 +148,16 @@ export async function measureBarcode(
   options: { moduleWidth?: number; height?: number; printText?: boolean; magnification?: number },
 ): Promise<{ width: number; height: number } | null> {
   if (!text) return null;
-  const bwip = await loadBwip();
+  const barcodes = await loadBarcodes();
   try {
     if (kind === 'qr') {
-      const [matrix] = bwip.raw('qrcode', text, { eclevel: 'Q' }) as Array<{ pixx: number }>;
-      const size = matrix.pixx * (options.magnification ?? 3);
+      const size = barcodes.qrMatrix(text, 'Q').size * (options.magnification ?? 3);
       return { width: size, height: QR_TOP_OFFSET + size };
     }
-    const [encoded] = bwip.raw('code128', text, { newencoder: true, suppressc: true }) as Array<{ sbs: number[] }>;
+    const sbs = barcodes.code128Widths(text);
     const moduleWidth = options.moduleWidth ?? 2;
     const textHeight = options.printText === false ? 0 : code128TextHeight(moduleWidth) + 2;
-    return { width: encoded.sbs.reduce((a, b) => a + b, 0) * moduleWidth, height: (options.height ?? 0) + textHeight };
+    return { width: sbs.reduce((a, b) => a + b, 0) * moduleWidth, height: (options.height ?? 0) + textHeight };
   } catch {
     return null;
   }
@@ -185,8 +165,8 @@ export async function measureBarcode(
 
 export async function renderZpl(label: ZplLabel, canvas: HTMLCanvasElement): Promise<void> {
   const needsBarcodes = label.items.some(i => i.kind === 'code128' || i.kind === 'qr');
-  const [bwip] = await Promise.all([
-    needsBarcodes ? loadBwip() : Promise.resolve(null),
+  const [barcodes] = await Promise.all([
+    needsBarcodes ? loadBarcodes() : Promise.resolve(null),
     document.fonts.load(`700 20px ${FONT_FAMILY}`, 'AaŞşĞğİı'),
   ]);
 
@@ -219,10 +199,10 @@ export async function renderZpl(label: ZplLabel, canvas: HTMLCanvasElement): Pro
         drawGraphic(ctx, item);
         break;
       case 'code128':
-        drawCode128(ctx, bwip!, item);
+        drawCode128(ctx, barcodes!, item);
         break;
       case 'qr':
-        drawQr(ctx, bwip!, item);
+        drawQr(ctx, barcodes!, item);
         break;
     }
   }

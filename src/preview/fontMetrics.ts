@@ -122,3 +122,25 @@ export const A0_AVERAGE_ADVANCE = (() => {
   const letters = Object.entries(A0_ADVANCE).filter(([c]) => /[\p{L}\p{N}]/u.test(c)).map(([, v]) => v);
   return letters.reduce((a, b) => a + b, 0) / letters.length;
 })();
+
+/**
+ * Lines of a ^FB field block as the printer breaks them: at spaces, when the next word would
+ * pass the block width. Words longer than the block are not split.
+ */
+export function fieldBlockLines(text: string, maxWidth: number, widthOf: (s: string) => number): string[] {
+  return text.split('\n').flatMap(part => {
+    const lines: string[] = [];
+    let current = '';
+    for (const word of part.split(' ')) {
+      const candidate = current ? `${current} ${word}` : word;
+      if (current && widthOf(candidate) > maxWidth) {
+        lines.push(current);
+        current = word;
+      } else {
+        current = candidate;
+      }
+    }
+    lines.push(current);
+    return lines;
+  });
+}
