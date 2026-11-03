@@ -28,7 +28,7 @@ Users: tenant companies and our support team.
 
 ### D1 — Outputs: JSON template + ZPL template
 - The JSON template is the editable source of truth. It carries a `schemaVersion` and is validated on load.
-- The ZPL template is the deliverable for printing systems. Its format is defined in `docs/OUTPUT_SPEC.md` (to be written).
+- The ZPL template is the deliverable for printing systems. Its format is defined in [`docs/OUTPUT_SPEC.md`](./OUTPUT_SPEC.md).
 
 ### D2 — Field catalog is a separate file
 Every company's data structure is different, so fields are not hardcoded.
@@ -92,6 +92,8 @@ Nothing is forced. Each text element has an overflow mode:
 - `truncate` — at most N characters.
 - `wrap` — within the element width, at most N lines, aligned left / center / right.
 
+With `wrap`, the designer also chooses whether the band keeps its designed height or grows with the number of lines the text needs (one growing element per band).
+
 The canvas has a toggle between **field names** (e.g. `[Customer.Name]`) and **sample data**. In sample-data mode, format, preview culture, wrapping and truncation are applied live.
 
 Note: ZPL `^FB` prints excess text over the last line instead of cutting it, so truncation is carried in the placeholder and applied by whoever fills the template.
@@ -103,7 +105,7 @@ Asked when a template is created and stored in its settings:
 - Resolution: 203 / 300 / 600 dpi.
 - Media: continuous roll only. Fixed-length labels and pagination are out of scope.
 
-The template stores the printable width (`^PW`), which is narrower than the paper itself.
+The template stores the printable width (`^PW`), which is narrower than the paper itself. Users read the printable width from their printer's settings and enter it; the presets are only starting values.
 
 Designs are measured in millimetres; ZPL coordinates are generated for the chosen resolution.
 
@@ -135,20 +137,18 @@ Elements and bands can be hidden based on a field value. Nothing is hidden unles
 
 Real-device checks are done on a Zebra ZQ521 (203 dpi, ZPL) with 3-inch roll paper.
 
-- Calibrates the preview font width table (D7) and verifies Turkish characters.
-- The printable width of the 3-inch roll is measured with a calibration template; the matching preset in D6 uses that value.
+- Calibrates the preview font width table (D7).
+- Turkish characters are confirmed to print.
 - 300 / 600 dpi output can only be checked in the preview until such a printer is available.
 
-## 4. Open Items (for `docs/OUTPUT_SPEC.md`)
-- Placeholder syntax (field path, format code, max length) and escaping; it must not clash with the ZPL control characters `^` and `~`.
-- How bands, repeating bands and conditions are marked in the ZPL output, and how the filler computes each band's offset and the total length (`^LL`).
-- How dynamic images (e.g. a tenant logo supplied at print time) are referenced.
-- Character encoding (UTF-8 via `^CI28`) and Turkish character support in printer fonts.
-- Supported format codes and their Java / JavaScript equivalents.
-- Final catalog file schema.
+## 4. Open Items
+
+Placeholder syntax and escaping, band and condition markers, length calculation, dynamic images, encoding and format codes are defined in [`docs/OUTPUT_SPEC.md`](./OUTPUT_SPEC.md).
+
+- Final catalog file schema, including fields of type `image` (roadmap step 6).
 
 ## 5. Roadmap
-1. Output specification (`docs/OUTPUT_SPEC.md`).
+1. ~~Output specification~~ — done: [`docs/OUTPUT_SPEC.md`](./OUTPUT_SPEC.md).
 2. Test baseline for the output and CI (lint, test, build) on pull requests.
 3. Own preview renderer replacing Labelary (D7).
 4. Template schema v2 — millimetre units, printer profile, bands, conditions, overflow, format — with v1 migration. Fixes the canvas/print font-size mismatch and removes line-print mode.
@@ -160,4 +160,5 @@ Real-device checks are done on a Zebra ZQ521 (203 dpi, ZPL) with 3-inch roll pap
 10. Embedding API (catalog, template, save hooks, locale).
 
 ### Later (candidates)
+- Fixed-length label support (gap / black-mark media) as a separate mode next to receipts.
 - Content builder — compose the content of a text, barcode or QR element from catalog fields and static text. Presets sit on top of it, e.g. a GİB e-Fatura / e-Arşiv QR preset. Values inside such content can use culture-invariant formats (see D3).
