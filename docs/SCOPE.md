@@ -137,7 +137,7 @@ Elements and bands can be hidden based on a field value. Nothing is hidden unles
 
 Real-device checks are done on a Zebra ZQ521 (203 dpi, ZPL) with 3-inch roll paper.
 
-- Confirms the preview font width table (D7) on real paper.
+- The preview font width table (D7) is measured in the Labelary emulator; a check on real paper is not required (owner decision, 2026-11-03).
 - Turkish characters are confirmed to print.
 - 300 / 600 dpi output can only be checked in the preview until such a printer is available.
 
@@ -160,6 +160,7 @@ Placeholder syntax and escaping, band and condition markers, length calculation,
 10. ~~Embedding API~~ — done: `<ZComposer>` with template, catalog, language, culture and save / change hooks, per-instance state and translations, scoped styles, `npm run build:lib` (INTEGRATION_GUIDE.md).
 
 ### Later (candidates)
+- Publishing the package to npm; it stays `private` for now (owner decision, 2026-11-03).
 - Nested repeating bands, for arrays inside array items (e.g. discounts per line).
 - Selections across bands, to move or align elements of several bands together.
 - Fixed-length label support (gap / black-mark media) as a separate mode next to receipts.
