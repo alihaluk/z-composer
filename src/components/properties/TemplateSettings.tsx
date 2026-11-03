@@ -70,6 +70,17 @@ export function TemplateSettings() {
         </ul>
       </Section>
 
+      <Section title={t('shortcuts.title')}>
+        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px]">
+          {(['move', 'select', 'copy', 'duplicate', 'delete', 'undo', 'deselect'] as const).map(k => (
+            <div key={k} className="contents">
+              <dt className="font-mono text-gray-700 whitespace-nowrap">{t(`shortcuts.${k}Keys`)}</dt>
+              <dd className="text-gray-500">{t(`shortcuts.${k}`)}</dd>
+            </div>
+          ))}
+        </dl>
+      </Section>
+
       <Section title={t('settings.output')}>
         <ZplCode zpl={generateTemplateZpl(template)} />
       </Section>

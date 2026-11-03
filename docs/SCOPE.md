@@ -156,7 +156,7 @@ Placeholder syntax and escaping, band and condition markers, length calculation,
 6. ~~Field catalog~~ — done: file format, import from a sample JSON or a JSON Schema, editor, generic default invoice catalog, missing-field warnings and the `fieldsUsed` snapshot.
 7. ~~Formats and preview~~ — done: format codes with live examples in the preview culture, culture selector on the canvas and in the preview, sample-data canvas mode.
 8. ~~Overflow modes~~ — done: as is, truncate, wrap and alignment; growing text is wrapped and grows its band on the canvas exactly like the filler.
-9. Editor ergonomics — multi-select, copy / paste / duplicate, Delete key, layer list, locking.
+9. ~~Editor ergonomics~~ — done: multi-select with group move and alignment, copy / paste / duplicate, Delete key, layer list, locking, bring to front / send to back, shortcut list.
 10. Embedding API (catalog, template, save hooks, locale).
 
 ### Later (candidates)

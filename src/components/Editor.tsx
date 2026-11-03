@@ -3,6 +3,7 @@ import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, pointerWithin, useSensor, useSensors,
   type DragEndEvent, type DragMoveEvent, type DragStartEvent,
 } from '@dnd-kit/core';
+import { useTranslation } from 'react-i18next';
 import { mmToPx, pxToMm } from '../lib/constants';
 import { sampleGrowth } from '../lib/elementDisplay';
 import { snapPosition, type Guide } from '../lib/snapping';
@@ -66,6 +67,7 @@ function useKeyboard(store: EditorStore) {
 }
 
 export function Editor() {
+  const { t } = useTranslation();
   const store = useEditorStore();
   const template = useEditor(s => s.template);
   const zoom = useEditor(s => s.zoom);
@@ -121,7 +123,7 @@ export function Editor() {
     if (!data || !result) return;
     const s = store.getState();
     if (data.type === 'tool') {
-      s.addElement(result.bandId, createElement(data.tool, result.x, result.y, template.printer.widthMm));
+      s.addElement(result.bandId, createElement(data.tool, result.x, result.y, template.printer.widthMm, t('tools.defaultText')));
       return;
     }
     if (data.bandId !== result.bandId) {

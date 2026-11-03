@@ -13,7 +13,8 @@
     "line": "Çizgi",
     "barcode": "Barkod",
     "qr": "QR Kod",
-    "image": "Görsel"
+    "image": "Görsel",
+    "defaultText": "Metin"
   },
   "catalog": {
     "title": "Alan Kataloğu",
@@ -198,5 +199,22 @@
     "alignRight": "Sağ kenarlara",
     "alignTop": "Üst kenarlara",
     "hint": "Shift veya Ctrl ile tıklayarak seçime ekleyin; ok tuşlarıyla birlikte taşıyın."
+  },
+  "shortcuts": {
+    "title": "Kısayollar",
+    "moveKeys": "Oklar",
+    "move": "0,5 mm taşı; Shift ile 5 mm",
+    "selectKeys": "Shift / Ctrl + tık",
+    "select": "Seçime ekle veya çıkar",
+    "copyKeys": "Ctrl+C / Ctrl+V",
+    "copy": "Kopyala, seçili banda yapıştır",
+    "duplicateKeys": "Ctrl+D",
+    "duplicate": "Çoğalt",
+    "deleteKeys": "Delete",
+    "delete": "Sil (kilitliler hariç)",
+    "undoKeys": "Ctrl+Z / Ctrl+Y",
+    "undo": "Geri al / yinele",
+    "deselectKeys": "Esc",
+    "deselect": "Seçimi kaldır"
   }
 }

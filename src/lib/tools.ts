@@ -3,11 +3,11 @@ import { type TemplateElement } from '../types';
 
 export type ToolType = 'text' | 'box' | 'line' | 'barcode' | 'qr' | 'image';
 
-export function createElement(tool: ToolType, x: number, y: number, pageWidth: number): TemplateElement {
+export function createElement(tool: ToolType, x: number, y: number, pageWidth: number, defaultText = 'Text'): TemplateElement {
   const base = { id: newId(), x, y };
   switch (tool) {
     case 'text':
-      return { ...base, type: 'text', width: 30, height: 3.6, fontSize: 3, content: 'Text' };
+      return { ...base, type: 'text', width: 30, height: 3.6, fontSize: 3, content: defaultText };
     case 'box':
       return { ...base, type: 'box', width: 20, height: 10, thickness: 0.25 };
     case 'line':

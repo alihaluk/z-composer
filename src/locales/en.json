@@ -13,7 +13,8 @@
     "line": "Line",
     "barcode": "Barcode",
     "qr": "QR code",
-    "image": "Image"
+    "image": "Image",
+    "defaultText": "Text"
   },
   "catalog": {
     "title": "Field Catalog",
@@ -198,5 +199,22 @@
     "alignRight": "Right edges",
     "alignTop": "Top edges",
     "hint": "Shift or Ctrl click to add to the selection; move them together with the arrow keys."
+  },
+  "shortcuts": {
+    "title": "Shortcuts",
+    "moveKeys": "Arrows",
+    "move": "Move 0.5 mm; 5 mm with Shift",
+    "selectKeys": "Shift / Ctrl + click",
+    "select": "Add to or remove from the selection",
+    "copyKeys": "Ctrl+C / Ctrl+V",
+    "copy": "Copy, paste into the selected band",
+    "duplicateKeys": "Ctrl+D",
+    "duplicate": "Duplicate",
+    "deleteKeys": "Delete",
+    "delete": "Delete (except locked)",
+    "undoKeys": "Ctrl+Z / Ctrl+Y",
+    "undo": "Undo / redo",
+    "deselectKeys": "Esc",
+    "deselect": "Clear the selection"
   }
 }
