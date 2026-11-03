@@ -98,7 +98,7 @@ function drawCode128(ctx: CanvasRenderingContext2D, bwip: Bwip, item: Code128Ite
   const [encoded] = bwip.raw('code128', item.text, { newencoder: true, suppressc: true }) as Array<{ sbs: number[] }>;
   const modules = encoded.sbs.reduce((sum, w) => sum + w, 0);
   const width = modules * item.moduleWidth;
-  const textHeight = item.printText ? Math.max(10, item.moduleWidth * 9) : 0;
+  const textHeight = item.printText ? code128TextHeight(item.moduleWidth) : 0;
   withOrientation(ctx, item.orientation, item.x, item.y, width, item.height + textHeight, () => {
     let x = 0;
     encoded.sbs.forEach((w, i) => {
@@ -127,6 +127,33 @@ function drawQr(ctx: CanvasRenderingContext2D, bwip: Bwip, item: QrItem) {
     for (let col = 0; col < matrix.pixx; col++) {
       if (matrix.pixs[row * matrix.pixx + col]) ctx.fillRect(item.x + col * m, top + row * m, m, m);
     }
+  }
+}
+
+const code128TextHeight = (moduleWidth: number) => Math.max(10, moduleWidth * 9);
+
+/**
+ * Printed size in dots of a barcode for some data: Code 128 with its text line, QR including
+ * the offset below ^FO. Returns null when the data cannot be encoded.
+ */
+export async function measureBarcode(
+  kind: 'code128' | 'qr', text: string,
+  options: { moduleWidth?: number; height?: number; printText?: boolean; magnification?: number },
+): Promise<{ width: number; height: number } | null> {
+  if (!text) return null;
+  const bwip = await loadBwip();
+  try {
+    if (kind === 'qr') {
+      const [matrix] = bwip.raw('qrcode', text, { eclevel: 'Q' }) as Array<{ pixx: number }>;
+      const size = matrix.pixx * (options.magnification ?? 3);
+      return { width: size, height: QR_TOP_OFFSET + size };
+    }
+    const [encoded] = bwip.raw('code128', text, { newencoder: true, suppressc: true }) as Array<{ sbs: number[] }>;
+    const moduleWidth = options.moduleWidth ?? 2;
+    const textHeight = options.printText === false ? 0 : code128TextHeight(moduleWidth) + 2;
+    return { width: encoded.sbs.reduce((a, b) => a + b, 0) * moduleWidth, height: (options.height ?? 0) + textHeight };
+  } catch {
+    return null;
   }
 }
 

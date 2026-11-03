@@ -149,3 +149,12 @@ describe('JSON Schema from .NET / Java generators', () => {
     ]);
   });
 });
+
+describe('changedFields', () => {
+  it('reports fields whose type changed since the template was saved', async () => {
+    const { changedFields } = await import('./catalogIO');
+    const t = { ...invoicePreset(), fieldsUsed: [{ path: 'Totals.Grand', type: 'string' }, { path: 'Gone', type: 'number' }] };
+    expect(changedFields(t, DEFAULT_CATALOG)).toEqual([{ path: 'Totals.Grand', was: 'string', now: 'number' }]);
+    expect(changedFields(invoicePreset(), DEFAULT_CATALOG)).toEqual([]);
+  });
+});

@@ -42,7 +42,18 @@
     "skipped": "{{count}} anahtar atlandı: {{list}}",
     "cancel": "Vazgeç",
     "apply": "Uygula",
-    "sampleHint": "Önizlemede kullanılan örnek belge (JSON). Gerçek müşteri verisi koymayın; tarayıcıda kalır ama şablonla birlikte paylaşılabilir."
+    "sampleHint": "Önizlemede kullanılan örnek belge (JSON). Gerçek müşteri verisi koymayın; tarayıcıda kalır ama şablonla birlikte paylaşılabilir.",
+    "changed": "Kaydedildiğinden beri tipi değişen alanlar: {{list}}",
+    "reasons": {
+      "name": "geçersiz ad",
+      "values": "değer dizisi",
+      "nested": "iç içe dizi",
+      "deep": "çok derin",
+      "other": "desteklenmiyor"
+    },
+    "addField": "Alan ekle",
+    "newPath": "Yeni alan yolu (ör. Customer.Phone)",
+    "invalidPath": "Geçersiz veya var olan yol"
   },
   "files": {
     "title": "Dosya",
@@ -169,7 +180,9 @@
     "toBack": "Arkaya gönder",
     "delete": "Sil",
     "sampleValue": "Örnek ({{locale}})",
-    "formatPattern": "kalıp"
+    "formatPattern": "kalıp",
+    "printedSize": "Basılı boyut (örnek veriyle): {{width}} × {{height}} mm",
+    "fitBox": "Kutuyu uydur"
   },
   "overflow": {
     "title": "Taşma",

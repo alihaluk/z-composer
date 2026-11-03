@@ -82,3 +82,16 @@ describe('saved templates', () => {
     expect(s.getState().saveTemplate('x')).toBe('blocked');
   });
 });
+
+describe('preview culture', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('is remembered unless the host fixes it', () => {
+    const data = new Map<string, string>();
+    vi.stubGlobal('localStorage', { getItem: (k: string) => data.get(k) ?? null, setItem: (k: string, v: string) => void data.set(k, v) });
+    createEditorStore({ defaultLocale: 'en-US' }).getState().setPreviewLocale('de-DE');
+    expect(createEditorStore({ defaultLocale: 'en-US' }).getState().previewLocale).toBe('de-DE');
+    expect(createEditorStore({ locale: 'fr-FR' }).getState().previewLocale).toBe('fr-FR');
+    expect(createEditorStore({ storageKey: null, defaultLocale: 'en-US' }).getState().previewLocale).toBe('en-US');
+  });
+});

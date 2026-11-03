@@ -6,10 +6,10 @@ import { fillTemplate } from '../lib/zplFill';
 import { generateTemplateZpl } from '../lib/zplTemplate';
 import { parseZpl } from '../preview/zplParser';
 import { renderZpl } from '../preview/zplRenderer';
-import { PREVIEW_LOCALES } from '../lib/constants';
 import { useEditor, useEditorStore, type CanvasMode } from '../store/editorStore';
 import { Button } from './ui/Button';
 import { Segmented } from './ui/Field';
+import { CultureInput } from './ui/CultureInput';
 import { ZplCode } from './properties/ZplCode';
 
 export const PreviewModal = () => {
@@ -66,9 +66,7 @@ export const PreviewModal = () => {
                   <Segmented<CanvasMode> label={t('preview.title')} value={mode} onChange={setMode}
                     options={[{ value: 'sample', label: t('preview.sampleData') }, { value: 'fields', label: t('preview.fieldNames') }]} />
                 </div>
-                <select aria-label={t('preview.culture')} className="h-8 text-xs border rounded px-2 bg-white" value={locale} onChange={e => store.getState().setPreviewLocale(e.target.value)}>
-                  {PREVIEW_LOCALES.map(l => <option key={l} value={l}>{l}</option>)}
-                </select>
+                <div className="w-28"><CultureInput label={t('preview.culture')} value={locale} onChange={l => store.getState().setPreviewLocale(l)} /></div>
                 <Button variant="ghost" onClick={() => setIsOpen(false)}>{t('preview.close')}</Button>
               </div>
             </div>

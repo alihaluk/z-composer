@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 import { type Catalog, type CatalogField, type FieldType } from '../lib/catalog';
-import { parseCatalog } from '../lib/catalogIO';
+import { isValidPath, parseCatalog } from '../lib/catalogIO';
 import { Button } from './ui/Button';
 import { Field, TextInput } from './ui/Field';
 
@@ -28,6 +28,31 @@ function FieldRows({ fields, onChange, nested }: { fields: CatalogField[]; onCha
           {f.type === 'array' && <FieldRows nested fields={f.items ?? []} onChange={items => update(i, { items })} />}
         </div>
       ))}
+      <AddField nested={nested} existing={fields.map(f => f.path)} onAdd={field => onChange([...fields, field])} />
+    </div>
+  );
+}
+
+function AddField({ nested, existing, onAdd }: { nested?: boolean; existing: string[]; onAdd: (field: CatalogField) => void }) {
+  const { t } = useTranslation();
+  const [path, setPath] = useState('');
+  const [type, setType] = useState<FieldType>('string');
+  const valid = isValidPath(path) && !path.startsWith('$.') && !existing.includes(path);
+  const add = () => {
+    if (!valid) return;
+    onAdd(type === 'array' ? { path, type, items: [] } : { path, type });
+    setPath('');
+  };
+  return (
+    <div className="grid grid-cols-[1fr_7rem_auto] gap-1 items-center pt-1">
+      <input aria-label={t('catalog.newPath')} placeholder={t('catalog.newPath')} value={path}
+        className={`h-7 text-xs border rounded px-1.5 ${path && !valid ? 'border-red-400' : ''}`}
+        title={path && !valid ? t('catalog.invalidPath') : undefined}
+        onChange={e => setPath(e.target.value.trim())} onKeyDown={e => { if (e.key === 'Enter') add(); }} />
+      <select aria-label={t('catalog.type')} className="h-7 text-xs border rounded px-1" value={type} onChange={e => setType(e.target.value as FieldType)}>
+        {[...SCALAR_TYPES, ...(nested ? [] : ['array' as const])].map(x => <option key={x} value={x}>{x}</option>)}
+      </select>
+      <Button type="button" size="sm" variant="outline" className="h-7 text-xs" disabled={!valid} onClick={add}>{t('catalog.addField')}</Button>
     </div>
   );
 }

@@ -224,3 +224,12 @@ export function fieldsUsed(template: Template, catalog: Catalog): { path: string
   }
   return [...seen].map(([path, type]) => ({ path, type }));
 }
+
+/** Fields whose catalog type differs from the type recorded when the template was saved. */
+export function changedFields(template: Template, catalog: Catalog): { path: string; was: string; now: string }[] {
+  if (!template.fieldsUsed?.length) return [];
+  const current = new Map(fieldsUsed(template, catalog).map(f => [f.path, f.type]));
+  return template.fieldsUsed
+    .filter(f => current.has(f.path) && current.get(f.path) !== 'unknown' && current.get(f.path) !== f.type)
+    .map(f => ({ path: f.path, was: f.type, now: current.get(f.path)! }));
+}

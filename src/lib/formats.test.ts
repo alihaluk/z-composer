@@ -31,3 +31,10 @@ describe('formatValue', () => {
     expect(formatValue('2026-11-13', 'X', 'tr-TR')).toBeNull();
   });
 });
+
+describe('canonicalCulture', async () => {
+  const { canonicalCulture } = await import('./formats');
+  it.each([['tr-tr', 'tr-TR'], ['en-US', 'en-US'], ['de', 'de'], ['not a culture', null], ['', null]])('%s -> %s', (input, expected) => {
+    expect(canonicalCulture(input)).toBe(expected);
+  });
+});

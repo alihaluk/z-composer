@@ -53,3 +53,13 @@ export function formatValue(value: unknown, format: string, locale: string, inva
     default: return format.length > 1 ? customPattern(format, parts) : null;
   }
 }
+
+/** Canonical form of a culture name the browser can format with, or null. */
+export function canonicalCulture(value: string): string | null {
+  try {
+    const [canonical] = Intl.getCanonicalLocales(value.trim());
+    return canonical && Intl.NumberFormat.supportedLocalesOf(canonical).length > 0 ? canonical : null;
+  } catch {
+    return null;
+  }
+}

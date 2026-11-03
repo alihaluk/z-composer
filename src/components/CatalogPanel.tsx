@@ -2,13 +2,15 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Pencil } from 'lucide-react';
 import { DEFAULT_CATALOG, type Catalog } from '../lib/catalog';
-import { catalogFromJsonSchema, catalogFromSample, missingFields, parseCatalog, type CatalogResult } from '../lib/catalogIO';
+import { catalogFromJsonSchema, catalogFromSample, changedFields, missingFields, parseCatalog, type CatalogResult } from '../lib/catalogIO';
 import { readJsonFile, saveJson } from '../lib/download';
 import { cn } from '../lib/utils';
 import { useEditor, useEditorStore } from '../store/editorStore';
 import { Button } from './ui/Button';
 import { FileButton } from './ui/FileButton';
 import { CatalogEditor } from './CatalogEditor';
+
+const REASON_KEYS: Record<string, string> = { name: 'name', 'array of values': 'values', 'nested array': 'nested', 'too deep': 'deep' };
 
 const countFields = (catalog: Catalog) => catalog.fields.reduce((n, f) => n + (f.type === 'array' ? 1 + (f.items?.length ?? 0) : 1), 0);
 
@@ -20,12 +22,18 @@ export function CatalogPanel({ editable = true }: { editable?: boolean }) {
   const [message, setMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null);
   const [editing, setEditing] = useState(false);
   const missing = useMemo(() => missingFields(template, catalog), [template, catalog]);
+  const changed = useMemo(() => changedFields(template, catalog), [template, catalog]);
+  // Skipped keys come as "path: reason"; the reason is translated.
+  const reason = (entry: string) => {
+    const i = entry.lastIndexOf(': ');
+    return `${entry.slice(0, i)} (${t(`catalog.reasons.${REASON_KEYS[entry.slice(i + 2)] ?? 'other'}`)})`;
+  };
 
   const load = async (file: File, build: (json: unknown, name: string) => CatalogResult) => {
     try {
       const { catalog: next, skipped } = build(await readJsonFile(file), file.name.replace(/\.json$/i, ''));
       store.getState().setCatalog(next);
-      const extra = skipped.length ? ` · ${t('catalog.skipped', { count: skipped.length, list: skipped.slice(0, 4).join(', ') })}` : '';
+      const extra = skipped.length ? ` · ${t('catalog.skipped', { count: skipped.length, list: skipped.slice(0, 4).map(reason).join(', ') })}` : '';
       setMessage({ kind: 'info', text: t('catalog.imported', { count: countFields(next) }) + extra });
     } catch (e) {
       setMessage({ kind: 'error', text: t('catalog.importFailed', { reason: e instanceof Error ? e.message : String(e) }) });
@@ -48,6 +56,12 @@ export function CatalogPanel({ editable = true }: { editable?: boolean }) {
         <p className="flex gap-1 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded p-1.5" role="status">
           <AlertTriangle size={12} className="shrink-0 mt-0.5" />
           {t('catalog.missing', { count: missing.length, paths: missing.slice(0, 5).join(', ') + (missing.length > 5 ? '…' : '') })}
+        </p>
+      )}
+      {changed.length > 0 && (
+        <p className="flex gap-1 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded p-1.5" role="status">
+          <AlertTriangle size={12} className="shrink-0 mt-0.5" />
+          {t('catalog.changed', { list: changed.slice(0, 4).map(c => `${c.path} (${c.was} → ${c.now})`).join(', ') })}
         </p>
       )}
       {editable && (

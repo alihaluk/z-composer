@@ -82,6 +82,10 @@ export function Editor() {
   const locale = useEditor(s => s.previewLocale);
   // In sample mode bands grow with their growing text, like in print.
   const growth = useMemo(() => template.bands.map(b => sampleGrowth(b, catalog, mode, locale, template.printer.dpi)), [template, catalog, mode, locale]);
+  const shownOffset = (bandIndex: number, y: number) => {
+    const g = growth[bandIndex];
+    return g && g.extraMm > 0 && y > g.growY ? g.extraMm : 0;
+  };
   const bandTops: number[] = [];
   template.bands.forEach((_, i) => bandTops.push(i === 0 ? 0 : bandTops[i - 1] + template.bands[i - 1].height + growth[i - 1].extraMm));
 
@@ -103,11 +107,14 @@ export function Editor() {
       const sourceIndex = template.bands.findIndex(b => b.id === data.bandId);
       const el = template.bands[sourceIndex]?.elements.find(x => x.id === data.id);
       if (!el) return null;
-      // Positions are compared on the whole page, then made relative to the target band.
-      const pageY = bandTops[sourceIndex] + el.y + pxToMm(e.delta.y / zoom);
+      // Positions are compared on the whole page as shown, then made relative to the target band.
+      const pageY = bandTops[sourceIndex] + el.y + shownOffset(sourceIndex, el.y) + pxToMm(e.delta.y / zoom);
       box = { x: el.x + pxToMm(e.delta.x / zoom), y: pageY - bandTops[targetIndex], width: el.width, height: el.height };
       ignore = [el.id];
     }
+    // Below a grown text the canvas shows elements lower than they are stored.
+    const g = growth[targetIndex];
+    if (g.extraMm > 0 && box.y > g.growY + g.extraMm) box = { ...box, y: box.y - g.extraMm };
     const others = target.elements.filter(o => !ignore.includes(o.id));
     const snapped = snapPosition(box, others, template.printer.widthMm, target.height);
     return { bandId: target.id, ...snapped, width: box.width, height: box.height };
@@ -157,7 +164,7 @@ export function Editor() {
               <>
                 <div
                   className="absolute border-2 border-dashed border-blue-500 bg-blue-300/30 pointer-events-none z-40"
-                  style={{ left: mmToPx(drop.x), top: mmToPx(bandTops[dropBandIndex] + drop.y), width: mmToPx(drop.width), height: Math.max(2, mmToPx(drop.height)) }}
+                  style={{ left: mmToPx(drop.x), top: mmToPx(bandTops[dropBandIndex] + drop.y + shownOffset(dropBandIndex, drop.y)), width: mmToPx(drop.width), height: Math.max(2, mmToPx(drop.height)) }}
                 >
                   <span className="absolute -top-5 left-0 whitespace-nowrap bg-blue-600 text-white text-[10px] font-mono px-1 rounded">
                     {drop.x.toFixed(1)}, {drop.y.toFixed(1)} mm
@@ -169,7 +176,7 @@ export function Editor() {
                     className="absolute pointer-events-none z-50 border-red-500 border-dashed"
                     style={g.axis === 'x'
                       ? { left: mmToPx(g.at), top: 0, bottom: 0, borderLeftWidth: 1 }
-                      : { top: mmToPx(bandTops[dropBandIndex] + g.at), left: 0, right: 0, borderTopWidth: 1 }}
+                      : { top: mmToPx(bandTops[dropBandIndex] + g.at + shownOffset(dropBandIndex, g.at)), left: 0, right: 0, borderTopWidth: 1 }}
                   />
                 ))}
               </>

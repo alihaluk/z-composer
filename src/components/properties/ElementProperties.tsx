@@ -14,6 +14,7 @@ import { Button } from '../ui/Button';
 import { Checkbox, Field, NumberInput, Section, Segmented, SelectInput, TextInput } from '../ui/Field';
 import { ConditionEditor, FieldPicker } from './FieldPicker';
 import { ZplCode } from './ZplCode';
+import { BarcodeSize } from './BarcodeSize';
 
 export function ElementProperties({ band, element: el }: { band: Band; element: TemplateElement }) {
   const { t } = useTranslation();
@@ -187,6 +188,7 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
               <Checkbox label={t('properties.showLabel')} checked={el.showLabel !== false} onChange={showLabel => update({ showLabel })} />
             </>
           )}
+          <BarcodeSize band={band} element={el} />
         </Section>
       )}
 

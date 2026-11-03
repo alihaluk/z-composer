@@ -61,7 +61,7 @@ function useBitmapRepair(store: EditorStore) {
 
 export function ZComposer({ template, catalog, language, locale, storageKey, catalogEditable = true, onChange, onSave, className }: ZComposerProps) {
   const [i18n] = useState(() => createI18n(language));
-  const [store] = useState(() => createEditorStore({ template, catalog, storageKey, locale: locale ?? defaultLocale(i18n.resolvedLanguage) }));
+  const [store] = useState(() => createEditorStore({ template, catalog, storageKey, locale, defaultLocale: defaultLocale(i18n.resolvedLanguage) }));
   useBitmapRepair(store);
 
   useEffect(() => { if (language && i18n.resolvedLanguage !== language) void i18n.changeLanguage(language); }, [i18n, language]);

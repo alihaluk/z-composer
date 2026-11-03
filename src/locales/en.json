@@ -42,7 +42,18 @@
     "skipped": "{{count}} keys skipped: {{list}}",
     "cancel": "Cancel",
     "apply": "Apply",
-    "sampleHint": "The example document used in previews (JSON). Avoid real customer data; it stays in the browser but may be shared with the catalog file."
+    "sampleHint": "The example document used in previews (JSON). Avoid real customer data; it stays in the browser but may be shared with the catalog file.",
+    "changed": "Fields whose type changed since the template was saved: {{list}}",
+    "reasons": {
+      "name": "invalid name",
+      "values": "array of values",
+      "nested": "nested array",
+      "deep": "too deep",
+      "other": "not supported"
+    },
+    "addField": "Add field",
+    "newPath": "New field path (e.g. Customer.Phone)",
+    "invalidPath": "Invalid or existing path"
   },
   "files": {
     "title": "File",
@@ -169,7 +180,9 @@
     "toBack": "Send to back",
     "delete": "Delete",
     "sampleValue": "Sample ({{locale}})",
-    "formatPattern": "pattern"
+    "formatPattern": "pattern",
+    "printedSize": "Printed size (sample data): {{width}} × {{height}} mm",
+    "fitBox": "Fit box"
   },
   "overflow": {
     "title": "Overflow",

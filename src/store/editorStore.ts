@@ -67,7 +67,10 @@ export interface EditorStoreOptions {
   template?: Template;
   catalog?: Catalog;
   templateName?: string | null;
+  /** Fixed preview culture chosen by the host; it is not remembered. */
   locale?: string;
+  /** Preview culture when neither the host nor an earlier session chose one. */
+  defaultLocale?: string;
   /** localStorage key for saved templates; null disables local saving. */
   storageKey?: string | null;
 }
@@ -149,6 +152,7 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
   const storageKey = options.storageKey === undefined ? DEFAULT_STORAGE_KEY : options.storageKey;
   // A catalog passed in by the host wins; otherwise the standalone app keeps the last one used.
   const catalogKey = storageKey === null ? null : `${storageKey}_catalog`;
+  const localeKey = storageKey === null || options.locale ? null : `${storageKey}_locale`;
 
   return createStore<EditorState>()(
     temporal(
@@ -159,7 +163,7 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
         selection: null,
         zoom: 1.5,
         canvasMode: 'fields',
-        previewLocale: options.locale ?? 'tr-TR',
+        previewLocale: options.locale ?? (localeKey ? storageGet(localeKey) : null) ?? options.defaultLocale ?? 'tr-TR',
         savedTemplates: readSaved(storageKey),
         clipboard: [],
 
@@ -255,7 +259,16 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
 
         setZoom: (zoom) => set({ zoom: Math.max(0.5, Math.min(4, zoom)) }),
         setCanvasMode: (canvasMode) => set({ canvasMode }),
-        setPreviewLocale: (previewLocale) => set({ previewLocale }),
+        setPreviewLocale: (previewLocale) => {
+          if (localeKey) {
+            try {
+              localStorage.setItem(localeKey, previewLocale);
+            } catch {
+              // Remembering the culture is a convenience only.
+            }
+          }
+          set({ previewLocale });
+        },
 
         saveTemplate: (name) => {
           const { template, savedTemplates, catalog } = get();

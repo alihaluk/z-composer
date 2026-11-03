@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
-import { DPI_OPTIONS, PAPER_PRESETS_MM, PREVIEW_LOCALES } from '../../lib/constants';
+import { DPI_OPTIONS, PAPER_PRESETS_MM } from '../../lib/constants';
+import { CultureInput } from '../ui/CultureInput';
 import { generateTemplateZpl } from '../../lib/zplTemplate';
 import { useEditor, useEditorStore, type CanvasMode } from '../../store/editorStore';
 import { type Dpi } from '../../types';
@@ -43,11 +44,7 @@ export function TemplateSettings() {
         <Segmented<CanvasMode> label={t('settings.canvasShows')} value={mode} onChange={m => s.setCanvasMode(m)}
           options={[{ value: 'fields', label: t('preview.fieldNames') }, { value: 'sample', label: t('preview.sampleData') }]} />
         <Field label={t('settings.previewCulture')} hint={t('settings.previewCultureHint')}>
-          {id => (
-            <SelectInput id={id} value={locale} onChange={l => s.setPreviewLocale(l)}>
-              {PREVIEW_LOCALES.map(l => <option key={l} value={l}>{l}</option>)}
-            </SelectInput>
-          )}
+          {id => <CultureInput id={id} value={locale} onChange={l => s.setPreviewLocale(l)} />}
         </Field>
         <div className="space-y-1">
           <div className="flex justify-between text-xs text-gray-600"><span>{t('settings.zoom')}</span><span>{Math.round(zoom * 100)}%</span></div>
