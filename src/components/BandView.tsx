@@ -8,12 +8,16 @@ import { useEditor, useEditorStore } from '../store/editorStore';
 import { type BandGrowth } from '../lib/elementDisplay';
 import { type Band } from '../types';
 import { CanvasElement } from './CanvasElement';
+import { bindingPath, type FieldRef } from '../lib/fieldElements';
 
 export function BandView({ band, widthPx, growth }: { band: Band; widthPx: number; growth: BandGrowth }) {
   const { t } = useTranslation();
   const store = useEditorStore();
   const bandSelected = useEditor(s => s.selection?.bandId === band.id && s.selection.ids.length === 0);
-  const { setNodeRef, isOver } = useDroppable({ id: band.id, data: { type: 'band', bandId: band.id } });
+  const { setNodeRef, isOver, active } = useDroppable({ id: band.id, data: { type: 'band', bandId: band.id } });
+  // A dragged field lights up only the bands that can print it.
+  const activeData = active?.data.current as { type?: string; field?: FieldRef } | undefined;
+  const accepts = activeData?.type !== 'field' || !activeData.field || bindingPath(activeData.field, band) !== null;
   const [marquee, setMarquee] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const dragged = useRef(false);
 
@@ -85,7 +89,7 @@ export function BandView({ band, widthPx, growth }: { band: Band; widthPx: numbe
           'relative border-b border-dashed border-gray-300',
           band.repeat ? 'bg-amber-50/40' : 'bg-white',
           bandSelected && 'ring-2 ring-inset ring-blue-400',
-          isOver && 'bg-blue-50/60',
+          isOver && accepts && 'bg-blue-50/60',
         )}
         aria-label={t('bands.region', { name: band.name })}
       >

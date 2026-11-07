@@ -9,6 +9,7 @@ import { useEditor, useEditorStore } from '../store/editorStore';
 import { Button } from './ui/Button';
 import { FileButton } from './ui/FileButton';
 import { CatalogEditor } from './CatalogEditor';
+import { FieldList } from './FieldList';
 
 const REASON_KEYS: Record<string, string> = { name: 'name', 'array of values': 'values', 'nested array': 'nested', 'too deep': 'deep' };
 
@@ -68,6 +69,7 @@ export function CatalogPanel({ editable = true }: { editable?: boolean }) {
           {t('catalog.changed', { list: changed.slice(0, 4).map(c => `${c.path} (${c.was} → ${c.now})`).join(', ') })}
         </p>
       )}
+      <FieldList />
       {editable && (
         <>
           <div className="grid grid-cols-2 gap-1.5">

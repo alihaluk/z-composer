@@ -58,7 +58,7 @@ test.describe('files', () => {
     await loadPreset(page);
     await name.fill('Fatura');
     await toolsPanel(page).getByRole('button', { name: 'Save as new' }).click();
-    const list = toolsPanel(page).getByRole('listitem');
+    const list = toolsPanel(page).locator('section').filter({ has: page.getByRole('heading', { name: 'Saved Templates' }) }).getByRole('listitem');
     // Kept in the order they were saved.
     await expect(list).toHaveText(['Fiş A', 'Fatura']);
 

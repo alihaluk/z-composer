@@ -121,6 +121,7 @@ export async function loadPreset(page: Page) {
 
 /** Drags with real mouse steps, as dnd-kit needs. */
 export async function drag(page: Page, from: Locator, to: { x: number; y: number }) {
+  await from.scrollIntoViewIfNeeded();
   const box = await from.boundingBox();
   if (!box) throw new Error('Drag source is not visible');
   const start = { x: box.x + Math.min(10, box.width / 2), y: box.y + Math.min(6, box.height / 2) };

@@ -6,7 +6,7 @@ Source: Gelir İdaresi Başkanlığı, *Karekod Standardı Kılavuzu*, version 1
 
 The karekod content is a JSON object built from the document's UBL data. The firm's system produces it, because it already has the UBL values and because the VAT keys depend on the rates on each document (see below). The template binds a QR element to the catalog field that holds this JSON; in the default catalog that is `Document.QrContent`.
 
-In the designer, **Set up as GİB karekod** (QR properties) binds the element to that field and places it in the top-right corner of its band, as the guide asks. The invoice preset already does this. The QR is printed with error correction level Q at 2 dots per module, about 22 mm wide for a full e-Fatura JSON at 203 dpi; use **Fit box** in the properties to match the box to the sample data.
+In the designer, **Set up as GİB karekod** (QR properties) binds the element to that field and places it in the top-right corner of its band, as the guide asks. Adding that field from the field list does the same: it becomes a karekod QR in the top-right corner, wherever it is dropped. The invoice preset already does this. The QR is printed with error correction level Q at 2 dots per module, about 22 mm wide for a full e-Fatura JSON at 203 dpi; use **Fit box** in the properties to match the box to the sample data.
 
 The guide does not set a QR size or error correction level.
 

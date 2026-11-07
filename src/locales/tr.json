@@ -150,6 +150,15 @@
     "general": "Genel",
     "missing": "Bu alan katalogda yok."
   },
+  "fieldList": {
+    "title": "Alanlar",
+    "search": "Alan ara",
+    "none": "Eşleşen alan yok",
+    "hint": "Bir alana tıklayınca seçili banda eklenir; bir banda sürükleyip de bırakabilirsiniz.",
+    "itemHint": "tıklayın ya da bir banda sürükleyin",
+    "arrayHint": "{{array}} dizisini tekrarlayan bantta basılır",
+    "noBand": "Bu alanlar {{array}} dizisini tekrarlayan bir bantta basılır. Önce bir bant seçip Tekrar ayarını {{array}} yapın."
+  },
   "properties": {
     "close": "Kapat",
     "position": "Konum ve boyut",

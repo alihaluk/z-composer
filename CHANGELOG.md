@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.0 — 2026-11-07
+
+### Added
+- Field list in the sidebar: the catalog's fields, grouped and searchable (case, Turkish letters and accents do not matter; "musteri" finds "Müşteri"). Clicking a field adds an element bound to it to the selected band, below the band's last element; dragging drops it where it is released. Enter or Space adds the focused field.
+- Fields come with sensible settings: numbers right-aligned with `N2` (`N0` when the sample value is whole), dates `dd.MM.yyyy`, date-times `dd.MM.yyyy HH:mm`, image fields as dynamic images, the GİB karekod field as a karekod QR in the top-right corner.
+- Item fields of an array go to the band that repeats it, and only that band lights up while one is dragged; document fields in a repeating band are bound from the root (`$.`). Without such a band the list says how to make one.
+
+### Changed
+- The drag preview of a tool shows its translated name.
+
 ## 1.5.1 — 2026-11-07
 
 ### Added

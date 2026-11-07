@@ -150,6 +150,15 @@
     "general": "General",
     "missing": "This field is not in the catalog."
   },
+  "fieldList": {
+    "title": "Fields",
+    "search": "Search fields",
+    "none": "No matching field",
+    "hint": "Click a field to add it to the selected band, or drag it onto a band.",
+    "itemHint": "click, or drag onto a band",
+    "arrayHint": "Printed in a band that repeats {{array}}",
+    "noBand": "These fields are printed in a band that repeats {{array}}. Select a band and set its Repeat to {{array}} first."
+  },
   "properties": {
     "close": "Close",
     "position": "Position and size",

@@ -10,6 +10,8 @@ import { presetBandNames } from '../lib/bandNames';
 import { Button } from './ui/Button';
 import { Maximize, Minus, Plus } from 'lucide-react';
 import { createElement, type ToolType } from '../lib/tools';
+import { createFieldElement, type FieldRef } from '../lib/fieldElements';
+import { fieldLabel } from '../lib/catalog';
 import { useEditor, useEditorStore, type EditorStore } from '../store/editorStore';
 import { type TemplateElement } from '../types';
 import { BandView } from './BandView';
@@ -23,7 +25,7 @@ interface Drop {
   guides: Guide[];
 }
 
-type DragData = { type: 'tool'; tool: ToolType } | { type: 'element'; bandId: string; id: string };
+type DragData = { type: 'tool'; tool: ToolType } | { type: 'field'; field: FieldRef } | { type: 'element'; bandId: string; id: string };
 
 const KEY_STEP_MM = 0.5;
 
@@ -111,10 +113,12 @@ export function Editor() {
 
     let box: { x: number; y: number; width: number; height: number };
     let ignore: string[] = [];
-    if (data.type === 'tool') {
+    if (data.type === 'tool' || data.type === 'field') {
       const rect = e.active.rect.current.translated;
       if (!rect || !e.over) return null;
-      const el = createElement(data.tool, 0, 0, template.printer.widthMm);
+      // A field can only be dropped on a band that can print it.
+      const el = data.type === 'tool' ? createElement(data.tool, 0, 0, template.printer.widthMm) : createFieldElement(data.field, target, 0, 0, catalog, template.printer.widthMm);
+      if (!el) return null;
       box = { x: pxToMm((rect.left - e.over.rect.left) / zoom), y: pxToMm((rect.top - e.over.rect.top) / zoom), width: el.width, height: el.height };
     } else {
       const sourceIndex = template.bands.findIndex(b => b.id === data.bandId);
@@ -144,6 +148,12 @@ export function Editor() {
     const s = store.getState();
     if (data.type === 'tool') {
       s.addElement(result.bandId, createElement(data.tool, result.x, result.y, template.printer.widthMm, t('tools.defaultText')));
+      return;
+    }
+    if (data.type === 'field') {
+      const band = s.template.bands.find(b => b.id === result.bandId)!;
+      const el = createFieldElement(data.field, band, result.x, result.y, catalog, template.printer.widthMm);
+      if (el) s.addElement(band.id, el);
       return;
     }
     // Moving one of several selected elements moves them all by the same distance.
@@ -217,7 +227,8 @@ export function Editor() {
           onClick={() => { const area = scrollRef.current?.parentElement; if (area) store.getState().setZoom(fitZoom(area.clientWidth, widthPx)); }}><Maximize size={14} /></button>
       </div>
       <DragOverlay dropAnimation={null}>
-        {drag?.type === 'tool' ? <div className="px-3 py-2 bg-white border rounded shadow text-sm capitalize opacity-90">{drag.tool}</div> : null}
+        {drag?.type === 'tool' ? <div className="px-3 py-2 bg-white border rounded shadow text-sm opacity-90">{t(`tools.${drag.tool}`)}</div>
+          : drag?.type === 'field' ? <div className="px-3 py-2 bg-white border rounded shadow text-sm opacity-90">{fieldLabel(drag.field.field)}</div> : null}
       </DragOverlay>
     </>
   );
