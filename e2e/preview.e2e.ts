@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { bandOf, design, elementsOn, loadPreset, open, tool } from './helpers';
 
 const dialog = (page: Page) => page.getByRole('dialog', { name: 'ZPL Preview' });
-const image = (page: Page) => dialog(page).getByLabel('Print preview');
+const image = (page: Page) => dialog(page).getByLabel('Print preview', { exact: true });
 
 /** Share of dark pixels in the rendered label. */
 const inked = (page: Page) => image(page).evaluate((canvas: HTMLCanvasElement) => {

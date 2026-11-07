@@ -69,3 +69,32 @@ describe('composed content parts', () => {
     expect(() => parseTemplate(withParts(parts))).toThrow();
   });
 });
+
+describe('optional element settings', () => {
+  const withElement = (patch: Record<string, unknown>) => ({
+    schemaVersion: 2, printer: { widthMm: 72, dpi: 203 },
+    bands: [{ id: 'b', name: 'B', height: 10, elements: [{ id: 'e', type: 'text', x: 0, y: 0, width: 10, height: 3, ...patch }] }],
+  });
+
+  it.each([
+    [{ content: 5 }, 'content must be text'],
+    [{ fontBold: 'yes' }, 'fontBold must be true or false'],
+    [{ fontSize: 0 }, 'fontSize must be a positive number'],
+    [{ maxLines: 1.5 }, 'maxLines must be a positive whole number'],
+    [{ rotation: 45 }, 'rotation must be 0, 90, 180 or 270'],
+    [{ align: 'justify' }, 'align must be left, center or right'],
+    [{ overflow: 'scroll' }, 'overflow must be none, truncate or wrap'],
+    [{ barcodeType: 'ean13' }, 'barcodeType must be code128 or qr'],
+    [{ threshold: 300 }, 'threshold must be between 0 and 255'],
+    [{ bitmap: { width: 2, height: 2 } }, 'bitmap must have a width, a height and data'],
+  ])('refuses %j', (patch, message) => {
+    expect(() => parseTemplate(withElement(patch))).toThrow(message);
+  });
+
+  it('reads null options as missing', () => {
+    const t = parseTemplate(withElement({ content: null, align: null }));
+    expect(t.bands[0].elements[0]).not.toHaveProperty('content');
+    expect(t.bands[0].elements[0]).not.toHaveProperty('align');
+  });
+});
+

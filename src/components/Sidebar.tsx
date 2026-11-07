@@ -91,10 +91,10 @@ export function Sidebar({ allowLocalTemplates = true, catalogEditable = true, sh
       <div className="flex flex-wrap justify-between items-center gap-y-1">
         <h2 className="text-base font-bold text-gray-800 whitespace-nowrap">Z-Composer</h2>
         <div className="flex items-center gap-1">
-          {showLanguageSwitch && <div className="flex bg-gray-100 rounded p-0.5 gap-0.5" role="group" aria-label="Language">
+          {showLanguageSwitch && <div className="flex bg-gray-100 rounded p-0.5 gap-0.5" role="group" aria-label={t('language')}>
             {['tr', 'en'].map(lng => (
               <button key={lng} type="button" onClick={() => i18n.changeLanguage(lng)}
-                className={cn('text-[10px] px-2 h-6 rounded uppercase', i18n.resolvedLanguage === lng ? 'bg-white shadow text-blue-600 font-bold' : 'text-gray-500')}>
+                className={cn('text-[10px] px-2 h-6 rounded uppercase', i18n.resolvedLanguage === lng ? 'bg-white shadow text-blue-600 font-bold' : 'text-gray-600')}>
                 {lng}
               </button>
             ))}

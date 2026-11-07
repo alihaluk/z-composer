@@ -35,7 +35,7 @@ function FieldItem({ field: ref, onAdd }: { field: FieldRef; onAdd: (ref: FieldR
         <Icon size={12} aria-hidden className="shrink-0 text-gray-500" />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-xs text-gray-800">{fieldLabel(ref.field)}</span>
-          {ref.field.label && <span className="block truncate text-[10px] font-mono text-gray-500">{ref.path}</span>}
+          {ref.field.label && <span className="block truncate text-[10px] font-mono text-gray-600">{ref.path}</span>}
         </span>
       </div>
     </li>

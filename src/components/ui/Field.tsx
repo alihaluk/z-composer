@@ -92,7 +92,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
           aria-checked={value === o.value}
           title={o.title}
           onClick={() => onChange(o.value)}
-          className={cn('flex-1 text-xs h-7 rounded transition-colors flex items-center justify-center', value === o.value ? 'bg-white shadow text-blue-600 font-semibold' : 'text-gray-500 hover:text-gray-700')}
+          className={cn('flex-1 text-xs h-7 rounded transition-colors flex items-center justify-center', value === o.value ? 'bg-white shadow text-blue-600 font-semibold' : 'text-gray-600 hover:text-gray-800')}
         >
           {o.label}
         </button>

@@ -85,3 +85,23 @@ test.describe('files', () => {
     await expect(page.getByText('Start designing')).toHaveCount(0);
   });
 });
+
+test('damaged browser storage does not break the designer', async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('seeded')) return;
+    sessionStorage.setItem('seeded', '1');
+    const good = { schemaVersion: 2, printer: { widthMm: 72, dpi: 203 }, bands: [{ id: 'b', name: 'Header', height: 10, elements: [] }] };
+    const bad = { ...good, bands: [{ ...good.bands[0], elements: [{ id: 'e', type: 'text', x: 0, y: 0, width: 10, height: 3, content: 42 }] }] };
+    localStorage.setItem('zcomposer_templates_v2', JSON.stringify([{ name: 'Good', template: good }, { name: 'Bad', template: bad }, 'junk']));
+    localStorage.setItem('zcomposer_templates_v2_draft', '{"template": {"schemaVersion": 2, "bands": 5}}');
+    localStorage.setItem('zcomposer_templates_v2_catalog', 'not json');
+  });
+  await open(page);
+  // The broken draft and catalog are ignored, the broken saved template is not listed.
+  await expect(page.getByText('Start designing')).toBeVisible();
+  await expect(toolsPanel(page).getByText('Genel fatura')).toBeVisible();
+  const list = toolsPanel(page).locator('section').filter({ has: page.getByRole('heading', { name: 'Saved Templates' }) }).getByRole('listitem');
+  await expect(list).toHaveText(['Good']);
+  await list.getByRole('button', { name: 'Good', exact: true }).click();
+  await expect(band(page, 'Header')).toBeVisible();
+});

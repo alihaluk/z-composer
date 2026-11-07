@@ -1,6 +1,7 @@
 import { useState, type CSSProperties, type PointerEvent } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Lock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../lib/utils';
 import { mmToDots, mmToPx, pxToMm, roundMm } from '../lib/constants';
 import { displayText, hiddenInSample } from '../lib/elementDisplay';
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) {
+  const { t } = useTranslation();
   const store = useEditorStore();
   const selected = useEditor(s => !!s.selection?.ids.includes(el.id));
   const zoom = useEditor(s => s.zoom);
@@ -111,6 +113,8 @@ export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) 
       onClick={select}
       {...listeners}
       {...attributes}
+      // Its type and the text it shows, for screen readers.
+      aria-label={[t(`tools.${el.type === 'barcode' && el.barcodeType === 'qr' ? 'qr' : el.type}`), el.type === 'image' ? el.imageKey : lines ? lines.join(' ') : shownText].filter(Boolean).join(': ')}
     >
       <ElementBody element={el} band={band} text={lines ? lines.join('\n') : shownText} dpi={dpi} preformatted={!!lines} />
       {el.condition?.path && (

@@ -4,6 +4,7 @@ import { ZComposer } from './ZComposer';
 function App() {
   return (
     <div className="h-screen">
+      <header className="sr-only"><h1>Z-Composer</h1></header>
       <ZComposer />
     </div>
   );

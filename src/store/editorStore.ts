@@ -110,9 +110,15 @@ function readJsonArray(key: string): unknown[] {
 
 function readSaved(key: string | null): SavedTemplate[] {
   if (!key) return [];
-  const saved = readJsonArray(key).filter((t): t is SavedTemplate => {
+  // A damaged entry is left out of the list; opening it would break the designer.
+  const saved = readJsonArray(key).flatMap((t): SavedTemplate[] => {
     const entry = t as Partial<SavedTemplate> | null;
-    return !!entry && typeof entry.name === 'string' && entry.template?.schemaVersion === 2;
+    if (!entry || typeof entry.name !== 'string' || entry.template?.schemaVersion !== 2) return [];
+    try {
+      return [{ ...entry, name: entry.name, template: parseTemplate(entry.template), savedAt: typeof entry.savedAt === 'string' ? entry.savedAt : '' }];
+    } catch {
+      return [];
+    }
   });
   if (storageGet(key) === null && key === DEFAULT_STORAGE_KEY) {
     for (const old of readJsonArray(V1_STORAGE_KEY) as { name?: unknown; data?: unknown; createdAt?: string }[]) {

@@ -14,7 +14,7 @@ test.describe('embedded designer', () => {
   test('a fixed language hides the switch, and the host page keeps its styles', async ({ page }) => {
     await openHost(page, 'lang=tr');
     await expect(designer(page).getByRole('heading', { name: 'Araç Kutusu' })).toBeVisible();
-    await expect(designer(page).getByRole('group', { name: 'Language' })).toHaveCount(0);
+    await expect(designer(page).getByRole('group', { name: /^(Language|Dil)$/ })).toHaveCount(0);
 
     // No global reset: the host's heading, list and font are untouched.
     const title = page.locator('.host-title');
@@ -90,7 +90,7 @@ test.describe('embedded designer', () => {
     await openHost(page, 'lang=en&template=preset');
     await designer(page).getByRole('button', { name: 'Preview ZPL' }).click();
     const dialog = page.getByRole('dialog', { name: 'ZPL Preview' });
-    await expect(dialog.getByLabel('Print preview')).toBeVisible({ timeout: 15_000 });
+    await expect(dialog.getByLabel('Print preview', { exact: true })).toBeVisible({ timeout: 15_000 });
     await expect(dialog.getByText('Failed to render preview')).toHaveCount(0);
   });
 });

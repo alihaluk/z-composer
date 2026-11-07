@@ -39,7 +39,7 @@ test.describe('ready-made templates', () => {
 
       await page.getByRole('button', { name: 'Preview ZPL' }).click();
       const dialog = page.getByRole('dialog', { name: 'ZPL Preview' });
-      await expect(dialog.getByLabel('Print preview')).toBeVisible({ timeout: 15_000 });
+      await expect(dialog.getByLabel('Print preview', { exact: true })).toBeVisible({ timeout: 15_000 });
       await expect(dialog.getByText('Failed to render preview')).toHaveCount(0);
     });
   }

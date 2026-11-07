@@ -18,9 +18,9 @@ function FieldRows({ fields, onChange, nested }: { fields: CatalogField[]; onCha
         <div key={f.path}>
           <div className="grid grid-cols-[1fr_7rem_1fr_auto] gap-1 items-center">
             <code className="text-[11px] truncate" title={f.path}>{f.path}</code>
-            {f.type === 'array' ? <span className="text-[11px] text-gray-500 px-1">array</span> : (
+            {f.type === 'array' ? <span className="text-[11px] text-gray-500 px-1">{t('catalog.types.array')}</span> : (
               <select aria-label={t('catalog.type')} className="h-7 text-xs border rounded px-1" value={f.type} onChange={e => update(i, { type: e.target.value as FieldType })}>
-                {SCALAR_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                {SCALAR_TYPES.map(type => <option key={type} value={type}>{t(`catalog.types.${type}`)}</option>)}
               </select>
             )}
             <input aria-label={t('catalog.label')} className="h-7 text-xs border rounded px-1.5" placeholder={f.path} value={f.label ?? ''} onChange={e => update(i, { label: e.target.value || undefined })} />
@@ -51,7 +51,7 @@ function AddField({ nested, existing, onAdd }: { nested?: boolean; existing: str
         title={path && !valid ? t('catalog.invalidPath') : undefined}
         onChange={e => setPath(e.target.value.trim())} onKeyDown={e => { if (e.key === 'Enter') add(); }} />
       <select aria-label={t('catalog.type')} className="h-7 text-xs border rounded px-1" value={type} onChange={e => setType(e.target.value as FieldType)}>
-        {[...SCALAR_TYPES, ...(nested ? [] : ['array' as const])].map(x => <option key={x} value={x}>{x}</option>)}
+        {[...SCALAR_TYPES, ...(nested ? [] : ['array' as const])].map(x => <option key={x} value={x}>{t(`catalog.types.${x}`)}</option>)}
       </select>
       <Button type="button" size="sm" variant="outline" className="h-7 text-xs" disabled={!valid} onClick={add}>{t('catalog.addField')}</Button>
     </div>

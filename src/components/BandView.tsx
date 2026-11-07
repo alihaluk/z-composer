@@ -72,7 +72,7 @@ export function BandView({ band, widthPx, growth }: { band: Band; widthPx: numbe
         {band.repeat && <Repeat size={9} aria-hidden className="inline mr-0.5 -mt-0.5" />}
         {band.condition?.path && <Filter size={9} aria-hidden className="inline mr-0.5 -mt-0.5" />}
         {band.name}
-        <span className="opacity-60"> · {band.height}mm</span>
+        <span className={bandSelected ? 'text-blue-100' : 'text-gray-500'}> · {band.height}mm</span>
       </button>
       <div
         ref={setNodeRef}
@@ -91,6 +91,7 @@ export function BandView({ band, widthPx, growth }: { band: Band; widthPx: numbe
           bandSelected && 'ring-2 ring-inset ring-blue-400',
           isOver && accepts && 'bg-blue-50/60',
         )}
+        role="group"
         aria-label={t('bands.region', { name: band.name })}
       >
         <div

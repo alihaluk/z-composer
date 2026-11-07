@@ -1,4 +1,5 @@
 {
+  "language": "Dil",
   "toolbar": {
     "undo": "Geri al (Ctrl/⌘+Z)",
     "redo": "Yinele (Ctrl/⌘+Shift+Z)"
@@ -54,7 +55,16 @@
     },
     "addField": "Alan ekle",
     "newPath": "Yeni alan yolu (ör. Customer.Phone)",
-    "invalidPath": "Geçersiz veya var olan yol"
+    "invalidPath": "Geçersiz veya var olan yol",
+    "types": {
+      "string": "Metin",
+      "number": "Sayı",
+      "date": "Tarih",
+      "datetime": "Tarih ve saat",
+      "boolean": "Evet / hayır",
+      "image": "Görsel",
+      "array": "Liste"
+    }
   },
   "files": {
     "title": "Dosya",
@@ -87,7 +97,8 @@
     "fieldNames": "Alan adları",
     "image": "Baskı önizlemesi",
     "approximate": "Önizleme tarayıcıda çizilir. Metin genişlikleri yaklaşıktır; yazıcı fontu yerine benzer açık bir font kullanılır.",
-    "culture": "Kültür"
+    "culture": "Kültür",
+    "imageArea": "Baskı önizleme alanı"
   },
   "settings": {
     "printer": "Yazıcı",
@@ -325,7 +336,9 @@
     "hideTools": "Araç panelini gizle",
     "showTools": "Araç panelini göster",
     "hideProperties": "Özellik panelini gizle",
-    "showProperties": "Özellik panelini göster"
+    "showProperties": "Özellik panelini göster",
+    "tools": "Araçlar",
+    "properties": "Özellikler"
   },
   "zoom": {
     "in": "Yakınlaştır",

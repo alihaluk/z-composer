@@ -60,6 +60,26 @@ function checkCondition(condition: unknown, where: string) {
   checkPath(condition.path, `${where} condition`);
 }
 
+const OPTION_CHECKS: [keys: string[], ok: (v: unknown) => boolean, expected: string][] = [
+  [['content', 'imageBase64'], v => typeof v === 'string', 'must be text'],
+  [['locked', 'isDynamic', 'invariant', 'fontBold', 'grow', 'showLabel'], v => typeof v === 'boolean', 'must be true or false'],
+  [['fontSize', 'thickness', 'moduleWidth', 'magnification'], v => isNumber(v) && v > 0, 'must be a positive number'],
+  [['maxChars', 'maxLines', 'charsPerLine'], v => Number.isInteger(v) && (v as number) > 0, 'must be a positive whole number'],
+  [['threshold'], v => isNumber(v) && v >= 0 && v <= 255, 'must be between 0 and 255'],
+  [['rotation'], v => [0, 90, 180, 270].includes(v as number), 'must be 0, 90, 180 or 270'],
+  [['align'], v => ['left', 'center', 'right'].includes(v as string), 'must be left, center or right'],
+  [['overflow'], v => ['none', 'truncate', 'wrap'].includes(v as string), 'must be none, truncate or wrap'],
+  [['barcodeType'], v => ['code128', 'qr'].includes(v as string), 'must be code128 or qr'],
+  [['bitmap'], v => isObject(v) && Number.isInteger(v.width) && (v.width as number) > 0 && Number.isInteger(v.height) && (v.height as number) > 0 && typeof v.data === 'string', 'must have a width, a height and data'],
+];
+
+/** Optional element settings have the type the designer and the generator expect. */
+function checkOptions(e: Record<string, unknown>, where: string) {
+  for (const [keys, ok, expected] of OPTION_CHECKS) {
+    for (const key of keys) if (e[key] !== undefined && !ok(e[key])) fail(`${where}: ${key} ${expected}`);
+  }
+}
+
 function validateV2(t: Record<string, unknown>): Template {
   const printer = t.printer;
   if (!isObject(printer) || !isNumber(printer.widthMm) || printer.widthMm <= 0) fail('printer.widthMm must be a positive number');
@@ -69,15 +89,19 @@ function validateV2(t: Record<string, unknown>): Template {
     if (!isObject(b) || typeof b.id !== 'string' || !isNumber(b.height) || b.height <= 0 || !Array.isArray(b.elements)) fail(`band ${i} needs id, a positive height and elements`);
     checkPath(b.repeat, `band ${i} repeat`);
     checkCondition(b.condition, `band ${i}`);
-    const elements = b.elements.map((e, j): TemplateElement => {
+    const elements = b.elements.map((raw, j): TemplateElement => {
       const where = `element ${j} of band ${i}`;
-      if (!isObject(e) || typeof e.id !== 'string' || !ELEMENT_TYPES.includes(e.type as ElementType)) fail(`${where} needs an id and a known type`);
+      if (!isObject(raw)) fail(`${where} needs an id and a known type`);
+      // A null option is read as a missing one.
+      const e = Object.fromEntries(Object.entries(raw).filter(([, v]) => v !== null));
+      if (typeof e.id !== 'string' || !ELEMENT_TYPES.includes(e.type as ElementType)) fail(`${where} needs an id and a known type`);
       for (const key of ['x', 'y', 'width', 'height']) if (!isNumber(e[key])) fail(`${where}: ${key} must be a number`);
       checkPath(e.dataSource, `${where} dataSource`);
       if (e.parts !== undefined) checkParts(e.parts, where);
       checkPath(e.imageKey, `${where} imageKey`);
       checkCondition(e.condition, where);
       if (e.format !== undefined && !isValidFormat(e.format)) fail(`${where}: invalid format`);
+      checkOptions(e, where);
       return e as unknown as TemplateElement;
     });
     return { ...(b as unknown as Band), name: typeof b.name === 'string' ? b.name : `Band ${i + 1}`, elements };

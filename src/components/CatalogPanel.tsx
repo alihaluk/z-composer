@@ -66,7 +66,7 @@ export function CatalogPanel({ editable = true }: { editable?: boolean }) {
       {changed.length > 0 && (
         <p className="flex gap-1 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded p-1.5" role="status">
           <AlertTriangle size={12} className="shrink-0 mt-0.5" />
-          {t('catalog.changed', { list: changed.slice(0, 4).map(c => `${c.path} (${c.was} → ${c.now})`).join(', ') })}
+          {t('catalog.changed', { list: changed.slice(0, 4).map(c => `${c.path} (${t(`catalog.types.${c.was}`, { defaultValue: c.was })} → ${t(`catalog.types.${c.now}`, { defaultValue: c.now })})`).join(', ') })}
         </p>
       )}
       <FieldList />

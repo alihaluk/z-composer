@@ -18,7 +18,7 @@ export const Layout = ({ children, sidebar, propertiesPanel }: LayoutProps) => {
   const [right, setRight] = useState(true);
   return (
     <div className="flex h-full min-h-0 w-full bg-gray-100 overflow-hidden text-gray-900">
-      {left && <aside className="w-64 shrink-0 border-r bg-white flex flex-col min-h-0">{sidebar}</aside>}
+      {left && <aside aria-label={t('panels.tools')} className="w-64 shrink-0 border-r bg-white flex flex-col min-h-0">{sidebar}</aside>}
       <div className="relative flex-1 min-w-0 flex">
         <button type="button" className={`${toggleClass} left-2`} aria-expanded={left}
           aria-label={t(left ? 'panels.hideTools' : 'panels.showTools')} title={t(left ? 'panels.hideTools' : 'panels.showTools')} onClick={() => setLeft(v => !v)}>
@@ -30,7 +30,7 @@ export const Layout = ({ children, sidebar, propertiesPanel }: LayoutProps) => {
           {right ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
         </button>
       </div>
-      {right && <aside className="w-80 shrink-0 border-l bg-white overflow-y-auto">{propertiesPanel}</aside>}
+      {right && <aside aria-label={t('panels.properties')} className="w-80 shrink-0 border-l bg-white overflow-y-auto">{propertiesPanel}</aside>}
     </div>
   );
 };

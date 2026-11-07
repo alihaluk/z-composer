@@ -49,7 +49,7 @@ export const PreviewModal = () => {
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} className="w-full bg-green-600 hover:bg-green-700 text-white shadow-sm">{t('preview.button')}</Button>
+      <Button onClick={() => setIsOpen(true)} className="w-full bg-green-700 hover:bg-green-800 text-white shadow-sm">{t('preview.button')}</Button>
       {isOpen && (
         <Dialog label={t('preview.title')} onClose={() => setIsOpen(false)} className="max-w-5xl">
           <div className="p-3 border-b flex justify-between items-center gap-3 bg-gray-50">
@@ -64,12 +64,12 @@ export const PreviewModal = () => {
             </div>
           </div>
           <div className="flex-1 flex overflow-hidden">
-            <div className="w-1/2 p-4 border-r overflow-auto bg-gray-50">
+            <div className="w-1/2 p-4 border-r overflow-auto bg-gray-50" tabIndex={0} role="region" aria-label={t('preview.generatedCode')}>
               <h3 className="font-bold mb-2 text-xs text-gray-500 uppercase">{t('preview.generatedCode')}</h3>
               <ZplCode zpl={templateZpl} className="h-auto" />
             </div>
-            <div className="w-1/2 p-4 flex flex-col items-center gap-3 bg-gray-200 overflow-auto">
-              <p className="text-[11px] text-gray-500 text-center">{t('preview.approximate')}</p>
+            <div className="w-1/2 p-4 flex flex-col items-center gap-3 bg-gray-200 overflow-auto" tabIndex={0} role="region" aria-label={t('preview.imageArea')}>
+              <p className="text-[11px] text-gray-600 text-center">{t('preview.approximate')}</p>
               {status === 'rendering' && (
                 <div className="flex flex-col items-center gap-2 mt-20">
                   <Loader2 className="animate-spin text-gray-500" size={32} />
