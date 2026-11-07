@@ -7,6 +7,8 @@ import { type Band } from '../../types';
 import { Button } from '../ui/Button';
 import { Field, NumberInput, Section, SelectInput, TextInput } from '../ui/Field';
 import { ConditionEditor } from './FieldPicker';
+import { OwnIssues } from '../DesignCheck';
+import { useDesignIssues } from '../../store/designIssues';
 
 export function BandProperties({ band }: { band: Band }) {
   const { t } = useTranslation();
@@ -16,6 +18,7 @@ export function BandProperties({ band }: { band: Band }) {
   const count = useEditor(s => s.template.bands.length);
   const s = store.getState();
   const update = (patch: Partial<Band>) => s.updateBand(band.id, patch);
+  const issues = useDesignIssues().filter(i => i.bandId === band.id && !i.elementId);
 
   return (
     <div className="space-y-4">
@@ -23,6 +26,7 @@ export function BandProperties({ band }: { band: Band }) {
         <h3 className="font-bold text-gray-800">{t('bands.properties')}</h3>
         <Button size="sm" variant="ghost" onClick={() => s.select(null)}>{t('properties.close')}</Button>
       </div>
+      <OwnIssues issues={issues} />
 
       <Section title={t('bands.band')}>
         <Field label={t('bands.name')}>{id => <TextInput id={id} value={band.name} onChange={name => update({ name })} />}</Field>

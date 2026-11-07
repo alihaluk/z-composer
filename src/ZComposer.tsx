@@ -4,6 +4,7 @@ import { DndContext, MouseSensor, TouchSensor, pointerWithin, useSensor, useSens
 import { Layout } from './components/Layout';
 import { Sidebar } from './components/Sidebar';
 import { Editor } from './components/Editor';
+import { DesignIssuesProvider } from './components/DesignCheck';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { createI18n, defaultLocale, type Language } from './i18n';
 import { type Catalog } from './lib/catalog';
@@ -94,9 +95,11 @@ export function ZComposer({ template, catalog, language, locale, storageKey, cat
         <LanguageRoot className={cn('zc-root h-full', className)}>
           {/* One drag context for the whole designer: tools are dragged from the sidebar onto the canvas. */}
           <DndContext sensors={sensors} collisionDetection={pointerWithin}>
-            <Layout sidebar={<Sidebar allowLocalTemplates={storageKey !== null} catalogEditable={catalogEditable} showLanguageSwitch={!language} onSave={save} />} propertiesPanel={<PropertiesPanel />}>
-              <Editor />
-            </Layout>
+            <DesignIssuesProvider>
+              <Layout sidebar={<Sidebar allowLocalTemplates={storageKey !== null} catalogEditable={catalogEditable} showLanguageSwitch={!language} onSave={save} />} propertiesPanel={<PropertiesPanel />}>
+                <Editor />
+              </Layout>
+            </DesignIssuesProvider>
           </DndContext>
         </LanguageRoot>
       </EditorStoreContext.Provider>

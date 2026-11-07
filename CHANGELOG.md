@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.0 — 2026-11-07
+
+### Added
+- Design check: finds what would only show on paper and lists it above the template settings. Errors: elements past the paper edge, sample text cut at the paper edge or not fitting a centred or right-aligned box, barcodes wider than the paper, fields the catalog does not have, document fields in a repeating band without `$.`. Warnings: elements reaching into the next band, wrapped text needing more lines than it may use, a field content without a field, empty composed content, images without a picture or field.
+- Repeating bands are checked against every sample row, not only the first.
+- Affected elements are outlined dashed (red for errors, amber for warnings); the selected element shows its own findings; a counter beside the zoom opens the list, and a finding selects its element. A document field moved into a repeating band is fixed with one click.
+
+### Fixed
+- A field added to a full, short band (such as the invoice lines) could land below the band; it now stays inside it.
+
 ## 1.6.0 — 2026-11-07
 
 ### Added

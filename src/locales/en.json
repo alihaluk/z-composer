@@ -159,6 +159,24 @@
     "arrayHint": "Printed in a band that repeats {{array}}",
     "noBand": "These fields are printed in a band that repeats {{array}}. Select a band and set its Repeat to {{array}} first."
   },
+  "check": {
+    "title": "Design check",
+    "none": "No problems found",
+    "summary": "Errors: {{errors}}, warnings: {{warnings}} (checked with the sample data)",
+    "open": "Design check",
+    "fix": "Fix",
+    "bandItself": "band",
+    "outsidePage": "Past the paper edge: the right edge is at {{value}} mm, the printable width is {{limit}} mm.",
+    "outsideBand": "Reaches below its band ({{value}} of {{limit}} mm) and prints over the next band.",
+    "textCut": "The sample text does not fit: {{value}} mm wide, {{limit}} mm of room. “{{text}}”",
+    "linesCut": "The sample text needs {{value}} lines; only {{limit}} are printed. “{{text}}”",
+    "barcodeCut": "The barcode does not fit on the paper: {{value}} mm wide, {{limit}} mm of room.",
+    "missingField": "{{path}} is not in the catalog, or its type does not fit here.",
+    "rootPrefix": "{{path}} is a document field; in a repeating band it is bound as $.{{path}}.",
+    "noField": "Field is chosen as content but no field is picked; the static text is printed instead.",
+    "emptyContent": "The composed content has no text and no field, so nothing is printed.",
+    "noImage": "No image is uploaded and no image field is chosen, so nothing is printed."
+  },
   "properties": {
     "close": "Close",
     "position": "Position and size",

@@ -159,6 +159,24 @@
     "arrayHint": "{{array}} dizisini tekrarlayan bantta basılır",
     "noBand": "Bu alanlar {{array}} dizisini tekrarlayan bir bantta basılır. Önce bir bant seçip Tekrar ayarını {{array}} yapın."
   },
+  "check": {
+    "title": "Tasarım kontrolü",
+    "none": "Sorun bulunmadı",
+    "summary": "Hata: {{errors}}, uyarı: {{warnings}} (örnek veriyle kontrol edildi)",
+    "open": "Tasarım kontrolü",
+    "fix": "Düzelt",
+    "bandItself": "bant",
+    "outsidePage": "Kağıttan taşıyor: sağ kenar {{value}} mm'de, basılabilir genişlik {{limit}} mm.",
+    "outsideBand": "Bandının altına taşıyor ({{value}} / {{limit}} mm); sonraki bandın üstüne basılır.",
+    "textCut": "Örnek metin sığmıyor: {{value}} mm genişlik, {{limit}} mm yer var. “{{text}}”",
+    "linesCut": "Örnek metin {{value}} satır tutuyor; yalnız {{limit}} satır basılır. “{{text}}”",
+    "barcodeCut": "Barkod kağıda sığmıyor: {{value}} mm genişlik, {{limit}} mm yer var.",
+    "missingField": "{{path}} katalogda yok ya da türü burada uymuyor.",
+    "rootPrefix": "{{path}} bir belge alanı; tekrarlanan bantta $.{{path}} olarak bağlanır.",
+    "noField": "İçerik olarak alan seçili ama alan seçilmemiş; yerine sabit metin basılır.",
+    "emptyContent": "Birleşik içerikte metin ya da alan yok; hiçbir şey basılmaz.",
+    "noImage": "Görsel yüklenmemiş ve görsel alanı seçilmemiş; hiçbir şey basılmaz."
+  },
   "properties": {
     "close": "Kapat",
     "position": "Konum ve boyut",

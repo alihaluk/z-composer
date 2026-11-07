@@ -70,15 +70,17 @@ const GAP_MM = 0.5;
 
 /**
  * Where a clicked field's element goes: below the lowest element of the band, numbers against the
- * right edge. When the band has no room left it falls back to a small offset from the top-left.
+ * right edge. When the band has no room left it falls back to a small offset from the top-left,
+ * kept inside the band.
  */
 export function nextFieldPosition(band: Band, el: TemplateElement, pageWidthMm: number): { x: number; y: number } {
   const bottom = Math.max(0, ...band.elements.map(e => e.y + e.height));
   const y = band.elements.length ? Math.round((bottom + GAP_MM) * 10) / 10 : 1;
   const x = el.align === 'right' ? Math.max(0, pageWidthMm - el.width - MARGIN_MM) : MARGIN_MM;
   if (y + el.height <= band.height) return { x, y };
+  // The offset stays inside the band, so the element does not print over the next one.
   const offset = (band.elements.length % 5) * 2;
-  return { x: MARGIN_MM + offset, y: 1 + offset };
+  return { x: MARGIN_MM + offset, y: Math.max(0, Math.min(1 + offset, Math.round((band.height - el.height) * 10) / 10)) };
 }
 
 /** Folds text for searching: case, Turkish dotted / dotless i and accents do not matter ("sut" finds "Süt"). */

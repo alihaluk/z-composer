@@ -110,6 +110,12 @@ describe('nextFieldPosition', () => {
     const band = { ...header, height: 8, elements: [{ ...text, y: 4 }] };
     expect(nextFieldPosition(band, text, 72)).toEqual({ x: 4, y: 3 });
   });
+
+  it('keeps the fallback inside a short band', () => {
+    const lines = { ...header, height: 4.5, elements: [1, 2, 3, 4].map(i => ({ ...text, id: `e${i}`, y: 0.5 })) };
+    const { y } = nextFieldPosition(lines, text, 72);
+    expect(y + text.height).toBeLessThanOrEqual(4.5);
+  });
 });
 
 describe('search', () => {

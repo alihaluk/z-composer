@@ -8,6 +8,7 @@ import { type Dpi } from '../../types';
 import { Button } from '../ui/Button';
 import { Field, NumberInput, Section, Segmented, SelectInput } from '../ui/Field';
 import { ZplCode } from './ZplCode';
+import { DesignCheckSection } from '../DesignCheck';
 
 export function TemplateSettings() {
   const { t } = useTranslation();
@@ -20,6 +21,7 @@ export function TemplateSettings() {
 
   return (
     <div className="space-y-4">
+      <DesignCheckSection />
       <Section title={t('settings.printer')}>
         <Field label={t('settings.printableWidth')} hint={t('settings.printableWidthHint')}>
           {id => <NumberInput id={id} value={template.printer.widthMm} min={10} max={216} step={1} onChange={widthMm => s.updatePrinter({ widthMm })} />}

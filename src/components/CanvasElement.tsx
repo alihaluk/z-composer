@@ -8,6 +8,7 @@ import { DEFAULT_FONT_MM, DEFAULT_THICKNESS_MM, textMetrics } from '../lib/zplTe
 import { A0_AVERAGE_ADVANCE, a0Width, fieldBlockLines } from '../preview/fontMetrics';
 import { useEditor, useEditorStore } from '../store/editorStore';
 import { type Band, type Dpi, type TemplateElement } from '../types';
+import { useElementIssues } from '../store/designIssues';
 
 export const CANVAS_FONT = '"Roboto Condensed", "Arial Narrow", sans-serif';
 const MIN_SIZE_MM = 1;
@@ -30,6 +31,8 @@ export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) 
   const locale = useEditor(s => s.previewLocale);
   const dpi = useEditor(s => s.template.printer.dpi);
   const [resize, setResize] = useState<{ width: number; height: number } | null>(null);
+  const issues = useElementIssues(el.id);
+  const issue = issues.some(i => i.severity === 'error') ? 'error' : issues.length ? 'warning' : null;
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `${band.id}:${el.id}`,
@@ -88,7 +91,8 @@ export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) 
     width: mmToPx(width),
     height: mmToPx(height),
     // Set here because tailwind-merge drops the `outline` style class next to `outline-2`.
-    outlineStyle: 'solid',
+    // A design check finding is outlined dashed until the element is selected.
+    outlineStyle: issue && !selected ? 'dashed' : 'solid',
   };
 
   return (
@@ -98,6 +102,8 @@ export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) 
       className={cn(
         'group select-none outline-1 outline-transparent hover:outline-blue-300',
         el.locked ? 'cursor-default' : 'cursor-move',
+        issue === 'error' && 'outline-red-500',
+        issue === 'warning' && 'outline-amber-500',
         selected && 'outline-blue-500 outline-2 bg-blue-50/40 z-10',
         isDragging && 'opacity-20',
         (hidden || emptySample) && 'opacity-30',

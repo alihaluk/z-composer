@@ -15,6 +15,8 @@ import { ContentBuilder } from './ContentBuilder';
 import { GIB_QR_FIELD, gibQrPatch } from '../../lib/gibQr';
 import { FormatPicker } from './FormatPicker';
 import { BarcodeSize } from './BarcodeSize';
+import { OwnIssues } from '../DesignCheck';
+import { useElementIssues } from '../../store/designIssues';
 
 type ContentMode = 'static' | 'dynamic' | 'composed';
 
@@ -26,6 +28,7 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
   const widthMm = useEditor(s => s.template.printer.widthMm);
   const locale = useEditor(s => s.previewLocale);
   const [imageError, setImageError] = useState<string | null>(null);
+  const issues = useElementIssues(el.id);
   const s = store.getState();
   const update = (patch: Partial<TemplateElement>) => s.updateElement(band.id, el.id, patch);
   const locked = !!el.locked;
@@ -62,6 +65,7 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
         <h3 className="font-bold text-gray-800">{t(`tools.${typeKey}`)}</h3>
         <Button size="sm" variant="ghost" onClick={() => s.select({ bandId: band.id, ids: [] })}>{t('properties.close')}</Button>
       </div>
+      <OwnIssues issues={issues} />
 
       <Section title={t('properties.position')}>
         <div className="grid grid-cols-2 gap-2">

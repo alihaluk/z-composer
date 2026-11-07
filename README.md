@@ -13,6 +13,7 @@ A visual designer for ZPL receipt and invoice templates for Zebra thermal printe
 - **Culture-independent formats**: numbers and dates keep a format code (`N2`, `d`, `dd.MM.yyyy` ...), not a culture; the printing side applies its culture. The designer previews any culture.
 - **Overflow**: text can stay as is, be truncated, or wrap; wrapped text can grow its band, and the canvas shows the grown rows.
 - **Printer profile**: printable width and 203 / 300 / 600 dpi per template; continuous receipt paper.
+- **Design check**: finds what would only show on paper (text or barcodes cut at the paper edge, lines that do not fit, fields missing from the catalog) by checking every sample row, and points to the element.
 - **Own preview**: the ZPL output is drawn in the browser at printer resolution, with real Code 128 and QR encoding. No data leaves the browser.
 - **Editing**: multi-select across bands, group move and alignment, copy / paste / duplicate, layers, locking, undo / redo, keyboard shortcuts.
 - **Embeddable**: a React component with its own state, translations and scoped styles ([integration guide](./INTEGRATION_GUIDE.md)).
