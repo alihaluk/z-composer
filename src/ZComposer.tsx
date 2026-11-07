@@ -3,6 +3,7 @@ import { I18nextProvider, useTranslation } from 'react-i18next';
 import { DndContext, MouseSensor, TouchSensor, pointerWithin, useSensor, useSensors } from '@dnd-kit/core';
 import { Layout } from './components/Layout';
 import { Sidebar } from './components/Sidebar';
+import { TopBar } from './components/TopBar';
 import { Editor } from './components/Editor';
 import { DesignIssuesProvider } from './components/DesignCheck';
 import { PropertiesPanel } from './components/PropertiesPanel';
@@ -96,9 +97,14 @@ export function ZComposer({ template, catalog, language, locale, storageKey, cat
           {/* One drag context for the whole designer: tools are dragged from the sidebar onto the canvas. */}
           <DndContext sensors={sensors} collisionDetection={pointerWithin}>
             <DesignIssuesProvider>
-              <Layout sidebar={<Sidebar allowLocalTemplates={storageKey !== null} catalogEditable={catalogEditable} showLanguageSwitch={!language} onSave={save} />} propertiesPanel={<PropertiesPanel />}>
-                <Editor catalogEditable={catalogEditable} />
-              </Layout>
+              <div className="flex h-full min-h-0 flex-col">
+                <TopBar catalogEditable={catalogEditable} showLanguageSwitch={!language} onSave={save} />
+                <div className="min-h-0 flex-1">
+                  <Layout sidebar={<Sidebar allowLocalTemplates={storageKey !== null} catalogEditable={catalogEditable} />} propertiesPanel={<PropertiesPanel />}>
+                    <Editor catalogEditable={catalogEditable} />
+                  </Layout>
+                </div>
+              </div>
             </DesignIssuesProvider>
           </DndContext>
         </LanguageRoot>

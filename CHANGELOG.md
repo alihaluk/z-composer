@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.10.0 — 2026-11-07
+
+### Changed
+- A top bar holds the template name, undo / redo, New, Import, Export, the ready-made templates, the design check state, the language and "Preview ZPL", so they stay in view on a laptop screen; below 1280 px the file actions show as icons.
+- The sidebar keeps the tools, the field list and the saved templates. The field list shows one row per field (the path is in the tooltip) under "Document" and the arrays' own labels, and shows about twice as many fields; importing and saving catalogs folds away.
+- With nothing selected the properties panel starts with the bands; shortcuts and the template ZPL fold away, and the zoom slider (a copy of the canvas zoom) is gone. The design check list appears there only when it has findings.
+- Band labels show the name only (height, repeat and condition in the tooltip) and no longer overlap on thin bands; repeating bands are named by the catalog label of their array; the condition marker explains itself.
+
 ## 1.9.2 — 2026-11-07
 
 ### Fixed

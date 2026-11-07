@@ -9,10 +9,12 @@ import { type BandGrowth } from '../lib/elementDisplay';
 import { type Band } from '../types';
 import { CanvasElement } from './CanvasElement';
 import { bindingPath, type FieldRef } from '../lib/fieldElements';
+import { arrayLabel } from '../lib/catalog';
 
 export function BandView({ band, widthPx, growth }: { band: Band; widthPx: number; growth: BandGrowth }) {
   const { t } = useTranslation();
   const store = useEditorStore();
+  const catalog = useEditor(s => s.catalog);
   const bandSelected = useEditor(s => s.selection?.bandId === band.id && s.selection.ids.length === 0);
   const { setNodeRef, isOver, active } = useDroppable({ id: band.id, data: { type: 'band', bandId: band.id } });
   // A dragged field lights up only the bands that can print it.
@@ -60,19 +62,20 @@ export function BandView({ band, widthPx, growth }: { band: Band; widthPx: numbe
         type="button"
         onClick={e => { e.stopPropagation(); store.getState().select({ bandId: band.id, ids: [] }); }}
         className={cn(
-          'absolute right-full top-0 mr-1 max-w-[120px] text-[10px] leading-tight px-1.5 py-0.5 rounded-l border text-left whitespace-nowrap overflow-hidden text-ellipsis',
+          // Short enough for a 3.6 mm band, so labels of thin bands do not overlap.
+          'absolute right-full top-0 mr-1 max-w-[124px] text-[9px] leading-none px-1.5 py-px rounded-l border text-left whitespace-nowrap overflow-hidden text-ellipsis',
           bandSelected ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400',
         )}
+        // The label shows the name; the tooltip also gives the height, what it repeats and its condition.
         title={[
-          band.name,
-          band.repeat && `${t('bands.repeat')}: ${band.repeat}`,
+          `${band.name} · ${band.height} mm`,
+          band.repeat && `${t('bands.repeat')}: ${arrayLabel(catalog, band.repeat)}`,
           band.condition?.path && `${t('condition.title')}: ${band.condition.path} · ${t(`condition.${band.condition.op}`)}`,
         ].filter(Boolean).join('\n')}
       >
         {band.repeat && <Repeat size={9} aria-hidden className="inline mr-0.5 -mt-0.5" />}
         {band.condition?.path && <Filter size={9} aria-hidden className="inline mr-0.5 -mt-0.5" />}
         {band.name}
-        <span className={bandSelected ? 'text-blue-100' : 'text-gray-500'}> · {band.height}mm</span>
       </button>
       <div
         ref={setNodeRef}

@@ -60,18 +60,14 @@ export function DesignCheckSection() {
   const { t } = useTranslation();
   const issues = useDesignIssues();
   const errors = issues.filter(i => i.severity === 'error').length;
+  // With nothing to fix the top bar says so; the panel keeps its room for the settings.
+  if (issues.length === 0) return null;
   return (
     <Section title={t('check.title')}>
-      {issues.length === 0 ? (
-        <p className="flex items-center gap-1.5 text-[11px] text-green-700"><CheckCircle2 size={13} aria-hidden />{t('check.none')}</p>
-      ) : (
-        <>
-          <p className="text-[11px] text-gray-600">{t('check.summary', { errors, warnings: issues.length - errors })}</p>
-          <ul className="max-h-72 overflow-y-auto space-y-0.5" aria-label={t('check.title')}>
-            {issues.map((issue, i) => <IssueRow key={i} issue={issue} locate />)}
-          </ul>
-        </>
-      )}
+      <p className="text-[11px] text-gray-600">{t('check.summary', { errors, warnings: issues.length - errors })}</p>
+      <ul className="max-h-72 overflow-y-auto space-y-0.5" aria-label={t('check.title')}>
+        {issues.map((issue, i) => <IssueRow key={i} issue={issue} locate />)}
+      </ul>
     </Section>
   );
 }
@@ -88,18 +84,20 @@ export function OwnIssues({ issues }: { issues: DesignIssue[] }) {
   );
 }
 
-/** The canvas button with the number of findings; it opens the list. */
+/** The design check's state: the number of findings, or that there are none; it opens the list. */
 export function DesignCheckButton() {
   const { t } = useTranslation();
   const store = useEditorStore();
   const issues = useDesignIssues();
-  if (issues.length === 0) return null;
   const errors = issues.some(i => i.severity === 'error');
+  const state = issues.length === 0 ? 'none' : errors ? 'errors' : 'warnings';
   return (
-    <button type="button" title={t('check.open')} aria-label={`${t('check.open')}: ${issues.length}`}
-      className={cn('flex items-center gap-1 px-1.5 py-1 rounded text-xs font-semibold hover:bg-gray-100', errors ? 'text-red-600' : 'text-amber-700')}
+    <button type="button" title={t('check.open')} aria-label={`${t('check.open')}: ${issues.length ? t('check.count', { count: issues.length }) : t('check.none')}`}
+      className={cn('flex items-center gap-1 h-8 px-2 rounded text-xs font-semibold whitespace-nowrap hover:bg-gray-100',
+        { none: 'text-green-700', errors: 'text-red-600', warnings: 'text-amber-700' }[state])}
       onClick={() => store.getState().select(null)}>
-      {errors ? <AlertCircle size={14} aria-hidden /> : <AlertTriangle size={14} aria-hidden />}{issues.length}
+      {state === 'none' ? <CheckCircle2 size={15} aria-hidden /> : state === 'errors' ? <AlertCircle size={15} aria-hidden /> : <AlertTriangle size={15} aria-hidden />}
+      {issues.length ? t('check.count', { count: issues.length }) : <span className="hidden xl:inline">{t('check.none')}</span>}
     </button>
   );
 }

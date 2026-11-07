@@ -35,7 +35,6 @@ function FieldItem({ field: ref, onAdd }: { field: FieldRef; onAdd: (ref: FieldR
         <Icon size={12} aria-hidden className="shrink-0 text-gray-500" />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-xs text-gray-800">{fieldLabel(ref.field)}</span>
-          {ref.field.label && <span className="block truncate text-[10px] font-mono text-gray-600">{ref.path}</span>}
         </span>
       </div>
     </li>
@@ -53,9 +52,11 @@ export function FieldList() {
   const groups = useMemo(() => {
     const result = new Map<string, { key: string; title: string; array?: string; fields: FieldRef[] }>();
     for (const ref of fieldRefs(catalog)) {
-      const key = ref.array ? `array:${ref.array}` : ref.path.includes('.') ? ref.path.split('.')[0] : '';
+      // Document fields together, then one group per array under its label: the catalog names
+      // fields, not path segments, so no group is titled with an English path part.
+      const key = ref.array ? `array:${ref.array}` : '';
       const array = ref.array ? catalog.fields.find(f => f.path === ref.array) : undefined;
-      const title = array ? fieldLabel(array) : key || t('fields.general');
+      const title = array ? fieldLabel(array) : t('fieldList.document');
       // Searching for a group's name ("satırlar") lists its fields.
       if (!matchesField(ref, query, title)) continue;
       if (!result.has(key)) result.set(key, { key, title, array: ref.array, fields: [] });
@@ -87,7 +88,7 @@ export function FieldList() {
         <input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder={t('fieldList.search')} aria-label={t('fieldList.search')}
           className="w-full h-7 text-xs border rounded pl-6 pr-2" />
       </div>
-      <div className="max-h-64 overflow-y-auto rounded border bg-gray-50/50 p-1" role="region" aria-label={t('fieldList.title')}>
+      <div className="max-h-80 overflow-y-auto rounded border bg-gray-50/50 p-1" role="region" aria-label={t('fieldList.title')}>
         {groups.length === 0 && <p className="text-[11px] text-gray-500 p-1">{t('fieldList.none')}</p>}
         {groups.map(g => (
           <section key={g.key} aria-label={g.title}>

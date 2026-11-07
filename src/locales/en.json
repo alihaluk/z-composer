@@ -4,6 +4,10 @@
     "undo": "Undo (Ctrl/⌘+Z)",
     "redo": "Redo (Ctrl/⌘+Shift+Z)"
   },
+  "topbar": {
+    "label": "Template commands",
+    "untitled": "Untitled template"
+  },
   "toolbox": {
     "title": "Toolbox",
     "hint": "Click a tool to add it to the selected band, or drag it onto a band.",
@@ -64,7 +68,8 @@
       "boolean": "Yes / no",
       "image": "Image",
       "array": "List"
-    }
+    },
+    "manage": "Import and save catalog"
   },
   "files": {
     "title": "File",
@@ -147,7 +152,8 @@
     "field": "Field",
     "show": "Show when",
     "notEmpty": "Not empty",
-    "notZero": "Not zero (negatives are shown)"
+    "notZero": "Not zero (negatives are shown)",
+    "marker": "Printed only when {{path}} passes \"{{op}}\""
   },
   "layers": {
     "title": "Layers",
@@ -170,7 +176,8 @@
     "hint": "Click a field to add it to the selected band, or drag it onto a band.",
     "itemHint": "click, or drag onto a band",
     "arrayHint": "Printed in a band that repeats {{array}}",
-    "noBand": "These fields are printed in a band that repeats {{array}}. Select a band and set its Repeat to {{array}} first."
+    "noBand": "These fields are printed in a band that repeats {{array}}. Select a band and set its Repeat to {{array}} first.",
+    "document": "Document"
   },
   "check": {
     "title": "Design check",
@@ -188,7 +195,9 @@
     "rootPrefix": "{{path}} is a document field; in a repeating band it is bound as $.{{path}}.",
     "noField": "Field is chosen as content but no field is picked; the static text is printed instead.",
     "emptyContent": "The composed content has no text and no field, so nothing is printed.",
-    "noImage": "No image is uploaded and no image field is chosen, so nothing is printed."
+    "noImage": "No image is uploaded and no image field is chosen, so nothing is printed.",
+    "count_one": "{{count}} problem",
+    "count_other": "{{count}} problems"
   },
   "presets": {
     "title": "Ready-made templates",

@@ -71,7 +71,10 @@ export function CatalogPanel({ editable = true }: { editable?: boolean }) {
       )}
       <FieldList />
       {editable && (
-        <>
+        // Importing and saving catalogs is occasional work; it stays folded away.
+        <details className="group text-xs">
+          <summary className="cursor-pointer select-none text-gray-600 hover:text-gray-900">{t('catalog.manage')}</summary>
+          <div className="mt-2 space-y-2">
           <div className="grid grid-cols-2 gap-1.5">
             <FileButton accept=".json,application/json" variant="outline" size="sm" className="h-7 text-[11px] px-1" onFile={f => void load(f, catalogFromSample)}>{t('catalog.fromSample')}</FileButton>
             <FileButton accept=".json,application/json" variant="outline" size="sm" className="h-7 text-[11px] px-1" onFile={f => void load(f, catalogFromJsonSchema)}>{t('catalog.fromSchema')}</FileButton>
@@ -83,7 +86,8 @@ export function CatalogPanel({ editable = true }: { editable?: boolean }) {
               {t('catalog.reset')}
             </button>
           )}
-        </>
+          </div>
+        </details>
       )}
       {message && <p className={cn('text-[11px]', message.kind === 'error' ? 'text-red-600' : 'text-green-700')} role="status">{message.text}</p>}
       {editing && <CatalogEditor catalog={catalog} onClose={() => setEditing(false)} onSave={next => { store.getState().setCatalog(next); setEditing(false); }} />}

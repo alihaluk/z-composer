@@ -1,13 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
-import { acceptConfirm, band, bandOf, design, designWhere, elementsOn, field, fill, loadPreset, open, toolsPanel, tool, type Template } from './helpers';
+import { acceptConfirm, band, bandOf, design, designWhere, elementsOn, field, fill, loadPreset, open, tool, toolsPanel, topBar, type Template } from './helpers';
 
 /** Saving goes through a download instead of the browser's save dialog. */
 const noSavePicker = (page: Page) => page.addInitScript(() => { delete (window as { showSaveFilePicker?: unknown }).showSaveFilePicker; });
 
 async function chooseFile(page: Page, button: string, file: { name: string; mimeType: string; buffer: Buffer }) {
   const chooser = page.waitForEvent('filechooser');
-  await toolsPanel(page).getByRole('button', { name: button, exact: true }).click();
+  await topBar(page).getByRole('button', { name: button, exact: true }).click();
   await (await chooser).setFiles(file);
 }
 
@@ -20,7 +20,7 @@ test.describe('files', () => {
     await loadPreset(page);
 
     const download = page.waitForEvent('download');
-    await toolsPanel(page).getByRole('button', { name: 'Export' }).click();
+    await topBar(page).getByRole('button', { name: 'Export' }).click();
     const file = await download;
     expect(file.suggestedFilename()).toBe('e-Fatura.json');
     const exported = JSON.parse(readFileSync((await file.path())!, 'utf8')) as Template & { fieldsUsed: { path: string }[] };
@@ -28,7 +28,7 @@ test.describe('files', () => {
     expect(exported.fieldsUsed.map(f => f.path)).toContain('Document.QrContent');
 
     acceptConfirm(page, /Clear the current design/);
-    await toolsPanel(page).getByRole('button', { name: 'New', exact: true }).click();
+    await topBar(page).getByRole('button', { name: 'New', exact: true }).click();
     await expect(band(page, 'Totals')).toHaveCount(0);
 
     await chooseFile(page, 'Import', json('copy.json', exported));
@@ -40,7 +40,7 @@ test.describe('files', () => {
   test('a broken file is refused with a message', async ({ page }) => {
     await open(page);
     await chooseFile(page, 'Import', json('bad.json', { schemaVersion: 2, bands: 'no' }));
-    await expect(toolsPanel(page).getByRole('status')).toContainText('Template could not be opened');
+    await expect(topBar(page).getByRole('status')).toContainText('Template could not be opened');
     await expect(band(page, 'Header')).toBeVisible();
   });
 

@@ -44,6 +44,12 @@ export function findField(catalog: Catalog, path: string, repeat?: string): Cata
 
 export const fieldLabel = (field: CatalogField) => field.label || field.path;
 
+/** The label of an array field by its path, e.g. "Satırlar" for Lines; the path when the catalog has no such array. */
+export const arrayLabel = (catalog: Catalog, path: string) => {
+  const array = catalog.fields.find(f => f.path === path && f.type === 'array');
+  return array ? fieldLabel(array) : path;
+};
+
 export const DEFAULT_CATALOG: Catalog = {
   catalogVersion: 1,
   name: 'Genel fatura',

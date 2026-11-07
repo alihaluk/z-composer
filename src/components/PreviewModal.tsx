@@ -13,7 +13,7 @@ import { Segmented } from './ui/Field';
 import { CultureInput } from './ui/CultureInput';
 import { ZplCode } from './properties/ZplCode';
 
-export const PreviewModal = () => {
+export const PreviewModal = ({ className }: { className?: string }) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<CanvasMode>('sample');
@@ -49,7 +49,7 @@ export const PreviewModal = () => {
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} className="w-full bg-green-700 hover:bg-green-800 text-white shadow-sm">{t('preview.button')}</Button>
+      <Button onClick={() => setIsOpen(true)} className={cn('bg-green-700 hover:bg-green-800 text-white shadow-sm', className)}>{t('preview.button')}</Button>
       {isOpen && (
         <Dialog label={t('preview.title')} onClose={() => setIsOpen(false)} className="max-w-5xl">
           <div className="p-3 border-b flex justify-between items-center gap-3 bg-gray-50">

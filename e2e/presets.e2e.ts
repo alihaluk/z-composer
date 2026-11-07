@@ -1,5 +1,5 @@
 import { expect, test, type Dialog, type Page } from '@playwright/test';
-import { acceptConfirm, band, deselect, elementsOn, field, fill, loadPreset, open, propertiesPanel, toolsPanel } from './helpers';
+import { acceptConfirm, band, catalogAction, deselect, elementsOn, field, fill, loadPreset, open, toolsPanel, topBar } from './helpers';
 
 const picker = (page: Page) => page.getByRole('dialog', { name: 'Ready-made templates' });
 const catalogName = (page: Page) => toolsPanel(page).locator('section').filter({ has: page.getByRole('heading', { name: 'Field Catalog' }) }).locator('p').first();
@@ -19,7 +19,7 @@ test.describe('ready-made templates', () => {
   });
 
   test('the picker lists every template and closes with Escape', async ({ page }) => {
-    await toolsPanel(page).getByRole('button', { name: 'Ready-made templates…' }).click();
+    await topBar(page).getByRole('button', { name: 'Ready-made templates…' }).click();
     await expect(picker(page).getByRole('listitem')).toHaveCount(5);
     await expect(picker(page).getByRole('button', { name: 'Close' })).toBeFocused();
     await page.keyboard.press('Escape');
@@ -35,7 +35,7 @@ test.describe('ready-made templates', () => {
       await expect(catalogName(page)).toHaveText(preset.catalog);
       await expect(page.locator('main')).toContainText(preset.text);
       await deselect(page);
-      await expect(propertiesPanel(page).getByText('No problems found')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Design check: No problems found' })).toBeVisible();
 
       await page.getByRole('button', { name: 'Preview ZPL' }).click();
       const dialog = page.getByRole('dialog', { name: 'ZPL Preview' });
@@ -58,7 +58,7 @@ test.describe('ready-made templates', () => {
 
   test('the user\'s own catalog is replaced only when they agree', async ({ page }) => {
     const chooser = page.waitForEvent('filechooser');
-    await toolsPanel(page).getByRole('button', { name: 'From sample JSON' }).click();
+    await (await catalogAction(page, 'From sample JSON')).click();
     await (await chooser).setFiles({ name: 'mine.json', mimeType: 'application/json', buffer: Buffer.from('{"Order":{"No":"1"}}') });
     await expect(catalogName(page)).toHaveText('mine');
 
@@ -68,7 +68,7 @@ test.describe('ready-made templates', () => {
     await loadPreset(page, 'Despatch advice (e-İrsaliye)');
     await expect(band(page, 'Signatures')).toBeVisible();
     await expect(catalogName(page)).toHaveText('mine');
-    await expect(page.getByRole('group', { name: 'Zoom' }).getByRole('button', { name: /^Design check: / })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Design check: \d+ problems?$/ })).toBeVisible();
 
     acceptConfirm(page, /"Sevk irsaliyesi"/);
     await loadPreset(page, 'Despatch advice (e-İrsaliye)');
@@ -78,7 +78,7 @@ test.describe('ready-made templates', () => {
   test('a design with content is replaced only after asking', async ({ page }) => {
     await toolsPanel(page).getByRole('button', { name: 'Text', exact: true }).click();
     page.once('dialog', d => { expect(d.message()).toContain('"Collection receipt"'); void d.dismiss(); });
-    await toolsPanel(page).getByRole('button', { name: 'Ready-made templates…' }).click();
+    await topBar(page).getByRole('button', { name: 'Ready-made templates…' }).click();
     await picker(page).getByRole('button', { name: /^Collection receipt/ }).click();
     await expect(band(page, 'Payments')).toHaveCount(0);
     await expect(elementsOn(page, 'Header')).toHaveCount(1);
@@ -94,8 +94,8 @@ test.describe('ready-made templates', () => {
   });
 
   test('band names and template name follow the interface language', async ({ page }) => {
-    await toolsPanel(page).getByRole('group', { name: 'Language' }).getByRole('button', { name: 'tr' }).click();
-    await toolsPanel(page).getByRole('button', { name: 'Hazır şablonlar…' }).click();
+    await topBar(page).getByRole('group', { name: 'Language' }).getByRole('button', { name: 'tr' }).click();
+    await topBar(page).getByRole('button', { name: 'Hazır şablonlar…' }).click();
     await page.getByRole('dialog', { name: 'Hazır şablonlar' }).getByRole('button', { name: /^Tahsilat makbuzu/ }).click();
     await expect(page.getByLabel('Ödemeler bandı', { exact: true })).toBeVisible();
     await expect(page.getByLabel('İmzalar bandı', { exact: true })).toBeVisible();

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { band, bandLabel, open, propertiesPanel, toolsPanel } from './helpers';
+import { band, bandLabel, open, propertiesPanel, topBar } from './helpers';
 
 test.describe('app shell', () => {
   test('opens with an empty three-band template and no console errors', async ({ page }) => {
@@ -10,14 +10,14 @@ test.describe('app shell', () => {
 
     await expect(page.getByText('Start designing')).toBeVisible();
     for (const name of ['Header', 'Lines', 'Footer']) await expect(band(page, name)).toBeVisible();
-    await expect(bandLabel(page, 'Lines')).toHaveAttribute('title', /Repeat: Lines/);
+    await expect(bandLabel(page, 'Lines')).toHaveAttribute('title', /Repeat: Satırlar/);
     await expect(propertiesPanel(page).getByText('Printable width (mm)')).toBeVisible();
     expect(errors).toEqual([]);
   });
 
   test('switches the interface language and keeps Turkish upper case', async ({ page }) => {
     await open(page);
-    await toolsPanel(page).getByRole('group', { name: 'Language' }).getByRole('button', { name: 'tr' }).click();
+    await topBar(page).getByRole('group', { name: 'Language' }).getByRole('button', { name: 'tr' }).click();
     await expect(page.getByRole('heading', { name: 'Araç Kutusu' })).toBeVisible();
     await expect(page.locator('.zc-root')).toHaveAttribute('lang', 'tr');
     // Headings are upper-cased by CSS, which follows lang: with "tr" an i becomes İ.

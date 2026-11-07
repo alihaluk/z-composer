@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { elementsOn, field, fill, loadPreset, open, propertiesPanel, toolsPanel } from './helpers';
+import { elementsOn, field, fill, loadPreset, open, propertiesPanel, toolsPanel, topBar } from './helpers';
 
 /** axe-core findings of the page, or of the open dialog, as "rule: element" lines. */
 async function violations(page: Page, dialog = false) {
@@ -37,7 +37,7 @@ test.describe('accessibility (axe-core)', () => {
     expect(await violations(page, true)).toEqual([]);
     await page.keyboard.press('Escape');
 
-    await toolsPanel(page).getByRole('button', { name: 'Ready-made templates…' }).click();
+    await topBar(page).getByRole('button', { name: 'Ready-made templates…' }).click();
     expect(await violations(page, true)).toEqual([]);
   });
 

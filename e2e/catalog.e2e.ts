@@ -1,13 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
-import { acceptConfirm, elementsOn, field, loadPreset, open, propertiesPanel, tool, toolsPanel } from './helpers';
+import { acceptConfirm, catalogAction, elementsOn, field, loadPreset, open, propertiesPanel, tool, toolsPanel } from './helpers';
 
 const catalogPanel = (page: Page) => toolsPanel(page).locator('section').filter({ has: page.getByRole('heading', { name: 'Field Catalog' }) });
 const editor = (page: Page) => page.getByRole('dialog', { name: 'Field Catalog' });
 
 async function chooseFile(page: Page, button: string, data: unknown) {
   const chooser = page.waitForEvent('filechooser');
-  await catalogPanel(page).getByRole('button', { name: button }).click();
+  await (await catalogAction(page, button)).click();
   await (await chooser).setFiles({ name: 'orders.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
 }
 
@@ -54,7 +54,7 @@ test.describe('field catalog', () => {
     await expect(catalogPanel(page).getByRole('status').first()).toContainText('fields that are not in the catalog');
 
     acceptConfirm(page, /default catalog/);
-    await catalogPanel(page).getByRole('button', { name: 'Default catalog' }).click();
+    await (await catalogAction(page, 'Default catalog')).click();
     await expect(catalogPanel(page)).toContainText('37 fields');
     await expect(catalogPanel(page).getByText('fields that are not in the catalog')).toHaveCount(0);
   });
@@ -74,7 +74,7 @@ test.describe('field catalog', () => {
     await page.addInitScript(() => { delete (window as { showSaveFilePicker?: unknown }).showSaveFilePicker; });
     await page.reload();
     const download = page.waitForEvent('download');
-    await catalogPanel(page).getByRole('button', { name: 'Save catalog' }).click();
+    await (await catalogAction(page, 'Save catalog')).click();
     const file = await download;
     const saved = JSON.parse(readFileSync((await file.path())!, 'utf8'));
     expect(saved.fields.some((f: { path: string }) => f.path === 'Document.QrContent')).toBe(true);

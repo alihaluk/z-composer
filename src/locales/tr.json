@@ -4,6 +4,10 @@
     "undo": "Geri al (Ctrl/⌘+Z)",
     "redo": "Yinele (Ctrl/⌘+Shift+Z)"
   },
+  "topbar": {
+    "label": "Şablon komutları",
+    "untitled": "Adsız şablon"
+  },
   "toolbox": {
     "title": "Araç Kutusu",
     "hint": "Bir araca tıklayın (seçili banda eklenir) ya da tuvaldeki bir banda sürükleyin.",
@@ -64,7 +68,8 @@
       "boolean": "Evet / hayır",
       "image": "Görsel",
       "array": "Liste"
-    }
+    },
+    "manage": "Katalog içe / dışa aktar"
   },
   "files": {
     "title": "Dosya",
@@ -147,7 +152,8 @@
     "field": "Alan",
     "show": "Şu durumda göster",
     "notEmpty": "Boş değilse",
-    "notZero": "Sıfır değilse (negatif de gösterilir)"
+    "notZero": "Sıfır değilse (negatif de gösterilir)",
+    "marker": "Yalnız {{path}} için \"{{op}}\" sağlanırsa basılır"
   },
   "layers": {
     "title": "Katmanlar",
@@ -170,7 +176,8 @@
     "hint": "Bir alana tıklayınca seçili banda eklenir; bir banda sürükleyip de bırakabilirsiniz.",
     "itemHint": "tıklayın ya da bir banda sürükleyin",
     "arrayHint": "{{array}} dizisini tekrarlayan bantta basılır",
-    "noBand": "Bu alanlar {{array}} dizisini tekrarlayan bir bantta basılır. Önce bir bant seçip Tekrar ayarını {{array}} yapın."
+    "noBand": "Bu alanlar {{array}} dizisini tekrarlayan bir bantta basılır. Önce bir bant seçip Tekrar ayarını {{array}} yapın.",
+    "document": "Belge"
   },
   "check": {
     "title": "Tasarım kontrolü",
@@ -188,7 +195,9 @@
     "rootPrefix": "{{path}} bir belge alanı; tekrarlanan bantta $.{{path}} olarak bağlanır.",
     "noField": "İçerik olarak alan seçili ama alan seçilmemiş; yerine sabit metin basılır.",
     "emptyContent": "Birleşik içerikte metin ya da alan yok; hiçbir şey basılmaz.",
-    "noImage": "Görsel yüklenmemiş ve görsel alanı seçilmemiş; hiçbir şey basılmaz."
+    "noImage": "Görsel yüklenmemiş ve görsel alanı seçilmemiş; hiçbir şey basılmaz.",
+    "count_one": "{{count}} sorun",
+    "count_other": "{{count}} sorun"
   },
   "presets": {
     "title": "Hazır şablonlar",

@@ -1,19 +1,12 @@
 import { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { useTranslation } from 'react-i18next';
-import { Barcode, FilePlus, Image, Minus, QrCode, Redo2, Save, Square, Trash, Type, Undo2, type LucideIcon } from 'lucide-react';
-import { useStore } from 'zustand';
+import { Barcode, Image, Minus, QrCode, Save, Square, Trash, Type, type LucideIcon } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { bandNames } from '../lib/bandNames';
-import { emptyTemplate, parseTemplate, withFieldsUsed } from '../lib/templateIO';
-import { readJsonFile, saveJson } from '../lib/download';
-import { FileButton } from './ui/FileButton';
 import { createElement, type ToolType } from '../lib/tools';
 import { useEditor, useEditorStore } from '../store/editorStore';
 import { Button } from './ui/Button';
-import { PreviewModal } from './PreviewModal';
 import { CatalogPanel } from './CatalogPanel';
-import { PresetPicker } from './PresetPicker';
 
 const TOOLS: { tool: ToolType; icon: LucideIcon }[] = [
   { tool: 'text', icon: Type },
@@ -52,31 +45,14 @@ function ToolItem({ tool, icon: Icon }: { tool: ToolType; icon: LucideIcon }) {
   );
 }
 
-export function Sidebar({ allowLocalTemplates = true, catalogEditable = true, showLanguageSwitch = true, onSave }: { allowLocalTemplates?: boolean; catalogEditable?: boolean; showLanguageSwitch?: boolean; onSave?: () => void }) {
-  const { t, i18n } = useTranslation();
+export function Sidebar({ allowLocalTemplates = true, catalogEditable = true }: { allowLocalTemplates?: boolean; catalogEditable?: boolean }) {
+  const { t } = useTranslation();
   const store = useEditorStore();
   const templateName = useEditor(s => s.templateName);
   const savedTemplates = useEditor(s => s.savedTemplates);
-  const canUndo = useStore(store.temporal, s => s.pastStates.length > 0);
-  const canRedo = useStore(store.temporal, s => s.futureStates.length > 0);
   const [newName, setNewName] = useState('');
   const [message, setMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null);
   const s = store.getState();
-
-  const exportFile = () => {
-    const { template, templateName, catalog } = store.getState();
-    const fileName = `${templateName || `z-composer-${new Date().toISOString().slice(0, 10)}`}.json`;
-    void saveJson(withFieldsUsed(template, catalog), fileName, 'Z-Composer template');
-  };
-
-  const importFile = async (file: File) => {
-    try {
-      s.setTemplate(parseTemplate(await readJsonFile(file)), file.name.replace(/\.json$/i, ''));
-      setMessage(null);
-    } catch (e) {
-      setMessage({ kind: 'error', text: t('files.importFailed', { reason: e instanceof Error ? e.message : String(e) }) });
-    }
-  };
 
   const saveAsNew = () => {
     const name = newName.trim();
@@ -88,22 +64,6 @@ export function Sidebar({ allowLocalTemplates = true, catalogEditable = true, sh
 
   return (
     <div className="p-4 flex flex-col gap-5 h-full overflow-y-auto">
-      <div className="flex flex-wrap justify-between items-center gap-y-1">
-        <h2 className="text-base font-bold text-gray-800 whitespace-nowrap">Z-Composer</h2>
-        <div className="flex items-center gap-1">
-          {showLanguageSwitch && <div className="flex bg-gray-100 rounded p-0.5 gap-0.5" role="group" aria-label={t('language')}>
-            {['tr', 'en'].map(lng => (
-              <button key={lng} type="button" onClick={() => i18n.changeLanguage(lng)}
-                className={cn('text-[10px] px-2 h-6 rounded uppercase', i18n.resolvedLanguage === lng ? 'bg-white shadow text-blue-600 font-bold' : 'text-gray-600')}>
-                {lng}
-              </button>
-            ))}
-          </div>}
-          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={!canUndo} onClick={() => store.temporal.getState().undo()} title={t('toolbar.undo')} aria-label={t('toolbar.undo')}><Undo2 size={14} /></Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={!canRedo} onClick={() => store.temporal.getState().redo()} title={t('toolbar.redo')} aria-label={t('toolbar.redo')}><Redo2 size={14} /></Button>
-        </div>
-      </div>
-
       <section>
         <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2">{t('toolbox.title')}</h3>
         <div className="grid grid-cols-2 gap-2">
@@ -145,24 +105,7 @@ export function Sidebar({ allowLocalTemplates = true, catalogEditable = true, sh
         </section>
       )}
 
-      <section className="space-y-2 mt-auto">
-        <h3 className="text-xs font-semibold text-gray-500 uppercase">{t('files.title')}</h3>
-        {onSave && (
-          <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => { onSave(); setMessage({ kind: 'info', text: t('files.handedOver') }); }}>
-            <Save size={14} className="mr-2" />{t('files.save')}
-          </Button>
-        )}
-        {message && <p className={cn('text-[11px]', message.kind === 'error' ? 'text-red-600' : 'text-green-700')} role="status">{message.text}</p>}
-        <div className="grid grid-cols-3 gap-2">
-          <Button variant="outline" className="text-xs h-8 px-0" onClick={() => { if (window.confirm(t('files.confirmNew'))) s.setTemplate(emptyTemplate(bandNames(t))); }}>
-            <FilePlus size={13} className="mr-1" />{t('files.new')}
-          </Button>
-          <Button variant="outline" className="text-xs h-8 px-0" onClick={exportFile}>{t('files.export')}</Button>
-          <FileButton accept=".json,application/json" variant="outline" className="text-xs h-8 px-0" onFile={f => void importFile(f)}>{t('files.import')}</FileButton>
-        </div>
-        <PresetPicker catalogEditable={catalogEditable} label={t('files.loadPreset')} variant="outline" className="w-full text-xs" />
-        <PreviewModal />
-      </section>
+      {message && <p className={cn('text-[11px]', message.kind === 'error' ? 'text-red-600' : 'text-green-700')} role="status">{message.text}</p>}
     </div>
   );
 }

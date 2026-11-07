@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
-import { band, bandLabel, bandOf, deselect, designWhere, drag, elementsOn, field, fill, loadPreset, open, propertiesPanel, tool, toolsPanel } from './helpers';
+import { band, bandLabel, bandOf, catalogAction, deselect, designWhere, drag, elementsOn, field, fill, loadPreset, open, propertiesPanel, tool, toolsPanel, topBar } from './helpers';
 
 const checkList = (page: Page) => propertiesPanel(page).getByRole('list', { name: 'Design check' });
-const counter = (page: Page) => page.getByRole('group', { name: 'Zoom' }).getByRole('button', { name: /^Design check: / });
+const counter = (page: Page) => page.getByRole('button', { name: /^Design check: \d+ problems?$/ });
 const fieldItem = (page: Page, label: string) => toolsPanel(page).getByRole('region', { name: 'Fields' }).getByRole('button', { name: new RegExp(`^${label}`) });
 
 test.describe('design check', () => {
@@ -14,7 +14,7 @@ test.describe('design check', () => {
   test('the invoice preset has no problems', async ({ page }) => {
     await loadPreset(page);
     await deselect(page);
-    await expect(propertiesPanel(page).getByText('No problems found')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Design check: No problems found' })).toBeVisible();
     await expect(counter(page)).toHaveCount(0);
   });
 
@@ -24,7 +24,7 @@ test.describe('design check', () => {
     // The element's own panel says what is wrong.
     await expect(propertiesPanel(page).getByRole('list', { name: 'Design check' })).toContainText('The sample text does not fit');
     const el = elementsOn(page, 'Header').first();
-    await expect(counter(page)).toHaveAccessibleName('Design check: 1');
+    await expect(counter(page)).toHaveAccessibleName('Design check: 1 problem');
 
     // Unselected, the element is outlined dashed in red.
     await counter(page).click();
@@ -86,7 +86,7 @@ test.describe('design check', () => {
     // A text bound to a field the catalog loses.
     await fieldItem(page, 'Oran').click();
     const chooser = page.waitForEvent('filechooser');
-    await toolsPanel(page).getByRole('button', { name: 'From sample JSON' }).click();
+    await (await catalogAction(page, 'From sample JSON')).click();
     await (await chooser).setFiles({ name: 'other.json', mimeType: 'application/json', buffer: Buffer.from('{"Lines":[{"X":1}]}') });
     await bandLabel(page, 'Footer').click();
     await expect(propertiesPanel(page).getByRole('list', { name: 'Design check' })).toContainText('VatBreakdown is not in the catalog');
@@ -96,7 +96,7 @@ test.describe('design check', () => {
   });
 
   test('Turkish messages use a decimal comma', async ({ page }) => {
-    await toolsPanel(page).getByRole('group', { name: 'Language' }).getByRole('button', { name: 'tr' }).click();
+    await topBar(page).getByRole('group', { name: 'Language' }).getByRole('button', { name: 'tr' }).click();
     await toolsPanel(page).getByRole('region', { name: 'Alanlar' }).getByRole('button', { name: /^Firma adresi/ }).click();
     await fill(propertiesPanel(page).getByLabel('X (mm)', { exact: true }), '40');
     await expect(propertiesPanel(page).getByRole('list', { name: 'Tasarım kontrolü' })).toContainText(/Örnek metin sığmıyor: \d+,\d mm genişlik, 32 mm yer var/);

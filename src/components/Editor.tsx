@@ -12,7 +12,6 @@ import { fieldLabel } from '../lib/catalog';
 import { useEditor, useEditorStore, type EditorStore } from '../store/editorStore';
 import { type TemplateElement } from '../types';
 import { BandView } from './BandView';
-import { DesignCheckButton } from './DesignCheck';
 import { PresetPicker } from './PresetPicker';
 
 interface Drop {
@@ -229,7 +228,6 @@ export function Editor({ catalogEditable = true }: { catalogEditable?: boolean }
         </div>
       </div>
       <div className="sticky bottom-3 float-right mr-3 -mt-12 flex items-center gap-0.5 bg-white border rounded-md shadow px-1 py-0.5 z-40" role="group" aria-label={t('settings.zoom')}>
-        <DesignCheckButton />
         <button type="button" className="p-1 rounded hover:bg-gray-100" aria-label={t('zoom.out')} title={t('zoom.out')} onClick={() => store.getState().setZoom(Math.round((zoom - 0.25) * 4) / 4)}><Minus size={14} /></button>
         <span className="text-xs w-10 text-center tabular-nums">{Math.round(zoom * 100)}%</span>
         <button type="button" className="p-1 rounded hover:bg-gray-100" aria-label={t('zoom.in')} title={t('zoom.in')} onClick={() => store.getState().setZoom(Math.round((zoom + 0.25) * 4) / 4)}><Plus size={14} /></button>

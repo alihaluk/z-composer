@@ -120,7 +120,7 @@ export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) 
     >
       <ElementBody element={el} band={band} text={lines ? lines.join('\n') : shownText} dpi={dpi} preformatted={!!lines} />
       {el.condition?.path && (
-        <span title={`${el.condition.path} ${el.condition.op}`} className="absolute top-0 left-0 w-0 h-0 border-t-[5px] border-r-[5px] border-t-amber-500 border-r-transparent" />
+        <span title={t('condition.marker', { path: el.condition.path, op: t(`condition.${el.condition.op}`) })} className="absolute top-0 left-0 w-0 h-0 border-t-[5px] border-r-[5px] border-t-amber-500 border-r-transparent" />
       )}
       {el.locked && <Lock size={8} className="absolute -top-2.5 right-0 text-gray-500 pointer-events-none" />}
       {selected && !el.locked && (

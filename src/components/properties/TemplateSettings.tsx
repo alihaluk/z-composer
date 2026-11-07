@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { DPI_OPTIONS, PAPER_PRESETS_MM } from '../../lib/constants';
+import { arrayLabel } from '../../lib/catalog';
 import { CultureInput } from '../ui/CultureInput';
 import { generateTemplateZpl } from '../../lib/zplTemplate';
 import { useEditor, useEditorStore, type CanvasMode } from '../../store/editorStore';
@@ -14,7 +15,7 @@ export function TemplateSettings() {
   const { t } = useTranslation();
   const store = useEditorStore();
   const template = useEditor(s => s.template);
-  const zoom = useEditor(s => s.zoom);
+  const catalog = useEditor(s => s.catalog);
   const mode = useEditor(s => s.canvasMode);
   const locale = useEditor(s => s.previewLocale);
   const s = store.getState();
@@ -22,6 +23,20 @@ export function TemplateSettings() {
   return (
     <div className="space-y-4">
       <DesignCheckSection />
+      <Section title={t('bands.title')} actions={
+        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => s.addBand()}><Plus size={12} className="mr-1" />{t('bands.add')}</Button>
+      }>
+        <ul className="space-y-1">
+          {template.bands.map(b => (
+            <li key={b.id}>
+              <button type="button" className="w-full text-left text-xs px-2 py-1 rounded hover:bg-gray-100 flex justify-between" onClick={() => s.select({ bandId: b.id, ids: [] })}>
+                <span>{b.name}{b.repeat && arrayLabel(catalog, b.repeat) !== b.name ? ` ↻ ${arrayLabel(catalog, b.repeat)}` : ''}</span>
+                <span className="text-gray-500">{b.height} mm</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Section>
       <Section title={t('settings.printer')}>
         <Field label={t('settings.printableWidth')} hint={t('settings.printableWidthHint')}>
           {id => <NumberInput id={id} value={template.printer.widthMm} min={10} max={216} step={1} onChange={widthMm => s.updatePrinter({ widthMm })} />}
@@ -41,35 +56,14 @@ export function TemplateSettings() {
           )}
         </Field>
       </Section>
-
       <Section title={t('settings.view')}>
         <Segmented<CanvasMode> label={t('settings.canvasShows')} value={mode} onChange={m => s.setCanvasMode(m)}
           options={[{ value: 'fields', label: t('preview.fieldNames') }, { value: 'sample', label: t('preview.sampleData') }]} />
         <Field label={t('settings.previewCulture')} hint={t('settings.previewCultureHint')}>
           {id => <CultureInput id={id} value={locale} onChange={l => s.setPreviewLocale(l)} />}
         </Field>
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs text-gray-600"><span>{t('settings.zoom')}</span><span>{Math.round(zoom * 100)}%</span></div>
-          <input type="range" min="0.5" max="4" step="0.1" value={zoom} aria-label={t('settings.zoom')} onChange={e => s.setZoom(Number(e.target.value))} className="w-full accent-blue-600" />
-        </div>
       </Section>
-
-      <Section title={t('bands.title')} actions={
-        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => s.addBand()}><Plus size={12} className="mr-1" />{t('bands.add')}</Button>
-      }>
-        <ul className="space-y-1">
-          {template.bands.map(b => (
-            <li key={b.id}>
-              <button type="button" className="w-full text-left text-xs px-2 py-1 rounded hover:bg-gray-100 flex justify-between" onClick={() => s.select({ bandId: b.id, ids: [] })}>
-                <span>{b.name}{b.repeat ? ` ↻ ${b.repeat}` : ''}</span>
-                <span className="text-gray-500">{b.height} mm</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </Section>
-
-      <Section title={t('shortcuts.title')}>
+      <Section title={t('shortcuts.title')} collapsed>
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px]">
           {(['move', 'select', 'selectAll', 'copy', 'duplicate', 'delete', 'undo', 'deselect'] as const).map(k => (
             <div key={k} className="contents">
@@ -79,10 +73,13 @@ export function TemplateSettings() {
           ))}
         </dl>
       </Section>
-
-      <Section title={t('settings.output')}>
+      <Section title={t('settings.output')} collapsed>
         <ZplCode zpl={generateTemplateZpl(template)} />
       </Section>
+
+
+
+
     </div>
   );
 }

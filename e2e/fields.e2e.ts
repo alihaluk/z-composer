@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { band, bandLabel, bandOf, design, designWhere, drag, elementsOn, field, fill, open, propertiesPanel, templateZpl, toolsPanel } from './helpers';
+import { band, bandLabel, bandOf, catalogAction, design, designWhere, drag, elementsOn, field, fill, open, propertiesPanel, templateZpl, toolsPanel } from './helpers';
 
 const list = (page: Page) => toolsPanel(page).getByRole('region', { name: 'Fields' });
 /** A field of the list by its label. */
@@ -17,12 +17,13 @@ test.describe('field list', () => {
   });
 
   test('lists the catalog fields in groups, arrays marked as repeating', async ({ page }) => {
-    await expect(list(page).getByRole('region', { name: 'Company' })).toBeVisible();
+    await expect(list(page).getByRole('region', { name: 'Document' })).toBeVisible();
     await expect(list(page).getByRole('region', { name: 'Satırlar' })).toBeVisible();
     await expect(list(page).getByRole('region', { name: 'KDV dökümü' })).toBeVisible();
     // 37 fields in the default catalog, two of them arrays.
     await expect(list(page).getByRole('button')).toHaveCount(35);
-    await expect(fieldItem(page, 'Firma adı')).toContainText('Company.Name');
+    // The path is in the tooltip; the list shows labels.
+    await expect(fieldItem(page, 'Firma adı')).toHaveAttribute('title', /^Company\.Name · /);
   });
 
   test('search ignores case, Turkish letters and accents, and matches paths', async ({ page }) => {
@@ -180,7 +181,7 @@ test.describe('field list', () => {
 
   test('the list follows the catalog', async ({ page }) => {
     const chooser = page.waitForEvent('filechooser');
-    await toolsPanel(page).getByRole('button', { name: 'From sample JSON' }).click();
+    await (await catalogAction(page, 'From sample JSON')).click();
     await (await chooser).setFiles({ name: 'adisyon.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ Table: 'A4', Items: [{ Name: 'Çay', Qty: 2 }] })) });
     await expect(list(page).getByRole('button')).toHaveText([/^Table/, /^Name/, /^Qty/]);
     await expect(list(page).getByRole('region', { name: 'Items' })).toBeVisible();

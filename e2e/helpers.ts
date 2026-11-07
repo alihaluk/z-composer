@@ -39,6 +39,15 @@ export async function open(page: Page) {
 }
 
 export const toolsPanel = (page: Page) => page.locator('aside').first();
+/** The bar above the canvas with file actions, ready-made templates, the design check and the preview. */
+export const topBar = (page: Page) => page.getByRole('region', { name: /^(Template commands|Şablon komutları)$/ });
+
+/** A button of the folded catalog actions (import and save), opening them first. */
+export async function catalogAction(page: Page, name: string) {
+  const details = toolsPanel(page).locator('details').filter({ hasText: /Import and save catalog|Katalog içe/ });
+  if (!(await details.evaluate((d: HTMLDetailsElement) => d.open))) await details.locator('summary').click();
+  return details.getByRole('button', { name, exact: true });
+}
 export const propertiesPanel = (page: Page) => page.locator('aside').last();
 
 /** A tool of the toolbox; click adds it to the selected band. */
@@ -48,7 +57,7 @@ export const tool = (page: Page, name: string) => toolsPanel(page).getByRole('bu
 export const band = (page: Page, name: string) => page.getByLabel(`${name} band`, { exact: true });
 
 /** The label button beside a band, which selects it. */
-export const bandLabel = (page: Page, name: string) => page.getByRole('button', { name: new RegExp(`^${name} · `) });
+export const bandLabel = (page: Page, name: string) => page.locator('main').getByRole('button', { name, exact: true });
 
 /** Elements drawn on a band, in drawing order. */
 export const elementsOn = (page: Page, bandName: string) => band(page, bandName).getByRole('button');
@@ -100,7 +109,10 @@ export async function deselect(page: Page) {
 /** The template ZPL shown in the properties panel when nothing is selected. */
 export async function templateZpl(page: Page): Promise<string> {
   await deselect(page);
-  const pre = propertiesPanel(page).locator('pre').last();
+  // The template output is folded away at first.
+  const output = propertiesPanel(page).locator('details').filter({ hasText: /Template output|Şablon çıktısı/ });
+  if (!(await output.evaluate((d: HTMLDetailsElement) => d.open))) await output.locator('summary').click();
+  const pre = output.locator('pre');
   await expect(pre).toBeVisible();
   return (await pre.textContent()) ?? '';
 }
@@ -120,7 +132,7 @@ export async function loadPreset(page: Page, name = 'e-Fatura') {
   // Replacing a design with content asks first; tests accept it.
   const replace = (dialog: Dialog) => { if (dialog.message().startsWith('Replace the current design')) void dialog.accept(); };
   page.on('dialog', replace);
-  await toolsPanel(page).getByRole('button', { name: 'Ready-made templates…' }).click();
+  await topBar(page).getByRole('button', { name: 'Ready-made templates…' }).click();
   await page.getByRole('dialog', { name: 'Ready-made templates' }).getByRole('button', { name: new RegExp(`^${name.replace(/[()]/g, '\\$&')}`) }).click();
   await expect(page.getByRole('dialog', { name: 'Ready-made templates' })).toHaveCount(0);
   page.off('dialog', replace);

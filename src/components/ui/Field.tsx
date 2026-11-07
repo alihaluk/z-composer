@@ -2,7 +2,16 @@ import { useId, useState, type ReactNode } from 'react';
 import { cn } from '../../lib/utils';
 import { Label } from './Label';
 
-export function Section({ title, children, actions }: { title: string; children: ReactNode; actions?: ReactNode }) {
+export function Section({ title, children, actions, collapsed }: { title: string; children: ReactNode; actions?: ReactNode; collapsed?: boolean }) {
+  // Occasional settings start folded; the title opens them.
+  if (collapsed) {
+    return (
+      <details className="group border-t pt-3 first:border-t-0 first:pt-0">
+        <summary className="cursor-pointer select-none text-[11px] font-semibold uppercase tracking-wide text-gray-500 hover:text-gray-800">{title}</summary>
+        <div className="mt-2 space-y-2">{children}</div>
+      </details>
+    );
+  }
   return (
     <section className="space-y-2 border-t pt-3 first:border-t-0 first:pt-0">
       <div className="flex items-center justify-between">

@@ -63,7 +63,7 @@ test.describe('embedded designer', () => {
       await expect(sidebar.getByRole('button', { name, exact: true })).toHaveCount(0);
     }
     // A ready-made template keeps the host's catalog.
-    await sidebar.getByRole('button', { name: 'Ready-made templates…' }).click();
+    await designer(page).getByRole('region', { name: 'Template commands' }).getByRole('button', { name: 'Ready-made templates…' }).click();
     await page.getByRole('dialog', { name: 'Ready-made templates' }).getByRole('button', { name: /^Collection receipt/ }).click();
     await expect(designer(page).getByLabel('Payments band', { exact: true })).toBeVisible();
     await expect(sidebar.getByText('Adisyon')).toBeVisible();

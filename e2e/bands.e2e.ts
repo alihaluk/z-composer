@@ -10,13 +10,13 @@ test.describe('bands', () => {
 
     await fill(field(page, 'Name'), 'Notes');
     await fill(field(page, 'Height (mm)'), '12');
-    await expect(bandLabel(page, 'Notes')).toContainText('12mm');
+    await expect(bandLabel(page, 'Notes')).toHaveAttribute('title', /^Notes · 12 mm/);
 
     await field(page, 'Repeat').selectOption('VatBreakdown');
     // The band's condition only offers document fields.
     await field(page, 'Field').selectOption('Document.Note');
     await expect(field(page, 'Show when')).toHaveValue('notEmpty');
-    await expect(bandLabel(page, 'Notes')).toHaveAttribute('title', /Repeat: VatBreakdown\nCondition: Document\.Note · Not empty/);
+    await expect(bandLabel(page, 'Notes')).toHaveAttribute('title', /Repeat: KDV dökümü\nCondition: Document\.Note · Not empty/);
 
     const notes = bandOf(await designWhere(page, t => t.bands.some(b => b.name === 'Notes' && !!b.condition)), 'Notes');
     expect(notes).toMatchObject({ height: 12, repeat: 'VatBreakdown', condition: { path: 'Document.Note', op: 'notEmpty' } });
