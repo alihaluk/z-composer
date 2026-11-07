@@ -74,4 +74,20 @@ test.describe('selection', () => {
     await page.keyboard.press('Escape');
     await expect(propertiesPanel(page).getByText('Printable width (mm)')).toBeVisible();
   });
+
+  test('Ctrl or Cmd + A selects every element of every band', async ({ page }) => {
+    await page.keyboard.press('ControlOrMeta+a');
+    await expect(propertiesPanel(page).getByRole('heading', { name: '3 elements selected' })).toBeVisible();
+    // The selection moves together.
+    await page.keyboard.press('ArrowDown');
+    const t = await designWhere(page, d => bandOf(d, 'Footer').elements[0]?.y !== undefined && bandOf(d, 'Header').elements[0].y === 1.5);
+    expect(bandOf(t, 'Header').elements.map(e => e.y)).toEqual([1.5, 12.5]);
+
+    // In a text box it keeps selecting the text.
+    const name = page.getByLabel('New template name');
+    await name.fill('abc');
+    await name.press('ControlOrMeta+a');
+    expect(await name.evaluate((i: HTMLInputElement) => [i.selectionStart, i.selectionEnd])).toEqual([0, 3]);
+    await expect(propertiesPanel(page).getByRole('heading', { name: '3 elements selected' })).toBeVisible();
+  });
 });

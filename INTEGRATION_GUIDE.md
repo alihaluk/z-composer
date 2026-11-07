@@ -64,6 +64,8 @@ The designer fills its container; give the container a height.
 
 Each `ZComposer` has its own state and its own i18next instance, so several designers can live on one page and the host's translations are not touched.
 
+The end-to-end tests embed the built package in a host page this way (`e2e/host`, `e2e/embed.e2e.ts`); it is a working example of these props.
+
 ### Styles
 
 `style.css` contains no global reset: every rule is scoped to the designer's root element (`.zc-root`), so the host page keeps its own styles.

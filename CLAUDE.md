@@ -27,7 +27,7 @@ CI runs lint, test, build, build:lib and the end-to-end tests. Run them before c
 - `src/preview/`: ZPL parser and canvas renderer for the preview; barcodes come from BWIPP encoders through the `@bwipp` alias
 - `src/store/editorStore.ts`: zustand store with undo (zundo)
 - `src/components/`: editor UI
-- `e2e/`: end-to-end tests; `helpers.ts` reads the design from the stored draft
+- `e2e/`: end-to-end tests; `helpers.ts` reads the design from the stored draft; `e2e/host` is a host page that embeds the built package (`embed.e2e.ts`)
 - `src/locales/`: `tr.json` and `en.json`; every UI string goes in both
 - `docs/`: specification, scope, review findings, GİB karekod notes
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.0 — 2026-11-07
+
+### Added
+- Ctrl / Cmd + A selects every element of every band (in a text box it still selects the text). The shortcut list names it.
+- End-to-end tests of the embedded package: the built `dist-lib` runs in a host page (`e2e/host`) with the props of the integration guide: fixed language, `onSave`, `onChange`, no storage, a locked catalog, the locale, two designers on one page, the barcode chunk, and the host page's own styles staying untouched.
+
 ## 1.7.0 — 2026-11-07
 
 ### Added

@@ -50,6 +50,14 @@ function useKeyboard(store: EditorStore) {
       if (mod && key === 'c') { s.copySelection(); return; }
       if (mod && key === 'v') { e.preventDefault(); s.paste(); return; }
       if (mod && key === 'd') { e.preventDefault(); s.duplicateSelection(); return; }
+      if (mod && key === 'a') {
+        // Every element of every band; the focus band stays when there is one.
+        e.preventDefault();
+        const ids = s.template.bands.flatMap(b => b.elements.map(el => el.id));
+        const bandId = s.selection?.bandId ?? s.template.bands.find(b => b.elements.length)?.id;
+        if (ids.length && bandId) s.select({ bandId, ids });
+        return;
+      }
       if (e.key === 'Escape') { s.select(null); return; }
 
       const sel = s.selection;

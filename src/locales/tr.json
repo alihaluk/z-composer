@@ -260,6 +260,8 @@
     "move": "0,5 mm taşı; Shift ile 5 mm",
     "selectKeys": "Shift / Ctrl / ⌘ + tık",
     "select": "Seçime ekle veya çıkar",
+    "selectAllKeys": "Ctrl/⌘+A",
+    "selectAll": "Tüm öğeleri seç",
     "copyKeys": "Ctrl/⌘+C, V",
     "copy": "Kopyala, seçili banda yapıştır",
     "duplicateKeys": "Ctrl/⌘+D",

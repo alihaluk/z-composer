@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Z-Composer host</title>
+    <!-- Host styles the designer must not change, and must not be broken by. -->
+    <style>
+      body { margin: 0; font-family: Georgia, serif; }
+      .host-title { font-size: 28px; margin: 8px 16px; }
+      .host-list { list-style: disc; margin: 0 16px; padding-left: 24px; }
+      .designers { display: flex; gap: 8px; height: 760px; }
+      .designers > div { flex: 1; min-width: 0; }
+    </style>
+  </head>
+  <body>
+    <h1 class="host-title">Host application</h1>
+    <ul class="host-list"><li>Host item</li></ul>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

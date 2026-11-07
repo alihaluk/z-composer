@@ -260,6 +260,8 @@
     "move": "Move 0.5 mm; 5 mm with Shift",
     "selectKeys": "Shift / Ctrl / ⌘ + click",
     "select": "Add to or remove from the selection",
+    "selectAllKeys": "Ctrl/⌘+A",
+    "selectAll": "Select all elements",
     "copyKeys": "Ctrl/⌘+C, V",
     "copy": "Copy, paste into the selected band",
     "duplicateKeys": "Ctrl/⌘+D",

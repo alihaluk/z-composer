@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.host.tsbuildinfo",
+    "types": ["vite/client", "node"],
+    // The host page imports the package by name; its types are the library's source.
+    "paths": { "z-composer": ["./src/index.ts"] }
+  },
+  "include": ["e2e/host", "src/preview/bwipp.d.ts"],
+  "exclude": []
+}
