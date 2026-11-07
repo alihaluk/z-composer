@@ -193,6 +193,7 @@
   "presets": {
     "title": "Ready-made templates",
     "hint": "Each template comes with its own field catalog and sample data, so the preview shows it filled.",
+    "confirmReplace": "Replace the current design with \"{{name}}\"? Undo (Ctrl/⌘+Z) brings it back.",
     "close": "Close",
     "replaceCatalog": "This template comes with its own catalog, \"{{catalog}}\". Replace your catalog \"{{current}}\" with it? Cancel keeps your catalog; fields the template uses may then be missing.",
     "invoice": {

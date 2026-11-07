@@ -81,14 +81,21 @@ describe('optional element settings', () => {
     [{ fontBold: 'yes' }, 'fontBold must be true or false'],
     [{ fontSize: 0 }, 'fontSize must be a positive number'],
     [{ maxLines: 1.5 }, 'maxLines must be a positive whole number'],
-    [{ rotation: 45 }, 'rotation must be 0, 90, 180 or 270'],
-    [{ align: 'justify' }, 'align must be left, center or right'],
-    [{ overflow: 'scroll' }, 'overflow must be none, truncate or wrap'],
-    [{ barcodeType: 'ean13' }, 'barcodeType must be code128 or qr'],
+    [{ rotation: '90' }, 'rotation must be a number'],
+    [{ align: 3 }, 'align must be text'],
     [{ threshold: 300 }, 'threshold must be between 0 and 255'],
     [{ bitmap: { width: 2, height: 2 } }, 'bitmap must have a width, a height and data'],
   ])('refuses %j', (patch, message) => {
     expect(() => parseTemplate(withElement(patch))).toThrow(message);
+  });
+
+  it('drops choices a later version may add, so the element keeps its default', () => {
+    const el = parseTemplate(withElement({ align: 'justify', overflow: 'shrink', rotation: 45, barcodeType: 'ean13', fontBold: true })).bands[0].elements[0];
+    expect(el).not.toHaveProperty('align');
+    expect(el).not.toHaveProperty('overflow');
+    expect(el).not.toHaveProperty('rotation');
+    expect(el).not.toHaveProperty('barcodeType');
+    expect(el.fontBold).toBe(true);
   });
 
   it('reads null options as missing', () => {

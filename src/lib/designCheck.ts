@@ -1,6 +1,7 @@
 // Design check: problems a template would show only on paper, found from its layout, the catalog
 // and the catalog's sample data.
 import { ROOT_PREFIX, findField, type Catalog } from './catalog';
+import { templateBindings, type Binding } from './catalogIO';
 import { dotsPerMm, mmToDots } from './constants';
 import { displayText } from './elementDisplay';
 import { isComposed, isFieldPart, textMetrics } from './zplTemplate';
@@ -54,29 +55,17 @@ function sampleTexts(el: TemplateElement, band: Band, catalog: Catalog, locale: 
   return items.map(item => displayText(el, band, withItem(catalog, band.repeat!, item), 'sample', locale));
 }
 
-/** Paths an element or band binds to, with the kind of field each needs. */
-type BindingKind = 'value' | 'condition' | 'image' | 'array';
+// The field type each kind of binding needs; a condition may test any field, an array included.
+const fits = (type: string, kind: Binding['kind']) =>
+  kind === 'repeat' ? type === 'array' : kind === 'image' ? type === 'image' : kind === 'field' ? type !== 'array' && type !== 'image' : true;
 
-function bindings(el: TemplateElement): { path: string; kind: BindingKind }[] {
-  const out: { path: string; kind: BindingKind }[] = [];
-  if (el.isDynamic && el.parts) for (const p of el.parts) { if (isFieldPart(p) && p.path) out.push({ path: p.path, kind: 'value' }); }
-  else if (el.isDynamic && el.dataSource) out.push({ path: el.dataSource, kind: 'value' });
-  if (el.condition?.path) out.push({ path: el.condition.path, kind: 'condition' });
-  if (el.type === 'image' && el.imageKey) out.push({ path: el.imageKey, kind: 'image' });
-  return out;
-}
-
-// A condition may test any field, an array included (printed only when it has items).
-const fits = (type: string, kind: BindingKind) =>
-  kind === 'array' ? type === 'array' : kind === 'image' ? type === 'image' : kind === 'value' ? type !== 'array' && type !== 'image' : true;
-
-function bindingIssue(catalog: Catalog, band: Band, path: string, kind: BindingKind, elementId?: string): DesignIssue | null {
-  const field = findField(catalog, path, kind === 'array' ? undefined : band.repeat);
-  if (field && fits(field.type, kind)) return null;
+function bindingIssue(catalog: Catalog, b: Binding): DesignIssue | null {
+  const field = findField(catalog, b.path, b.repeat);
+  if (field && fits(field.type, b.kind)) return null;
   // In a repeating band a document field is reached with "$.".
-  const atRoot = !field && band.repeat && kind !== 'array' && !path.startsWith(ROOT_PREFIX) ? findField(catalog, path) : undefined;
-  const issueKind: IssueKind = atRoot && fits(atRoot.type, kind) ? 'rootPrefix' : 'missingField';
-  return { kind: issueKind, severity: SEVERITY[issueKind], bandId: band.id, elementId, path };
+  const atRoot = !field && b.repeat && !b.path.startsWith(ROOT_PREFIX) ? findField(catalog, b.path) : undefined;
+  const kind: IssueKind = atRoot && fits(atRoot.type, b.kind) ? 'rootPrefix' : 'missingField';
+  return { kind, severity: SEVERITY[kind], bandId: b.bandId, elementId: b.elementId, path: b.path };
 }
 
 /** How the text of an element prints with the sample data, when some of it is lost. */
@@ -115,10 +104,15 @@ export function checkDesign(template: Template, catalog: Catalog, locale: string
   const { widthMm, dpi } = template.printer;
   const add = (issue: DesignIssue | null) => { if (issue) issues.push(issue); };
 
+  // Bindings by their band or element, in template order.
+  const owned = new Map<string, Binding[]>();
+  for (const b of templateBindings(template)) {
+    const owner = b.elementId ?? `band:${b.bandId}`;
+    owned.set(owner, [...(owned.get(owner) ?? []), b]);
+  }
+
   for (const band of template.bands) {
-    if (band.repeat) add(bindingIssue(catalog, band, band.repeat, 'array'));
-    // A band's condition is read from the document, also on a repeating band.
-    if (band.condition?.path) add(bindingIssue(catalog, { ...band, repeat: undefined }, band.condition.path, 'condition'));
+    for (const b of owned.get(`band:${band.id}`) ?? []) add(bindingIssue(catalog, b));
 
     for (const el of band.elements) {
       const at = { bandId: band.id, elementId: el.id };
@@ -128,7 +122,7 @@ export function checkDesign(template: Template, catalog: Catalog, locale: string
       if (el.y + el.height > band.height + EPSILON_MM) {
         add({ kind: 'outsideBand', severity: SEVERITY.outsideBand, ...at, value: round1(el.y + el.height), limit: band.height });
       }
-      for (const b of bindings(el)) add(bindingIssue(catalog, band, b.path, b.kind, el.id));
+      for (const b of owned.get(el.id) ?? []) add(bindingIssue(catalog, b));
 
       if (el.isDynamic && (el.type === 'text' || el.type === 'barcode')) {
         // Without a field the static text is printed; composed content without parts prints nothing.
@@ -148,15 +142,17 @@ export function checkDesign(template: Template, catalog: Catalog, locale: string
   return issues;
 }
 
-/** The sample text of every barcode element that has one, by element id: what the caller measures for `checkDesign`. */
-export function barcodeSamples(template: Template, catalog: Catalog, locale: string): { id: string; kind: 'code128' | 'qr'; text: string; element: TemplateElement }[] {
+/**
+ * The sample texts of every barcode element, one per distinct row: what the caller measures for
+ * `checkDesign`, keeping the widest. Code 128 packs digit pairs, so the longest text is not always the widest.
+ */
+export function barcodeSamples(template: Template, catalog: Catalog, locale: string): { id: string; kind: 'code128' | 'qr'; texts: string[]; element: TemplateElement }[] {
   const out: ReturnType<typeof barcodeSamples> = [];
   for (const band of template.bands) {
     for (const el of band.elements) {
       if (el.type !== 'barcode') continue;
-      // The widest row decides; Code 128 width grows with the text length.
-      const text = sampleTexts(el, band, catalog, locale).reduce((a, b) => (b.length > a.length ? b : a), '');
-      if (text) out.push({ id: el.id, kind: el.barcodeType === 'qr' ? 'qr' : 'code128', text, element: el });
+      const texts = [...new Set(sampleTexts(el, band, catalog, locale).filter(Boolean))];
+      if (texts.length) out.push({ id: el.id, kind: el.barcodeType === 'qr' ? 'qr' : 'code128', texts, element: el });
     }
   }
   return out;

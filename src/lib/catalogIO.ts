@@ -188,17 +188,29 @@ export function parseCatalog(json: unknown): Catalog {
   };
 }
 
+export interface Binding {
+  path: string;
+  /** The array the path is relative to; band-level bindings are read from the document. */
+  repeat?: string;
+  kind: 'field' | 'condition' | 'image' | 'repeat';
+  bandId: string;
+  /** Unset for the band's own repeat and condition. */
+  elementId?: string;
+}
+
 /** Every binding of a template: field paths with the band context they are used in. */
-export function templateBindings(template: Template): { path: string; repeat?: string; kind: 'field' | 'condition' | 'image' | 'repeat' }[] {
-  const out: ReturnType<typeof templateBindings> = [];
+export function templateBindings(template: Template): Binding[] {
+  const out: Binding[] = [];
   for (const band of template.bands) {
-    if (band.repeat) out.push({ path: band.repeat, kind: 'repeat' });
-    if (band.condition?.path) out.push({ path: band.condition.path, kind: 'condition' });
+    const bandId = band.id;
+    if (band.repeat) out.push({ path: band.repeat, kind: 'repeat', bandId });
+    if (band.condition?.path) out.push({ path: band.condition.path, kind: 'condition', bandId });
     for (const el of band.elements) {
-      if (el.isDynamic && el.parts) for (const p of el.parts) { if ('path' in p && p.path) out.push({ path: p.path, repeat: band.repeat, kind: 'field' }); }
-      else if (el.isDynamic && el.dataSource) out.push({ path: el.dataSource, repeat: band.repeat, kind: 'field' });
-      if (el.condition?.path) out.push({ path: el.condition.path, repeat: band.repeat, kind: 'condition' });
-      if (el.type === 'image' && el.imageKey) out.push({ path: el.imageKey, repeat: band.repeat, kind: 'image' });
+      const at = { repeat: band.repeat, bandId, elementId: el.id };
+      if (el.isDynamic && el.parts) for (const p of el.parts) { if ('path' in p && p.path) out.push({ path: p.path, kind: 'field', ...at }); }
+      else if (el.isDynamic && el.dataSource) out.push({ path: el.dataSource, kind: 'field', ...at });
+      if (el.condition?.path) out.push({ path: el.condition.path, kind: 'condition', ...at });
+      if (el.type === 'image' && el.imageKey) out.push({ path: el.imageKey, kind: 'image', ...at });
     }
   }
   return out;

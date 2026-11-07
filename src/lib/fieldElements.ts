@@ -6,6 +6,13 @@ import { createElement } from './tools';
 import { lookup } from './zplFill';
 import { type Band, type TemplateElement } from '../types';
 
+/** The sample's data contexts of a band: every item for a repeating band, the document otherwise. */
+function sampleRows(catalog: Catalog, band: Band): unknown[] {
+  if (!band.repeat) return catalog.sample === undefined ? [] : [catalog.sample];
+  const items = lookup(catalog.sample, catalog.sample, band.repeat);
+  return Array.isArray(items) ? items : [sampleContext(catalog, band)].filter(v => v !== undefined);
+}
+
 /** A field as the field list offers it: a document field, or an item field of the array `array`. */
 export interface FieldRef {
   path: string;
@@ -57,8 +64,10 @@ export function createFieldElement(ref: FieldRef, band: Band, x: number, y: numb
 
   const bound: TemplateElement = { ...createElement('text', x, y, pageWidthMm), content: undefined, isDynamic: true, dataSource: path };
   if (type === 'number') {
-    const sample = lookup(sampleContext(catalog, band), catalog.sample, path);
-    return { ...bound, align: 'right', format: typeof sample === 'number' && Number.isInteger(sample) ? 'N0' : 'N2' };
+    // Whole numbers only when every sample row has one: 10 pieces in one row, 2.5 kg in another needs N2.
+    const values = sampleRows(catalog, band).map(row => lookup(row, catalog.sample, path));
+    const whole = values.length > 0 && values.every(v => typeof v === 'number' && Number.isInteger(v));
+    return { ...bound, align: 'right', format: whole ? 'N0' : 'N2' };
   }
   if (type === 'date') return { ...bound, format: 'dd.MM.yyyy' };
   if (type === 'datetime') return { ...bound, format: 'dd.MM.yyyy HH:mm' };

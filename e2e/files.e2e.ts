@@ -104,4 +104,12 @@ test('damaged browser storage does not break the designer', async ({ page }) => 
   await expect(list).toHaveText(['Good']);
   await list.getByRole('button', { name: 'Good', exact: true }).click();
   await expect(band(page, 'Header')).toBeVisible();
+
+  // Saving keeps the entries this version cannot open, for a version that can.
+  const name = toolsPanel(page).getByLabel('New template name');
+  await name.fill('New');
+  await name.press('Enter');
+  await expect(list).toHaveText(['Good', 'New']);
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('zcomposer_templates_v2')!) as unknown[]);
+  expect(stored.map(e => (typeof e === 'object' && e ? (e as { name: string }).name : e))).toEqual(['Good', 'New', 'Bad', 'junk']);
 });

@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.9.1 — 2026-11-07
+
+### Fixed
+- Accessibility: axe-core finds nothing on the designer, the design check and the dialogs in either language (contrast, names of canvas elements, band areas, keyboard access to scrollable code, named side panels, a level-one heading, translated language switch and field types).
+- A template with a setting of the wrong type (e.g. a number as text) was accepted and crashed ZPL generation; it is now refused with a message. A setting value from a later version is dropped instead of refusing the template.
+- Saved templates are validated when read; one that cannot be opened is left out of the list and kept in storage instead of breaking the designer.
+- Choosing a ready-made template asks before replacing a design with content.
+- Number fields from the field list keep decimals when any sample row has them; the barcode width check measures every sample row.
+- The karekod field's drop outline shows the corner it goes to.
+
+### Changed
+- Libraries load from their own chunk, which stays cached across releases.
+
 ## 1.9.0 — 2026-11-07
 
 ### Added

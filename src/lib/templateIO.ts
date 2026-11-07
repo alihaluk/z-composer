@@ -66,18 +66,25 @@ const OPTION_CHECKS: [keys: string[], ok: (v: unknown) => boolean, expected: str
   [['fontSize', 'thickness', 'moduleWidth', 'magnification'], v => isNumber(v) && v > 0, 'must be a positive number'],
   [['maxChars', 'maxLines', 'charsPerLine'], v => Number.isInteger(v) && (v as number) > 0, 'must be a positive whole number'],
   [['threshold'], v => isNumber(v) && v >= 0 && v <= 255, 'must be between 0 and 255'],
-  [['rotation'], v => [0, 90, 180, 270].includes(v as number), 'must be 0, 90, 180 or 270'],
-  [['align'], v => ['left', 'center', 'right'].includes(v as string), 'must be left, center or right'],
-  [['overflow'], v => ['none', 'truncate', 'wrap'].includes(v as string), 'must be none, truncate or wrap'],
-  [['barcodeType'], v => ['code128', 'qr'].includes(v as string), 'must be code128 or qr'],
+  [['rotation'], isNumber, 'must be a number'],
+  [['align', 'overflow', 'barcodeType'], v => typeof v === 'string', 'must be text'],
   [['bitmap'], v => isObject(v) && Number.isInteger(v.width) && (v.width as number) > 0 && Number.isInteger(v.height) && (v.height as number) > 0 && typeof v.data === 'string', 'must have a width, a height and data'],
 ];
 
-/** Optional element settings have the type the designer and the generator expect. */
+/** Values this version knows; a template from a later version may use others. */
+const CHOICES: Record<string, readonly unknown[]> = {
+  rotation: [0, 90, 180, 270], align: ['left', 'center', 'right'], overflow: ['none', 'truncate', 'wrap'], barcodeType: ['code128', 'qr'],
+};
+
+/**
+ * Optional element settings have the type the designer and the generator expect. A choice of the
+ * right type this version does not know is dropped, so the element falls back to the default.
+ */
 function checkOptions(e: Record<string, unknown>, where: string) {
   for (const [keys, ok, expected] of OPTION_CHECKS) {
     for (const key of keys) if (e[key] !== undefined && !ok(e[key])) fail(`${where}: ${key} ${expected}`);
   }
+  for (const [key, known] of Object.entries(CHOICES)) if (e[key] !== undefined && !known.includes(e[key])) delete e[key];
 }
 
 function validateV2(t: Record<string, unknown>): Template {

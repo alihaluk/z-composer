@@ -62,6 +62,10 @@ describe('createFieldElement', () => {
     expect(make(ref('Price', 'Lines'), lines)).toMatchObject({ format: 'N2' });
     // Without a sample value decimals are kept.
     expect(make(ref('Totals.Grand'), header, { ...DEFAULT_CATALOG, sample: undefined })).toMatchObject({ format: 'N2' });
+    // A later row with decimals keeps them, also when the first row is whole.
+    const sample = structuredClone(DEFAULT_CATALOG.sample) as { Lines: { Quantity: number }[] };
+    sample.Lines[2].Quantity = 2.5;
+    expect(make(ref('Quantity', 'Lines'), lines, { ...DEFAULT_CATALOG, sample })).toMatchObject({ format: 'N2' });
   });
 
   it('gives dates a fixed pattern', () => {

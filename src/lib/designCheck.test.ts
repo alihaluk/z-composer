@@ -107,14 +107,14 @@ describe('checkDesign', () => {
 });
 
 describe('barcodeSamples', () => {
-  it('gives the longest sample text of each barcode', () => {
+  it('gives every distinct sample text of each barcode', () => {
     const lines: Band = { id: 'l', name: 'Lines', height: 12, repeat: 'Lines', elements: [
       { id: 'b', type: 'barcode', barcodeType: 'code128', x: 2, y: 1, width: 40, height: 10, isDynamic: true, dataSource: 'Product.Code' },
     ] };
     const [sample] = barcodeSamples(template([lines]), DEFAULT_CATALOG, 'tr-TR');
     expect(sample).toMatchObject({ id: 'b', kind: 'code128' });
     const codes = (DEFAULT_CATALOG.sample as { Lines: { Product: { Code: string } }[] }).Lines.map(l => l.Product.Code);
-    expect(sample.text.length).toBe(Math.max(...codes.map(c => c.length)));
+    expect(sample.texts).toEqual(codes);
   });
 });
 

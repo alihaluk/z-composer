@@ -147,6 +147,24 @@ test.describe('field list', () => {
     await page.mouse.up();
   });
 
+  test('the karekod field shows where it will land while dragged', async ({ page }) => {
+    const item = fieldItem(page, 'Karekod içeriği (GİB JSON)');
+    await item.scrollIntoViewIfNeeded();
+    const box = (await item.boundingBox())!;
+    const footer = (await band(page, 'Footer').boundingBox())!;
+    await page.mouse.move(box.x + 10, box.y + 6);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 20, box.y + 16, { steps: 4 });
+    // Dragged over the bottom-left of the footer, the outline is in its top-right corner.
+    await page.mouse.move(footer.x + 30, footer.y + footer.height - 20, { steps: 10 });
+    // The band under the pointer is known from the next move on.
+    await page.mouse.move(footer.x + 34, footer.y + footer.height - 22);
+    await expect(page.getByText('47.5, 1.0 mm')).toBeVisible();
+    await page.mouse.up();
+    const qr = bandOf(await designWhere(page, t => bandOf(t, 'Footer').elements.length === 1), 'Footer').elements[0];
+    expect([qr.x, qr.y]).toEqual([47.5, 1]);
+  });
+
   test('the logo field becomes a dynamic image and the karekod field a GİB QR', async ({ page }) => {
     await fieldItem(page, 'Firma logosu').click();
     await fieldItem(page, 'Karekod içeriği (GİB JSON)').click();

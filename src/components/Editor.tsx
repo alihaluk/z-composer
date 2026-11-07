@@ -126,6 +126,8 @@ export function Editor({ catalogEditable = true }: { catalogEditable?: boolean }
       // A field can only be dropped on a band that can print it.
       const el = data.type === 'tool' ? createElement(data.tool, 0, 0, template.printer.widthMm) : createFieldElement(data.field, target, 0, 0, catalog, template.printer.widthMm);
       if (!el) return null;
+      // The karekod takes the corner the GİB guide asks for, wherever it is dropped; the outline shows it there.
+      if (data.type === 'field' && el.barcodeType === 'qr') return { bandId: target.id, x: el.x, y: el.y, width: el.width, height: el.height, guides: [] };
       box = { x: pxToMm((rect.left - e.over.rect.left) / zoom), y: pxToMm((rect.top - e.over.rect.top) / zoom), width: el.width, height: el.height };
     } else {
       const sourceIndex = template.bands.findIndex(b => b.id === data.bandId);

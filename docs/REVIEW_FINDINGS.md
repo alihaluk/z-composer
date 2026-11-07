@@ -2,7 +2,7 @@
 
 Findings from the review at the end of each roadmap step (docs/SCOPE.md). Critical findings are fixed in the step that found them; the rest are tracked here.
 
-Status at version 1.0.0: no finding is open. *deferred* items are planned in docs/SCOPE.md (Later); *accepted* and *won't fix* items are known limitations.
+Status at version 1.9.1: no finding is open. *deferred* items are planned in docs/SCOPE.md (Later); *accepted* and *won't fix* items are known limitations.
 
 Severity: **critical** (wrong output, data loss, broken core flow) · **major** (feature works incorrectly in a common case) · **minor** (cosmetic, rare, or a known approximation).
 
@@ -65,3 +65,16 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | E-1 | e2e | major | fixed | Dragging a tool from the toolbox onto a band did nothing: since the bands rewrite the drag context only wrapped the canvas, not the sidebar. Found by the end-to-end tests; the context now wraps the whole designer. |
 | E-2 | e2e | minor | fixed | A new condition took its default operator from the previous field's type, so a number field started with "not empty" instead of "not zero". |
 | E-3 | e2e | minor | fixed | "Custom pattern" set a listed format, so the pattern box could not be reached from the list. |
+| E-4 | 1.7.0 | minor | fixed | A field added to a full, short band (the invoice lines) could land below the band and print over the next one. Found by the design check. |
+| A-1 | accessibility | major | fixed | axe-core found low-contrast hints, band labels, segmented controls and the preview button; canvas elements without a name; band areas labelled without a role; scrollable code and preview not reachable by keyboard; two unnamed side panels; no level-one heading. All fixed; a test keeps axe at zero on the designer, the design check and the dialogs. |
+| I-1 | robustness | major | fixed | Template import did not check the type of optional settings: a number as text content passed and crashed ZPL generation. Found by a seeded fuzz test, which now damages every template and catalog thousands of times. |
+| I-2 | robustness | major | fixed | Saved templates were not validated when read, so a damaged one broke the designer when opened. They are now validated; one that cannot be opened is left out of the list and kept in storage. |
+| R12-1 | review | major | fixed | Unknown setting values (an alignment of a later version) refused the whole template; they are now dropped and the element keeps its default. |
+| R12-2 | review | major | fixed | Saving a template rewrote the stored list without the entries this version could not open, deleting them. |
+| R12-3 | review | minor | fixed | A number field from the field list got `N0` when the first sample row was whole, although later rows had decimals; every row is now checked. |
+| R12-4 | review | minor | fixed | The barcode width check measured the longest sample text; Code 128 packs digit pairs, so it now measures every row and keeps the widest. |
+| R12-5 | review | minor | fixed | Choosing a ready-made template replaced a design with content without asking, unlike "New". |
+| R12-6 | review | minor | fixed | The karekod field's drop outline showed under the pointer, but the QR goes to the top-right corner; the outline is now shown there. |
+| R12-7 | review | minor | fixed | The design check listed bindings with its own copy of `templateBindings`; it now uses the shared one. |
+| R12-8 | review | minor | no change | Design check results reach canvas elements through a context that changes with every edit; the canvas already re-renders every element on each template change, so no render is added. |
+| L-1 | emulator | — | verified | The five ready-made templates filled with their samples render in the Labelary Zebra emulator as in the preview (positions, line breaks, QR sizes), and the four karekods decode to the expected GİB JSON. |

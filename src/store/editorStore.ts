@@ -108,18 +108,21 @@ function readJsonArray(key: string): unknown[] {
   }
 }
 
+/** A stored entry as a saved template, or null when it cannot be opened (damaged, or from a later version). */
+function readEntry(value: unknown): SavedTemplate | null {
+  const entry = value as Partial<SavedTemplate> | null;
+  if (!entry || typeof entry.name !== 'string' || entry.template?.schemaVersion !== 2) return null;
+  try {
+    return { ...entry, name: entry.name, template: parseTemplate(entry.template), savedAt: typeof entry.savedAt === 'string' ? entry.savedAt : '' };
+  } catch {
+    return null;
+  }
+}
+
 function readSaved(key: string | null): SavedTemplate[] {
   if (!key) return [];
-  // A damaged entry is left out of the list; opening it would break the designer.
-  const saved = readJsonArray(key).flatMap((t): SavedTemplate[] => {
-    const entry = t as Partial<SavedTemplate> | null;
-    if (!entry || typeof entry.name !== 'string' || entry.template?.schemaVersion !== 2) return [];
-    try {
-      return [{ ...entry, name: entry.name, template: parseTemplate(entry.template), savedAt: typeof entry.savedAt === 'string' ? entry.savedAt : '' }];
-    } catch {
-      return [];
-    }
-  });
+  // An entry that cannot be opened is left out of the list; opening it would break the designer.
+  const saved = readJsonArray(key).map(readEntry).filter((t): t is SavedTemplate => t !== null);
   if (storageGet(key) === null && key === DEFAULT_STORAGE_KEY) {
     for (const old of readJsonArray(V1_STORAGE_KEY) as { name?: unknown; data?: unknown; createdAt?: string }[]) {
       try {
@@ -135,8 +138,10 @@ function readSaved(key: string | null): SavedTemplate[] {
 
 function writeSaved(key: string | null, templates: SavedTemplate[]): string | null {
   if (!key) return null;
+  // Entries this version cannot open are kept as they are, for a version that can.
+  const unreadable = readJsonArray(key).filter(entry => readEntry(entry) === null);
   try {
-    localStorage.setItem(key, JSON.stringify(templates));
+    localStorage.setItem(key, JSON.stringify([...templates, ...unreadable]));
     return null;
   } catch (e) {
     return e instanceof Error ? e.message : 'Storage is not available';

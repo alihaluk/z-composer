@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Dialog, type Page } from '@playwright/test';
 import { acceptConfirm, band, deselect, elementsOn, field, fill, loadPreset, open, propertiesPanel, toolsPanel } from './helpers';
 
 const picker = (page: Page) => page.getByRole('dialog', { name: 'Ready-made templates' });
@@ -45,12 +45,15 @@ test.describe('ready-made templates', () => {
   }
 
   test('switching between templates switches catalogs without asking', async ({ page }) => {
-    page.on('dialog', d => { throw new Error(`Unexpected dialog: ${d.message()}`); });
+    // Only the design is confirmed, never the catalog.
+    const messages: string[] = [];
+    page.on('dialog', d => { messages.push(d.message()); });
     await loadPreset(page, 'Collection receipt');
     await loadPreset(page, 'Restaurant bill (e-Adisyon)');
     await expect(catalogName(page)).toHaveText('Adisyon');
     await loadPreset(page, 'e-Fatura');
     await expect(catalogName(page)).toHaveText('Genel fatura');
+    expect(messages.every(m => m.startsWith('Replace the current design'))).toBe(true);
   });
 
   test('the user\'s own catalog is replaced only when they agree', async ({ page }) => {
@@ -60,7 +63,8 @@ test.describe('ready-made templates', () => {
     await expect(catalogName(page)).toHaveText('mine');
 
     // Cancel: the template loads, the catalog stays, the check reports the missing fields.
-    page.once('dialog', d => { expect(d.message()).toContain('"Sevk irsaliyesi"'); expect(d.message()).toContain('"mine"'); void d.dismiss(); });
+    const dismiss = (d: Dialog) => { if (d.message().includes('"mine"')) { page.off('dialog', dismiss); void d.dismiss(); } };
+    page.on('dialog', dismiss);
     await loadPreset(page, 'Despatch advice (e-İrsaliye)');
     await expect(band(page, 'Signatures')).toBeVisible();
     await expect(catalogName(page)).toHaveText('mine');
@@ -69,6 +73,15 @@ test.describe('ready-made templates', () => {
     acceptConfirm(page, /"Sevk irsaliyesi"/);
     await loadPreset(page, 'Despatch advice (e-İrsaliye)');
     await expect(catalogName(page)).toHaveText('Sevk irsaliyesi');
+  });
+
+  test('a design with content is replaced only after asking', async ({ page }) => {
+    await toolsPanel(page).getByRole('button', { name: 'Text', exact: true }).click();
+    page.once('dialog', d => { expect(d.message()).toContain('"Collection receipt"'); void d.dismiss(); });
+    await toolsPanel(page).getByRole('button', { name: 'Ready-made templates…' }).click();
+    await picker(page).getByRole('button', { name: /^Collection receipt/ }).click();
+    await expect(band(page, 'Payments')).toHaveCount(0);
+    await expect(elementsOn(page, 'Header')).toHaveCount(1);
   });
 
   test('loading a template is undone with Ctrl or Cmd + Z', async ({ page }) => {

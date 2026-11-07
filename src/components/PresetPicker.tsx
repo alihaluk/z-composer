@@ -17,6 +17,8 @@ export function PresetPicker({ catalogEditable, label, ...button }: Omit<ButtonP
 
   const apply = (preset: Preset) => {
     const s = store.getState();
+    // Like "New", replacing a design with content asks first.
+    if (s.template.bands.some(b => b.elements.length) && !window.confirm(t('presets.confirmReplace', { name: t(`presets.${preset.id}.name`) }))) return;
     // Each template comes with its own catalog. A catalog of another template is replaced without
     // asking; the user's own catalog only when they agree. A host that locks the catalog keeps it.
     if (catalogEditable && !same(s.catalog, preset.catalog)) {

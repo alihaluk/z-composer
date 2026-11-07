@@ -98,6 +98,21 @@ const template = parseTemplate(JSON.parse(storedJson)); // also migrates v1 temp
 const zplTemplate = generateTemplateZpl(template);      // docs/OUTPUT_SPEC.md
 ```
 
+`parseTemplate` throws when a template is damaged (a missing band, a setting of the wrong type). A setting value it does not know, such as an alignment added by a later version, is dropped and the element keeps its default.
+
+### Ready-made templates
+
+`PRESETS` lists the ready-made templates (`invoice`, `earsiv`, `despatch`, `receipt`, `adisyon`); each has `build()` and the `catalog` it binds to, with sample data. The builders are also exported one by one (`invoicePreset`, `earsivPreset`, `despatchPreset`, `receiptPreset`, `adisyonPreset`).
+
+```tsx
+import { PRESETS } from 'z-composer';
+
+const receipt = PRESETS.find(p => p.id === 'receipt')!;
+<ZComposer template={receipt.build()} catalog={receipt.catalog} />
+```
+
+In the designer, choosing a ready-made template also switches to its catalog. With `catalogEditable={false}` the host's catalog is kept; fields of the template the catalog lacks are then reported by the design check.
+
 Printing is outside Z-Composer's scope. The [output specification](./docs/OUTPUT_SPEC.md) defines how to fill a ZPL template in any language. `fillTemplate` is the reference implementation in TypeScript, used by the designer's preview. A filler written in another language can be checked against the [conformance suite](./conformance/README.md):
 
 ```ts

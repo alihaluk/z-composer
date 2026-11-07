@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from '@playwright/test';
+import { expect, type Dialog, type Locator, type Page } from '@playwright/test';
 
 export const STORAGE_KEY = 'zcomposer_templates_v2';
 
@@ -105,19 +105,25 @@ export async function templateZpl(page: Page): Promise<string> {
   return (await pre.textContent()) ?? '';
 }
 
-/** Answers the next window.confirm. */
+/** Accepts the next window.confirm whose message matches `expected` (any message without it). */
 export function acceptConfirm(page: Page, expected?: RegExp) {
-  page.once('dialog', async dialog => {
-    if (expected) expect(dialog.message()).toMatch(expected);
+  const handler = async (dialog: Dialog) => {
+    if (expected && !expected.test(dialog.message())) return;
+    page.off('dialog', handler);
     await dialog.accept();
-  });
+  };
+  page.on('dialog', handler);
 }
 
 /** Loads a ready-made template from the sidebar's picker (the e-Fatura by default). */
 export async function loadPreset(page: Page, name = 'e-Fatura') {
+  // Replacing a design with content asks first; tests accept it.
+  const replace = (dialog: Dialog) => { if (dialog.message().startsWith('Replace the current design')) void dialog.accept(); };
+  page.on('dialog', replace);
   await toolsPanel(page).getByRole('button', { name: 'Ready-made templates…' }).click();
   await page.getByRole('dialog', { name: 'Ready-made templates' }).getByRole('button', { name: new RegExp(`^${name.replace(/[()]/g, '\\$&')}`) }).click();
   await expect(page.getByRole('dialog', { name: 'Ready-made templates' })).toHaveCount(0);
+  page.off('dialog', replace);
   if (name === 'e-Fatura') await expect(band(page, 'Totals')).toBeVisible();
 }
 

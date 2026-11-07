@@ -193,6 +193,7 @@
   "presets": {
     "title": "Hazır şablonlar",
     "hint": "Her şablon kendi alan kataloğu ve örnek verisiyle gelir; önizlemede dolu görünür.",
+    "confirmReplace": "Mevcut tasarım \"{{name}}\" ile değiştirilsin mi? Geri al (Ctrl/⌘+Z) ile geri gelir.",
     "close": "Kapat",
     "replaceCatalog": "Bu şablon kendi kataloğuyla gelir: \"{{catalog}}\". Şu anki kataloğunuz \"{{current}}\" bununla değiştirilsin mi? İptal derseniz kataloğunuz kalır; şablonun kullandığı bazı alanlar eksik görünebilir.",
     "invoice": {

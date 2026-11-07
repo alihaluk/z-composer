@@ -19,14 +19,19 @@ export function useCheckedDesign(): DesignIssue[] {
 
   // Barcode widths are measured with the encoders, which load on demand.
   const samples = useMemo(() => barcodeSamples(template, catalog, locale), [template, catalog, locale]);
-  const key = JSON.stringify(samples.map(s => [s.id, s.kind, s.text, s.element.moduleWidth, s.element.magnification]));
+  const key = JSON.stringify(samples.map(s => [s.id, s.kind, s.texts, s.element.moduleWidth, s.element.magnification]));
   const [measured, setMeasured] = useState<{ key: string; widths: Record<string, number> } | null>(null);
   useEffect(() => {
     let cancelled = false;
-    void Promise.all(samples.map(async s => [s.id, (await measureBarcode(s.kind, s.text, { moduleWidth: s.element.moduleWidth, magnification: s.element.magnification }))?.width] as const))
-      .then(entries => {
-        if (!cancelled) setMeasured({ key, widths: Object.fromEntries(entries.filter((e): e is readonly [string, number] => e[1] !== undefined)) });
-      });
+    // The widest row of each barcode decides.
+    const measure = async (s: (typeof samples)[number]) => {
+      const sizes = await Promise.all(s.texts.map(text => measureBarcode(s.kind, text, { moduleWidth: s.element.moduleWidth, magnification: s.element.magnification })));
+      const widths = sizes.flatMap(size => (size ? [size.width] : []));
+      return [s.id, widths.length ? Math.max(...widths) : undefined] as const;
+    };
+    void Promise.all(samples.map(measure)).then(entries => {
+      if (!cancelled) setMeasured({ key, widths: Object.fromEntries(entries.filter((e): e is readonly [string, number] => e[1] !== undefined)) });
+    });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the key covers what the samples measure
   }, [key]);
