@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  DndContext, DragOverlay, MouseSensor, TouchSensor, pointerWithin, useSensor, useSensors,
-  type DragEndEvent, type DragMoveEvent, type DragStartEvent,
-} from '@dnd-kit/core';
+import { DragOverlay, useDndMonitor, type DragEndEvent, type DragMoveEvent, type DragStartEvent } from '@dnd-kit/core';
 import { useTranslation } from 'react-i18next';
 import { mmToPx, pxToMm } from '../lib/constants';
 import { sampleGrowth } from '../lib/elementDisplay';
@@ -93,7 +90,6 @@ export function Editor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only once, the user controls zoom afterwards
   }, []);
 
-  const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 4 } }), useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }));
   const catalog = useEditor(s => s.catalog);
   const mode = useEditor(s => s.canvasMode);
   const locale = useEditor(s => s.previewLocale);
@@ -170,10 +166,13 @@ export function Editor() {
     if (group.length === 1) s.select({ bandId: data.bandId, ids: [data.id] });
   };
 
+  // The drag context is ZComposer's, so tools of the sidebar can be dragged onto the canvas too.
+  useDndMonitor({ onDragStart: onStart, onDragMove: onMove, onDragEnd: onEnd, onDragCancel: () => { setDrag(null); setDrop(null); } });
+
   const dropBandIndex = drop ? template.bands.findIndex(b => b.id === drop.bandId) : -1;
 
   return (
-    <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={onStart} onDragMove={onMove} onDragEnd={onEnd} onDragCancel={() => { setDrag(null); setDrop(null); }}>
+    <>
       {/* w-max + mx-auto centres the page but keeps all of it reachable by scrolling when it is wider. */}
       <div ref={scrollRef} className="min-h-full w-max min-w-full py-8 pl-32 pr-8" onClick={() => store.getState().select(null)}>
         <div className="mx-auto" style={{ width: widthPx * zoom, minHeight: '100%' }}>
@@ -220,6 +219,6 @@ export function Editor() {
       <DragOverlay dropAnimation={null}>
         {drag?.type === 'tool' ? <div className="px-3 py-2 bg-white border rounded shadow text-sm capitalize opacity-90">{drag.tool}</div> : null}
       </DragOverlay>
-    </DndContext>
+    </>
   );
 }

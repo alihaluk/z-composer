@@ -62,3 +62,6 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | D-1 | dependencies | minor | fixed | `npm audit` reports a moderate advisory for `minimatch` inside ESLint (development only; the fix needs ESLint 10). The shipped dependencies have no known vulnerabilities. (1.3.0: ESLint 10 and a `minimatch` override; `npm audit` reports no vulnerabilities) |
 | U-15 | 1.4.0 | minor | fixed | Upper-case section titles used the English rule in the Turkish interface (`İÇERIK`, `METIN`); the component root now carries the interface language. |
 | U-16 | 1.4.0 | major | fixed | A reload or a closed tab lost the design being edited unless it had been saved; the standalone designer now keeps it as a draft. |
+| E-1 | e2e | major | fixed | Dragging a tool from the toolbox onto a band did nothing: since the bands rewrite the drag context only wrapped the canvas, not the sidebar. Found by the end-to-end tests; the context now wraps the whole designer. |
+| E-2 | e2e | minor | fixed | A new condition took its default operator from the previous field's type, so a number field started with "not empty" instead of "not zero". |
+| E-3 | e2e | minor | fixed | "Custom pattern" set a listed format, so the pattern box could not be reached from the list. |

@@ -39,11 +39,12 @@ export function FieldPicker({ band, value, onChange, types, label, includeArrays
 export function ConditionEditor({ band, value, onChange }: { band: Band; value: Condition | undefined; onChange: (c: Condition | undefined) => void }) {
   const { t } = useTranslation();
   const catalog = useEditor(s => s.catalog);
-  const fieldType = value?.path ? findField(catalog, value.path, band.repeat)?.type : undefined;
+  // A new condition on a number field defaults to "not zero"; the type is the newly picked field's.
+  const defaultOp = (path: string): ConditionOp => (findField(catalog, path, band.repeat)?.type === 'number' ? 'notZero' : 'notEmpty');
   return (
     <div className="space-y-2">
       <FieldPicker band={band} includeArrays label={t('condition.field')} value={value?.path}
-        onChange={path => onChange(path ? { path, op: value?.op ?? (fieldType === 'number' ? 'notZero' : 'notEmpty') } : undefined)} />
+        onChange={path => onChange(path ? { path, op: value?.op ?? defaultOp(path) } : undefined)} />
       {value?.path && (
         <Field label={t('condition.show')}>
           {id => (

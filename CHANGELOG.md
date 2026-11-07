@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.1 — 2026-11-07
+
+### Added
+- End-to-end tests (Playwright) run the built app in Chromium: elements, selection, bands, field binding and formats, composed content, barcodes and the GİB karekod, images, the preview dialog, the field catalog, saving, import and export, and the draft. CI runs them on every push (`npm run test:e2e`).
+
+### Fixed
+- Dragging a tool from the toolbox onto a band did nothing; only clicking a tool added an element. The drag context now covers the toolbox as well as the canvas.
+- A new condition on a number field started as "not empty" instead of "not zero".
+- "Custom pattern" in the format list chose `dd.MM.yyyy`, a listed format, so the pattern box never appeared; it now starts from `dd.MM.yyyy HH:mm` and shows the box.
+
 ## 1.5.0 — 2026-11-04
 
 ### Added

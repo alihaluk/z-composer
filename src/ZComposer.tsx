@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { I18nextProvider, useTranslation } from 'react-i18next';
+import { DndContext, MouseSensor, TouchSensor, pointerWithin, useSensor, useSensors } from '@dnd-kit/core';
 import { Layout } from './components/Layout';
 import { Sidebar } from './components/Sidebar';
 import { Editor } from './components/Editor';
@@ -70,6 +71,7 @@ export function ZComposer({ template, catalog, language, locale, storageKey, cat
   const [i18n] = useState(() => createI18n(language));
   const [store] = useState(() => createEditorStore({ template, emptyTemplate: emptyTemplate(bandNames(i18n.t)), catalog, storageKey, locale, defaultLocale: defaultLocale(i18n.resolvedLanguage) }));
   useBitmapRepair(store);
+  const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 4 } }), useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }));
 
   useEffect(() => { if (language && i18n.resolvedLanguage !== language) void i18n.changeLanguage(language); }, [i18n, language]);
   useEffect(() => { if (locale) store.getState().setPreviewLocale(locale); }, [store, locale]);
@@ -90,9 +92,12 @@ export function ZComposer({ template, catalog, language, locale, storageKey, cat
     <I18nextProvider i18n={i18n}>
       <EditorStoreContext.Provider value={store}>
         <LanguageRoot className={cn('zc-root h-full', className)}>
-          <Layout sidebar={<Sidebar allowLocalTemplates={storageKey !== null} catalogEditable={catalogEditable} showLanguageSwitch={!language} onSave={save} />} propertiesPanel={<PropertiesPanel />}>
-            <Editor />
-          </Layout>
+          {/* One drag context for the whole designer: tools are dragged from the sidebar onto the canvas. */}
+          <DndContext sensors={sensors} collisionDetection={pointerWithin}>
+            <Layout sidebar={<Sidebar allowLocalTemplates={storageKey !== null} catalogEditable={catalogEditable} showLanguageSwitch={!language} onSave={save} />} propertiesPanel={<PropertiesPanel />}>
+              <Editor />
+            </Layout>
+          </DndContext>
         </LanguageRoot>
       </EditorStoreContext.Provider>
     </I18nextProvider>

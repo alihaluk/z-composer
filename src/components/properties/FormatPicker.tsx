@@ -7,6 +7,9 @@ import { useEditor } from '../../store/editorStore';
 import { type Band } from '../../types';
 import { Checkbox, Field, SelectInput, TextInput } from '../ui/Field';
 
+// A custom pattern starts from one that is not in the list, so its text box shows.
+const CUSTOM_START = 'dd.MM.yyyy HH:mm';
+
 /** Format code and culture choice for one field, with examples from its sample value. */
 export function FormatPicker({ band, path, format, invariant, onChange }: {
   band: Band; path: string | undefined; format: string | undefined; invariant: boolean | undefined;
@@ -29,7 +32,7 @@ export function FormatPicker({ band, path, format, invariant, onChange }: {
           {id => (
             <div className="space-y-1">
               <SelectInput id={id} value={known ? format! : format ? 'custom' : ''}
-                onChange={v => onChange({ format: v === 'custom' ? format || 'dd.MM.yyyy' : v || undefined, invariant })}>
+                onChange={v => onChange({ format: v === 'custom' ? CUSTOM_START : v || undefined, invariant })}>
                 <option value="">{t('properties.formatNone')}</option>
                 {formats.map(f => (
                   <option key={f} value={f}>{f} · {formatValue(exampleValue, f, locale, !!invariant) ?? '—'} ({t(`formats.${f}`, { defaultValue: t('properties.formatPattern') })})</option>
@@ -37,7 +40,7 @@ export function FormatPicker({ band, path, format, invariant, onChange }: {
                 {fieldType !== 'number' && <option value="custom">{t('properties.formatCustom')}</option>}
               </SelectInput>
               {format && !known && (
-                <TextInput value={format} placeholder="dd.MM.yyyy HH:mm" onChange={f => onChange({ format: f.replace(/[|}\r\n]/g, '') || undefined, invariant })} />
+                <TextInput value={format} placeholder={CUSTOM_START} onChange={f => onChange({ format: f.replace(/[|}\r\n]/g, '') || undefined, invariant })} />
               )}
             </div>
           )}

@@ -28,6 +28,7 @@ The designer saves a JSON template and produces a ZPL template with placeholders
 npm install
 npm run dev        # standalone app
 npm test           # unit tests
+npm run test:e2e   # end-to-end tests (first: npx playwright install chromium)
 npm run lint
 npm run build      # standalone app → dist/
 npm run build:lib  # embeddable package → dist-lib/

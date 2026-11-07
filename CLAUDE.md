@@ -14,11 +14,12 @@ The test printer is a Zebra ZQ521 with 3-inch paper (203 dpi).
 
 - `npm run dev`: dev server
 - `npm test`: vitest (includes the conformance suite)
+- `npm run test:e2e`: Playwright end-to-end tests against the built app (`e2e/`; first run `npx playwright install chromium`)
 - `npm run lint`: ESLint
 - `npm run build`: type check and app build
 - `npm run build:lib`: library build (`dist-lib`)
 
-CI runs lint, test, build and build:lib. Run all four before committing.
+CI runs lint, test, build, build:lib and the end-to-end tests. Run them before committing.
 
 ## Layout
 
@@ -26,6 +27,7 @@ CI runs lint, test, build and build:lib. Run all four before committing.
 - `src/preview/`: ZPL parser and canvas renderer for the preview; barcodes come from BWIPP encoders through the `@bwipp` alias
 - `src/store/editorStore.ts`: zustand store with undo (zundo)
 - `src/components/`: editor UI
+- `e2e/`: end-to-end tests; `helpers.ts` reads the design from the stored draft
 - `src/locales/`: `tr.json` and `en.json`; every UI string goes in both
 - `docs/`: specification, scope, review findings, GİB karekod notes
 
@@ -61,4 +63,4 @@ CI runs lint, test, build and build:lib. Run all four before committing.
 - **Think first.** State assumptions. When a request has more than one reading, say so. Ask the owner only for decisions that are theirs or hard to reverse; otherwise choose a sensible default, say which, and continue.
 - **Keep it simple.** Write the least code that solves the problem. No speculative features, options or abstractions.
 - **Change only what the task needs.** Match the existing style. Mention unrelated problems instead of fixing them on the side. Remove what your own change left unused.
-- **Verify.** Turn the task into a check: a failing test that then passes, a conformance case, or a look at the running app. Do not call a task done before the check passes.
+- **Verify.** Turn the task into a check: a failing test that then passes, a conformance case, an end-to-end test for a UI flow, or a look at the running app. Do not call a task done before the check passes.
