@@ -298,7 +298,7 @@
     "title": "Kısayollar",
     "moveKeys": "Oklar",
     "move": "0,5 mm taşı; Shift ile 5 mm",
-    "selectKeys": "Shift / Ctrl / ⌘ + tık",
+    "selectKeys": "Shift / Ctrl / ⌘ + tık, Enter",
     "select": "Seçime ekle veya çıkar",
     "selectAllKeys": "Ctrl/⌘+A",
     "selectAll": "Tüm öğeleri seç",

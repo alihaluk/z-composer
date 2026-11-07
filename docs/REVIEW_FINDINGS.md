@@ -2,7 +2,7 @@
 
 Findings from the review at the end of each roadmap step (docs/SCOPE.md). Critical findings are fixed in the step that found them; the rest are tracked here.
 
-Status at version 1.9.1: no finding is open. *deferred* items are planned in docs/SCOPE.md (Later); *accepted* and *won't fix* items are known limitations.
+Status at version 1.9.2: no finding is open. *deferred* items are planned in docs/SCOPE.md (Later); *accepted* and *won't fix* items are known limitations.
 
 Severity: **critical** (wrong output, data loss, broken core flow) · **major** (feature works incorrectly in a common case) · **minor** (cosmetic, rare, or a known approximation).
 
@@ -78,3 +78,5 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | R12-7 | review | minor | fixed | The design check listed bindings with its own copy of `templateBindings`; it now uses the shared one. |
 | R12-8 | review | minor | no change | Design check results reach canvas elements through a context that changes with every edit; the canvas already re-renders every element on each template change, so no render is added. |
 | L-1 | emulator | — | verified | The five ready-made templates filled with their samples render in the Labelary Zebra emulator as in the preview (positions, line breaks, QR sizes), and the four karekods decode to the expected GİB JSON. |
+| A-2 | accessibility | minor | fixed | Canvas elements could be reached with Tab but not selected with the keyboard; Enter or Space now selects (Shift adds), and the focused element is outlined. |
+| P-1 | performance | — | verified | A 300-element template imports and renders in about 0.13 s; moving one element or all 300 with the arrow keys shows within two frames (17–29 ms, Chromium, M-series Mac). |

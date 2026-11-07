@@ -176,4 +176,20 @@ test.describe('elements', () => {
     await expect.poll(async () => (await header.boundingBox())!.height).toBeGreaterThan(plain);
     expect(await templateZpl(page)).toContain('^FX ZC:GROW');
   });
+
+  test('elements are selected and moved with the keyboard alone', async ({ page }) => {
+    await tool(page, 'Text').click();
+    await tool(page, 'Box').click();
+    await page.keyboard.press('Escape');
+    const [text, box] = [elementsOn(page, 'Header').nth(0), elementsOn(page, 'Header').nth(1)];
+    await text.focus();
+    await page.keyboard.press('Enter');
+    await expect(propertiesPanel(page).getByRole('heading', { name: 'Text', exact: true }).first()).toBeVisible();
+    await box.focus();
+    await page.keyboard.press('Shift+Space');
+    await expect(propertiesPanel(page).getByRole('heading', { name: '2 elements selected' })).toBeVisible();
+    await page.keyboard.press('ArrowDown');
+    const t = await designWhere(page, d => bandOf(d, 'Header').elements.every(e => e.y > 1));
+    expect(bandOf(t, 'Header').elements.map(e => e.y)).toEqual([1.5, 3.5]);
+  });
 });

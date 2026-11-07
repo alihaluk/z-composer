@@ -298,7 +298,7 @@
     "title": "Shortcuts",
     "moveKeys": "Arrows",
     "move": "Move 0.5 mm; 5 mm with Shift",
-    "selectKeys": "Shift / Ctrl / ⌘ + click",
+    "selectKeys": "Shift / Ctrl / ⌘ + click, Enter",
     "select": "Add to or remove from the selection",
     "selectAllKeys": "Ctrl/⌘+A",
     "selectAll": "Select all elements",

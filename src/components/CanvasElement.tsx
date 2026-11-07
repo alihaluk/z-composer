@@ -69,7 +69,8 @@ export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) 
     window.addEventListener('pointerup', up);
   };
 
-  const select = (e: React.MouseEvent) => {
+  // Click, or Enter / Space on the focused element; Shift, Ctrl or Cmd add to the selection.
+  const select = (e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
     const { selection, select } = store.getState();
     if ((e.shiftKey || e.metaKey || e.ctrlKey) && selection) {
@@ -102,7 +103,7 @@ export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) 
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group select-none outline-1 outline-transparent hover:outline-blue-300',
+        'group select-none outline-1 outline-transparent hover:outline-blue-300 focus-visible:ring-2 focus-visible:ring-blue-500',
         el.locked ? 'cursor-default' : 'cursor-move',
         issue === 'error' && 'outline-red-500',
         issue === 'warning' && 'outline-amber-500',
@@ -113,6 +114,7 @@ export function CanvasElement({ element: el, band, offsetY = 0, lines }: Props) 
       onClick={select}
       {...listeners}
       {...attributes}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(e); } }}
       // Its type and the text it shows, for screen readers.
       aria-label={[t(`tools.${el.type === 'barcode' && el.barcodeType === 'qr' ? 'qr' : el.type}`), el.type === 'image' ? el.imageKey : lines ? lines.join(' ') : shownText].filter(Boolean).join(': ')}
     >

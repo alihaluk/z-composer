@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.2 — 2026-11-07
+
+### Fixed
+- Canvas elements are selected with Enter or Space when focused (Shift adds to the selection) and show a focus outline, so the canvas works with the keyboard alone.
+
 ## 1.9.1 — 2026-11-07
 
 ### Fixed
