@@ -8,6 +8,6 @@ export type * from './types';
 export { DEFAULT_CATALOG, type Catalog, type CatalogField, type FieldType } from './lib/catalog';
 export { catalogFromJsonSchema, catalogFromSample, missingFields, parseCatalog, sampleFromCatalog } from './lib/catalogIO';
 export { emptyTemplate, parseTemplate, withFieldsUsed } from './lib/templateIO';
-export { invoicePreset } from './lib/presets';
+export { PRESETS, adisyonPreset, despatchPreset, earsivPreset, invoicePreset, receiptPreset, type Preset, type PresetId } from './lib/presets';
 export { generateTemplateZpl } from './lib/zplTemplate';
 export { fillTemplate, type FillOptions } from './lib/zplFill';

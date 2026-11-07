@@ -5,9 +5,6 @@ import { mmToPx, pxToMm } from '../lib/constants';
 import { sampleGrowth } from '../lib/elementDisplay';
 import { snapPosition, type Guide } from '../lib/snapping';
 import { fitZoom } from '../lib/zoom';
-import { invoicePreset } from '../lib/presets';
-import { presetBandNames } from '../lib/bandNames';
-import { Button } from './ui/Button';
 import { Maximize, Minus, Plus } from 'lucide-react';
 import { createElement, type ToolType } from '../lib/tools';
 import { createFieldElement, type FieldRef } from '../lib/fieldElements';
@@ -16,6 +13,7 @@ import { useEditor, useEditorStore, type EditorStore } from '../store/editorStor
 import { type TemplateElement } from '../types';
 import { BandView } from './BandView';
 import { DesignCheckButton } from './DesignCheck';
+import { PresetPicker } from './PresetPicker';
 
 interface Drop {
   bandId: string;
@@ -80,7 +78,7 @@ function useKeyboard(store: EditorStore) {
   }, [store]);
 }
 
-export function Editor() {
+export function Editor({ catalogEditable = true }: { catalogEditable?: boolean }) {
   const { t } = useTranslation();
   const store = useEditorStore();
   const template = useEditor(s => s.template);
@@ -199,7 +197,7 @@ export function Editor() {
             <div className="mb-4 rounded-lg border border-dashed border-blue-300 bg-white/90 p-4 text-center" onClick={e => e.stopPropagation()}>
               <p className="font-semibold text-gray-800">{t('empty.title')}</p>
               <p className="mt-1 text-sm text-gray-500">{t('empty.text')}</p>
-              <Button size="sm" variant="outline" className="mt-3" onClick={() => store.getState().setTemplate(invoicePreset(presetBandNames(t)), t('files.presetName'))}>{t('empty.preset')}</Button>
+              <PresetPicker catalogEditable={catalogEditable} label={t('empty.preset')} size="sm" variant="outline" className="mt-3" />
             </div>
           )}
           <div className="relative shadow-lg bg-white" style={{ width: widthPx, transform: `scale(${zoom})`, transformOrigin: 'top left' }}>

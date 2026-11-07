@@ -28,9 +28,10 @@ test.describe('app shell', () => {
     await expect(page.getByRole('heading', { name: 'Araç Kutusu' })).toBeVisible();
   });
 
-  test('the empty state loads the invoice preset', async ({ page }) => {
+  test('the empty state opens the ready-made templates', async ({ page }) => {
     await open(page);
-    await page.getByRole('button', { name: 'Load the preset' }).click();
+    await page.getByRole('button', { name: 'Choose a template' }).click();
+    await page.getByRole('dialog', { name: 'Ready-made templates' }).getByRole('button', { name: /^e-Fatura/ }).click();
     for (const name of ['Header', 'Lines', 'VAT title', 'VAT lines', 'Totals', 'Footer']) await expect(band(page, name)).toBeVisible();
     await expect(page.getByText('Start designing')).toHaveCount(0);
   });

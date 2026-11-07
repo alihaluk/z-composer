@@ -97,7 +97,7 @@ export function ZComposer({ template, catalog, language, locale, storageKey, cat
           <DndContext sensors={sensors} collisionDetection={pointerWithin}>
             <DesignIssuesProvider>
               <Layout sidebar={<Sidebar allowLocalTemplates={storageKey !== null} catalogEditable={catalogEditable} showLanguageSwitch={!language} onSave={save} />} propertiesPanel={<PropertiesPanel />}>
-                <Editor />
+                <Editor catalogEditable={catalogEditable} />
               </Layout>
             </DesignIssuesProvider>
           </DndContext>

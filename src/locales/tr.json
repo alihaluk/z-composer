@@ -69,8 +69,7 @@
     "confirmNew": "Mevcut tasarım temizlensin mi? Kaydedilmemiş değişiklikler kaybolur.",
     "export": "Dışa aktar",
     "import": "İçe aktar",
-    "loadPreset": "Hazır fatura şablonu",
-    "presetName": "Hazır Fatura",
+    "loadPreset": "Hazır şablonlar…",
     "importFailed": "Şablon açılamadı: {{reason}}",
     "saveFailed": "Kaydedilemedi: {{reason}}",
     "saved": "\"{{name}}\" kaydedildi",
@@ -126,7 +125,10 @@
       "footer": "Alt bilgi",
       "vatTitle": "KDV başlığı",
       "vatLines": "KDV satırları",
-      "totals": "Toplamlar"
+      "totals": "Toplamlar",
+      "payments": "Ödemeler",
+      "signatures": "İmzalar",
+      "discount": "İndirim"
     }
   },
   "condition": {
@@ -176,6 +178,32 @@
     "noField": "İçerik olarak alan seçili ama alan seçilmemiş; yerine sabit metin basılır.",
     "emptyContent": "Birleşik içerikte metin ya da alan yok; hiçbir şey basılmaz.",
     "noImage": "Görsel yüklenmemiş ve görsel alanı seçilmemiş; hiçbir şey basılmaz."
+  },
+  "presets": {
+    "title": "Hazır şablonlar",
+    "hint": "Her şablon kendi alan kataloğu ve örnek verisiyle gelir; önizlemede dolu görünür.",
+    "close": "Kapat",
+    "replaceCatalog": "Bu şablon kendi kataloğuyla gelir: \"{{catalog}}\". Şu anki kataloğunuz \"{{current}}\" bununla değiştirilsin mi? İptal derseniz kataloğunuz kalır; şablonun kullandığı bazı alanlar eksik görünebilir.",
+    "invoice": {
+      "name": "e-Fatura",
+      "description": "Kurumsal müşteriye fatura: satıcı ve müşteri bilgileri, miktar ve fiyatlı satırlar, KDV dökümü, toplamlar ve GİB karekodu."
+    },
+    "earsiv": {
+      "name": "e-Arşiv fatura",
+      "description": "Bireysel müşteriye kısa fatura: TCKN, miktar, fiyat ve KDV oranıyla iki satırlı ürünler, toplamlar ve karekod."
+    },
+    "despatch": {
+      "name": "Sevk irsaliyesi (e-İrsaliye)",
+      "description": "Fiyatsız mal sevki: alıcı, araç ve şoför, ürün kodu, miktar ve birim, teslim imzaları ve e-İrsaliye karekodu."
+    },
+    "receipt": {
+      "name": "Tahsilat makbuzu",
+      "description": "Nakit, çek ya da kartla alınan ödemeler: rakam ve yazıyla toplam, önceki ve kalan bakiye, imzalar."
+    },
+    "adisyon": {
+      "name": "Adisyon (e-Adisyon)",
+      "description": "Masa, garson ve kişi sayısı, adetleriyle ürünler, toplam ve e-Adisyon karekodu."
+    }
   },
   "properties": {
     "close": "Kapat",
@@ -306,7 +334,7 @@
   },
   "empty": {
     "title": "Tasarıma başlayın",
-    "text": "Soldaki araçlara tıklayın ya da bir banda sürükleyin. Ya da hazır fatura şablonuyla başlayın.",
-    "preset": "Hazır şablonu yükle"
+    "text": "Soldaki araçlara tıklayın ya da bir banda sürükleyin. Ya da hazır bir şablonla başlayın.",
+    "preset": "Hazır şablon seç"
   }
 }

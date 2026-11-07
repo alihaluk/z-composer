@@ -163,4 +163,4 @@ Placeholder syntax and escaping, band and condition markers, length calculation,
 - Publishing the package to npm; it stays `private` for now (owner decision, 2026-11-03).
 - Nested repeating bands, for arrays inside array items (e.g. discounts per line). Owner decision (2026-11-04): not now, as it needs specification version 2.
 - Fixed-length label support (gap / black-mark media) as a separate mode next to receipts.
-- Further content presets on top of the content builder (1.4.0). The GİB karekod is handled in 1.5.0 by binding the QR to a JSON field the firm's system produces (owner decision, 2026-11-04; [docs/GIB_QR.md](./GIB_QR.md)).
+- Further content presets on top of the content builder (1.4.0). Ready-made templates for e-Arşiv invoices, despatch advices, collection receipts and restaurant bills came in 1.9.0, each with its own catalog. The GİB karekod is handled in 1.5.0 by binding the QR to a JSON field the firm's system produces (owner decision, 2026-11-04; [docs/GIB_QR.md](./GIB_QR.md)).

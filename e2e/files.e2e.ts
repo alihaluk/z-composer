@@ -22,7 +22,7 @@ test.describe('files', () => {
     const download = page.waitForEvent('download');
     await toolsPanel(page).getByRole('button', { name: 'Export' }).click();
     const file = await download;
-    expect(file.suggestedFilename()).toBe('Invoice preset.json');
+    expect(file.suggestedFilename()).toBe('e-Fatura.json');
     const exported = JSON.parse(readFileSync((await file.path())!, 'utf8')) as Template & { fieldsUsed: { path: string }[] };
     expect(exported.bands.map(b => b.name)).toEqual(['Header', 'Lines', 'VAT title', 'VAT lines', 'Totals', 'Footer']);
     expect(exported.fieldsUsed.map(f => f.path)).toContain('Document.QrContent');

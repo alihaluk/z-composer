@@ -7,4 +7,5 @@ export const bandNames = (t: TFunction): BandNames => ({ header: t('bands.names.
 
 export const presetBandNames = (t: TFunction): PresetBandNames => ({
   ...bandNames(t), vatTitle: t('bands.names.vatTitle'), vatLines: t('bands.names.vatLines'), totals: t('bands.names.totals'),
+  payments: t('bands.names.payments'), signatures: t('bands.names.signatures'), discount: t('bands.names.discount'),
 });

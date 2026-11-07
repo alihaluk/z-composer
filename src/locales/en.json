@@ -69,8 +69,7 @@
     "confirmNew": "Clear the current design? Unsaved changes are lost.",
     "export": "Export",
     "import": "Import",
-    "loadPreset": "Invoice preset",
-    "presetName": "Invoice preset",
+    "loadPreset": "Ready-made templates…",
     "importFailed": "Template could not be opened: {{reason}}",
     "saveFailed": "Could not save: {{reason}}",
     "saved": "\"{{name}}\" saved",
@@ -126,7 +125,10 @@
       "footer": "Footer",
       "vatTitle": "VAT title",
       "vatLines": "VAT lines",
-      "totals": "Totals"
+      "totals": "Totals",
+      "payments": "Payments",
+      "signatures": "Signatures",
+      "discount": "Discount"
     }
   },
   "condition": {
@@ -176,6 +178,32 @@
     "noField": "Field is chosen as content but no field is picked; the static text is printed instead.",
     "emptyContent": "The composed content has no text and no field, so nothing is printed.",
     "noImage": "No image is uploaded and no image field is chosen, so nothing is printed."
+  },
+  "presets": {
+    "title": "Ready-made templates",
+    "hint": "Each template comes with its own field catalog and sample data, so the preview shows it filled.",
+    "close": "Close",
+    "replaceCatalog": "This template comes with its own catalog, \"{{catalog}}\". Replace your catalog \"{{current}}\" with it? Cancel keeps your catalog; fields the template uses may then be missing.",
+    "invoice": {
+      "name": "e-Fatura",
+      "description": "Invoice to a business: seller and customer, lines with quantity and price, VAT breakdown, totals and the GİB karekod."
+    },
+    "earsiv": {
+      "name": "e-Arşiv invoice",
+      "description": "Short invoice to a consumer: TCKN, two-row lines with quantity, price and VAT rate, totals and the karekod."
+    },
+    "despatch": {
+      "name": "Despatch advice (e-İrsaliye)",
+      "description": "Goods shipped without prices: receiver, vehicle and driver, product codes, quantities and units, delivery signatures and the e-İrsaliye karekod."
+    },
+    "receipt": {
+      "name": "Collection receipt",
+      "description": "Payments received by cash, cheque or card: total in figures and words, previous and remaining balance, signatures."
+    },
+    "adisyon": {
+      "name": "Restaurant bill (e-Adisyon)",
+      "description": "Table, waiter and guests, items with quantities, total and the e-Adisyon karekod."
+    }
   },
   "properties": {
     "close": "Close",
@@ -306,7 +334,7 @@
   },
   "empty": {
     "title": "Start designing",
-    "text": "Click a tool on the left or drag it onto a band, or start from the invoice preset.",
-    "preset": "Load the preset"
+    "text": "Click a tool on the left or drag it onto a band, or start from a ready-made template.",
+    "preset": "Choose a template"
   }
 }

@@ -4,8 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Barcode, FilePlus, Image, Minus, QrCode, Redo2, Save, Square, Trash, Type, Undo2, type LucideIcon } from 'lucide-react';
 import { useStore } from 'zustand';
 import { cn } from '../lib/utils';
-import { invoicePreset } from '../lib/presets';
-import { bandNames, presetBandNames } from '../lib/bandNames';
+import { bandNames } from '../lib/bandNames';
 import { emptyTemplate, parseTemplate, withFieldsUsed } from '../lib/templateIO';
 import { readJsonFile, saveJson } from '../lib/download';
 import { FileButton } from './ui/FileButton';
@@ -14,6 +13,7 @@ import { useEditor, useEditorStore } from '../store/editorStore';
 import { Button } from './ui/Button';
 import { PreviewModal } from './PreviewModal';
 import { CatalogPanel } from './CatalogPanel';
+import { PresetPicker } from './PresetPicker';
 
 const TOOLS: { tool: ToolType; icon: LucideIcon }[] = [
   { tool: 'text', icon: Type },
@@ -160,7 +160,7 @@ export function Sidebar({ allowLocalTemplates = true, catalogEditable = true, sh
           <Button variant="outline" className="text-xs h-8 px-0" onClick={exportFile}>{t('files.export')}</Button>
           <FileButton accept=".json,application/json" variant="outline" className="text-xs h-8 px-0" onFile={f => void importFile(f)}>{t('files.import')}</FileButton>
         </div>
-        <Button variant="outline" className="w-full text-xs" onClick={() => s.setTemplate(invoicePreset(presetBandNames(t)), t('files.presetName'))}>{t('files.loadPreset')}</Button>
+        <PresetPicker catalogEditable={catalogEditable} label={t('files.loadPreset')} variant="outline" className="w-full text-xs" />
         <PreviewModal />
       </section>
     </div>

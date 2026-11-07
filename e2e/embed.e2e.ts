@@ -62,6 +62,15 @@ test.describe('embedded designer', () => {
     for (const name of ['Edit', 'From sample JSON', 'From JSON Schema', 'Open catalog', 'Save catalog']) {
       await expect(sidebar.getByRole('button', { name, exact: true })).toHaveCount(0);
     }
+    // A ready-made template keeps the host's catalog.
+    await sidebar.getByRole('button', { name: 'Ready-made templates…' }).click();
+    await page.getByRole('dialog', { name: 'Ready-made templates' }).getByRole('button', { name: /^Collection receipt/ }).click();
+    await expect(designer(page).getByLabel('Payments band', { exact: true })).toBeVisible();
+    await expect(sidebar.getByText('Adisyon')).toBeVisible();
+    // Back to an empty design for the field list below.
+    page.once('dialog', d => void d.accept());
+    await designer(page).getByRole('button', { name: 'New', exact: true }).click();
+
     // The field list still adds its fields, with the host's locale.
     await sidebar.getByRole('region', { name: 'Fields' }).getByRole('button', { name: /^Toplam/ }).click();
     await expect(designer(page).getByLabel('Header band', { exact: true }).getByRole('button')).toHaveText(['1.234,50']);

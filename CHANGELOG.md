@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.0 — 2026-11-07
+
+### Added
+- Four more ready-made templates: e-Arşiv invoice to a consumer, despatch advice (e-İrsaliye), collection receipt and restaurant bill (e-Adisyon). Each comes with its own field catalog and consistent sample data; the e-İrsaliye and e-Adisyon karekod contents follow the GİB guide (sections 2.3 and 2.8). All five templates pass the design check with every sample row.
+- A picker lists the templates (sidebar and empty canvas). Choosing one also switches to its catalog; the user's own catalog is replaced only after asking, and a catalog locked by the host is kept.
+- The library exports `PRESETS` and the template builders.
+
+### Changed
+- "Invoice preset" became "Ready-made templates…"; a template loads under its own name (e.g. `e-Fatura`).
+
 ## 1.8.0 — 2026-11-07
 
 ### Added

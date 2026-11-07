@@ -113,10 +113,12 @@ export function acceptConfirm(page: Page, expected?: RegExp) {
   });
 }
 
-/** Loads the invoice preset from the sidebar. */
-export async function loadPreset(page: Page) {
-  await toolsPanel(page).getByRole('button', { name: 'Invoice preset' }).click();
-  await expect(band(page, 'Totals')).toBeVisible();
+/** Loads a ready-made template from the sidebar's picker (the e-Fatura by default). */
+export async function loadPreset(page: Page, name = 'e-Fatura') {
+  await toolsPanel(page).getByRole('button', { name: 'Ready-made templates…' }).click();
+  await page.getByRole('dialog', { name: 'Ready-made templates' }).getByRole('button', { name: new RegExp(`^${name.replace(/[()]/g, '\\$&')}`) }).click();
+  await expect(page.getByRole('dialog', { name: 'Ready-made templates' })).toHaveCount(0);
+  if (name === 'e-Fatura') await expect(band(page, 'Totals')).toBeVisible();
 }
 
 /** Drags with real mouse steps, as dnd-kit needs. */
