@@ -113,3 +113,33 @@ test('damaged browser storage does not break the designer', async ({ page }) => 
   const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('zcomposer_templates_v2')!) as unknown[]);
   expect(stored.map(e => (typeof e === 'object' && e ? (e as { name: string }).name : e))).toEqual(['Good', 'New', 'Bad', 'junk']);
 });
+
+test('the update button belongs to the saved template, not to an equal name', async ({ page }) => {
+  await open(page);
+  await tool(page, 'Text').click();
+  const name = toolsPanel(page).getByLabel('New template name');
+  await name.fill('e-Fatura');
+  await name.press('Enter');
+  const update = toolsPanel(page).getByRole('button', { name: 'Update "e-Fatura"' });
+  const modified = topBar(page).getByText('Modified');
+  await expect(update).toHaveCount(0);
+  await expect(modified).toHaveCount(0);
+
+  // A change makes it modified; undo makes it equal to the saved template again.
+  await tool(page, 'Box').click();
+  await expect(update).toBeVisible();
+  await expect(modified).toBeVisible();
+  await page.getByRole('button', { name: /^Undo/ }).click();
+  await expect(update).toHaveCount(0);
+
+  // A ready-made template of the same name must not offer to overwrite it, also after a change.
+  await loadPreset(page, 'e-Fatura');
+  await tool(page, 'Box').click();
+  await expect(update).toHaveCount(0);
+  await page.getByRole('button', { name: /^Undo/ }).click();
+  await page.getByRole('button', { name: /^Undo/ }).click();
+  await expect(band(page, 'Totals')).toHaveCount(0);
+  await expect(topBar(page)).toContainText('e-Fatura');
+  await expect(modified).toHaveCount(0);
+});
+

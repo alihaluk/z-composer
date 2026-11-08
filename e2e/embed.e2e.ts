@@ -93,4 +93,38 @@ test.describe('embedded designer', () => {
     await expect(dialog.getByLabel('Print preview', { exact: true })).toBeVisible({ timeout: 15_000 });
     await expect(dialog.getByText('Failed to render preview')).toHaveCount(0);
   });
+
+  test('shortcuts act only on the designer in use', async ({ page }) => {
+    await openHost(page, 'two=1&lang1=en&lang2=en&storage=none');
+    const elements = (n: number) => designer(page, n).getByLabel('Header band', { exact: true }).getByRole('button');
+    for (const n of [1, 2]) {
+      const box = designer(page, n).locator('aside').first().getByRole('button', { name: 'Box', exact: true });
+      await box.click();
+      await box.click();
+    }
+    await elements(1).nth(1).click();
+    await elements(2).nth(1).click();
+
+    // The second designer was used last: Delete leaves the first one alone, also with focus on the page.
+    await page.keyboard.press('Delete');
+    await expect(elements(2)).toHaveCount(1);
+    await expect(elements(1)).toHaveCount(2);
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(elements(2)).toHaveCount(2);
+    await expect(elements(1)).toHaveCount(2);
+
+    // A click on the host page gives the keyboard back to the host.
+    await page.locator('.host-title').click();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(elements(2)).toHaveCount(2);
+    await expect(elements(1)).toHaveCount(2);
+
+    // A dialog in one designer does not turn off the other one's state, and blocks its own shortcuts.
+    await elements(1).nth(1).click();
+    await designer(page, 1).getByRole('button', { name: 'Preview ZPL' }).click();
+    await page.keyboard.press('Delete');
+    await expect(elements(1)).toHaveCount(2);
+  });
 });
+

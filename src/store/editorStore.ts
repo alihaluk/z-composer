@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import { createStore, useStore, type StoreApi } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { temporal, type TemporalState } from 'zundo';
@@ -26,6 +26,8 @@ export interface EditorState {
   template: Template;
   catalog: Catalog;
   templateName: string | null;
+  /** The saved template this design was opened from or saved as; an equal name alone says nothing. */
+  savedAs: string | null;
   selection: Selection | null;
   zoom: number;
   canvasMode: CanvasMode;
@@ -82,7 +84,9 @@ export interface EditorStoreOptions {
   storageKey?: string | null;
 }
 
-export type EditorStore = StoreApi<EditorState> & { temporal: StoreApi<TemporalState<{ template: Template }>> };
+type History = Pick<EditorState, 'template' | 'templateName' | 'savedAs'>;
+
+export type EditorStore = StoreApi<EditorState> & { temporal: StoreApi<TemporalState<History>> };
 
 const PASTE_OFFSET_MM = 2;
 const DEFAULT_STORAGE_KEY = 'zcomposer_templates_v2';
@@ -159,15 +163,39 @@ const withoutIds = (selection: Selection | null, ids: string[]): Selection | nul
 const cloneElements = (elements: TemplateElement[], offset: number) =>
   elements.map(el => ({ ...structuredClone(el), id: newId(), x: el.x + offset, y: el.y + offset }));
 
-interface Draft { template: Template; templateName: string | null }
+/** The selection without what no longer exists; the same object when all of it does. */
+export function validSelection(selection: Selection | null, template: Template): Selection | null {
+  if (!selection) return null;
+  const ids = selection.ids.filter(id => template.bands.some(b => b.elements.some(el => el.id === id)));
+  const bandExists = template.bands.some(b => b.id === selection.bandId);
+  if (bandExists && ids.length === selection.ids.length) return selection;
+  const bandId = bandExists ? selection.bandId : template.bands.find(b => b.elements.some(el => el.id === ids[0]))?.id;
+  return bandId ? { bandId, ids } : null;
+}
+
+export type DesignStatus = 'untitled' | 'named' | 'saved' | 'modified';
+
+/** Where the design stands: never named, named but not saved, equal to its saved template, or changed since. */
+export function designStatus(s: Pick<EditorState, 'template' | 'templateName' | 'savedAs' | 'savedTemplates'>): DesignStatus {
+  const saved = s.savedTemplates.find(t => t.name === s.savedAs);
+  if (!saved) return s.templateName ? 'named' : 'untitled';
+  const content = (t: Template) => JSON.stringify({ ...t, fieldsUsed: undefined });
+  return content(saved.template) === content(s.template) ? 'saved' : 'modified';
+}
+
+interface Draft { template: Template; templateName: string | null; savedAs: string | null }
 
 /** The design being edited, kept so that a reload or a closed tab does not lose it. */
 function readDraft(key: string | null): Draft | null {
   const raw = key ? storageGet(key) : null;
   if (!raw) return null;
   try {
-    const draft = JSON.parse(raw) as { template: unknown; templateName?: unknown };
-    return { template: parseTemplate(draft.template), templateName: typeof draft.templateName === 'string' ? draft.templateName : null };
+    const draft = JSON.parse(raw) as { template: unknown; templateName?: unknown; savedAs?: unknown };
+    return {
+      template: parseTemplate(draft.template),
+      templateName: typeof draft.templateName === 'string' ? draft.templateName : null,
+      savedAs: typeof draft.savedAs === 'string' ? draft.savedAs : null,
+    };
   } catch {
     return null;
   }
@@ -200,6 +228,7 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
         template: options.template ?? draft?.template ?? options.emptyTemplate ?? emptyTemplate(),
         catalog: options.catalog ?? readCatalog(catalogKey) ?? DEFAULT_CATALOG,
         templateName: options.templateName ?? draft?.templateName ?? null,
+        savedAs: draft?.savedAs ?? null,
         selection: null,
         zoom: 1.5,
         // Sample data shows the design as it prints; without a sample, field names are clearer.
@@ -208,7 +237,7 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
         savedTemplates: readSaved(storageKey),
         clipboard: [],
 
-        setTemplate: (template, name = null) => set({ template, templateName: name, selection: null }),
+        setTemplate: (template, name = null) => set({ template, templateName: name, savedAs: null, selection: null }),
         setTemplateName: (templateName) => set({ templateName }),
         setCatalog: (catalog) => {
           if (catalogKey && !options.catalog) {
@@ -335,21 +364,21 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
           const { template, savedTemplates, catalog } = get();
           const updated = [...savedTemplates.filter(t => t.name !== name), { name, template: withFieldsUsed(template, catalog), savedAt: new Date().toISOString() }];
           const error = writeSaved(storageKey, updated);
-          if (!error) set({ savedTemplates: updated, templateName: name });
+          if (!error) set({ savedTemplates: updated, templateName: name, savedAs: name });
           return error;
         },
         deleteTemplate: (name) => {
           const updated = get().savedTemplates.filter(t => t.name !== name);
           writeSaved(storageKey, updated);
-          set(s => ({ savedTemplates: updated, templateName: s.templateName === name ? null : s.templateName }));
+          set(s => ({ savedTemplates: updated, templateName: s.templateName === name ? null : s.templateName, savedAs: s.savedAs === name ? null : s.savedAs }));
         },
         loadTemplate: (name) => {
           const saved = get().savedTemplates.find(t => t.name === name);
-          if (saved) set({ template: structuredClone(saved.template), templateName: name, selection: null });
+          if (saved) set({ template: structuredClone(saved.template), templateName: name, savedAs: name, selection: null });
         },
       }),
       {
-        partialize: (state) => ({ template: state.template }),
+        partialize: (state) => ({ template: state.template, templateName: state.templateName, savedAs: state.savedAs }),
         // Only template changes create undo steps; selection, zoom and so on do not.
         equality: (past, current) => past.template === current.template,
         limit: 100,
@@ -357,14 +386,21 @@ export function createEditorStore(options: EditorStoreOptions = {}): EditorStore
     ),
   ) as EditorStore;
 
+  // Undo, redo and a template from the host change the design without touching the selection.
+  store.subscribe((s, prev) => {
+    if (s.template === prev.template) return;
+    const selection = validSelection(s.selection, s.template);
+    if (selection !== s.selection) store.setState({ selection });
+  });
+
   if (draftKey) {
     let timer: ReturnType<typeof setTimeout> | undefined;
     store.subscribe((s, prev) => {
-      if (s.template === prev.template && s.templateName === prev.templateName) return;
+      if (s.template === prev.template && s.templateName === prev.templateName && s.savedAs === prev.savedAs) return;
       clearTimeout(timer);
       timer = setTimeout(() => {
         try {
-          localStorage.setItem(draftKey, JSON.stringify({ template: s.template, templateName: s.templateName }));
+          localStorage.setItem(draftKey, JSON.stringify({ template: s.template, templateName: s.templateName, savedAs: s.savedAs }));
         } catch {
           // Keeping the draft is a convenience; a full or blocked storage only loses it.
         }
@@ -384,6 +420,15 @@ export function useEditorStore(): EditorStore {
 
 export function useEditor<T>(selector: (state: EditorState) => T): T {
   return useStore(useEditorStore(), selector);
+}
+
+/** The design's status for the interface. */
+export function useDesignStatus(): DesignStatus {
+  const template = useEditor(s => s.template);
+  const templateName = useEditor(s => s.templateName);
+  const savedAs = useEditor(s => s.savedAs);
+  const savedTemplates = useEditor(s => s.savedTemplates);
+  return useMemo(() => designStatus({ template, templateName, savedAs, savedTemplates }), [template, templateName, savedAs, savedTemplates]);
 }
 
 export function useSelectedBand(): Band | undefined {

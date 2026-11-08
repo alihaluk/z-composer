@@ -62,7 +62,7 @@ The designer fills its container; give the container a height.
 | `onSave` | `({ template, zpl }) => void` | — | Shows a Save button. `template` carries the `fieldsUsed` snapshot; `zpl` is the ZPL template. |
 | `className` | `string` | — | Extra class for the root element. |
 
-Each `ZComposer` has its own state and its own i18next instance, so several designers can live on one page and the host's translations are not touched.
+Each `ZComposer` has its own state and its own i18next instance, so several designers can live on one page and the host's translations are not touched. Keyboard shortcuts act on the designer in use; a click elsewhere on the host page gives the keyboard back to the host.
 
 The end-to-end tests embed the built package in a host page this way (`e2e/host`, `e2e/embed.e2e.ts`); it is a working example of these props.
 

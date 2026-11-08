@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { elementLines, generateTemplateZpl, markerId } from './zplTemplate';
 import { fillTemplate } from './zplFill';
 import { parseZpl } from '../preview/zplParser';
-import { type Template, type TemplateElement } from '../types';
+import { DEFAULT_CATALOG } from './catalog';
+import { sampleGrowth } from './elementDisplay';
+import { type Band, type Template, type TemplateElement } from '../types';
 
 const text = (overrides: Partial<TemplateElement> = {}): TemplateElement => ({
   id: 't1', type: 'text', x: 2, y: 1, width: 40, height: 4, fontSize: 3, content: 'Hi', ...overrides,
@@ -132,5 +134,21 @@ describe('composed content', () => {
 
   it('uses static content again when the element is no longer dynamic', () => {
     expect(elementLines(text({ isDynamic: false, parts, content: 'Hi' }), 203)[0]).toContain('^FDHi^FS');
+  });
+});
+
+describe('growing text', () => {
+  const grower = (id: string, y: number, path: string): TemplateElement => ({ id, type: 'text', x: 0, y, width: 15, height: 3, fontSize: 3, isDynamic: true, dataSource: path, overflow: 'wrap', maxLines: 5, grow: true });
+  const band: Band = { id: 'b', name: 'B', height: 20, elements: [grower('a', 0, 'Company.Name'), grower('d', 8, 'Company.Address')] };
+  const template: Template = { schemaVersion: 2, printer: { widthMm: 72, dpi: 203 }, bands: [band] };
+
+  it('marks only the first growing text of a band, so output has at most one', () => {
+    expect(generateTemplateZpl(template).match(/ZC:GROW/g)).toHaveLength(1);
+  });
+
+  it('grows the band on the canvas as the filler does', () => {
+    const extraMm = sampleGrowth(band, DEFAULT_CATALOG, 'sample', 'tr-TR', 203).extraMm;
+    const zpl = fillTemplate(generateTemplateZpl(template), DEFAULT_CATALOG.sample, { locale: 'tr-TR' });
+    expect(Number(/\^LL(\d+)/.exec(zpl)![1])).toBe(160 + Math.round(extraMm * 8));
   });
 });

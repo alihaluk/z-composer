@@ -23,7 +23,9 @@ export function BarcodeSize({ band, element: el }: { band: Band; element: Templa
   useEffect(() => {
     let cancelled = false;
     measureBarcode(isQr ? 'qr' : 'code128', text, { moduleWidth: el.moduleWidth, magnification: el.magnification, printText: el.showLabel !== false, height: heightDots })
-      .then(r => { if (!cancelled && r) setSize({ key, ...r }); });
+      .then(r => { if (!cancelled && r) setSize({ key, ...r }); })
+      // The design check reports a barcode that cannot be measured.
+      .catch(() => undefined);
     return () => { cancelled = true; };
   }, [key, isQr, text, el.moduleWidth, el.magnification, el.showLabel, heightDots]);
 

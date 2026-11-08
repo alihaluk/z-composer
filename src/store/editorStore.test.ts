@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createEditorStore } from './editorStore';
+import { createEditorStore, designStatus, validSelection } from './editorStore';
+import { invoicePreset } from '../lib/presets';
+import { emptyTemplate } from '../lib/templateIO';
 import { type Template } from '../types';
 
 const template = (): Template => ({
@@ -170,5 +172,86 @@ describe('draft', () => {
   it('ignores a draft that is not a valid template', () => {
     memoryStorage().set('zcomposer_templates_v2_draft', '{"template":{"bands":"x"}}');
     expect(createEditorStore().getState().template.bands).toHaveLength(3);
+  });
+});
+
+describe('design status', () => {
+  const box = { id: 'x', type: 'box' as const, x: 0, y: 0, width: 5, height: 5 };
+  const make = () => createEditorStore({ storageKey: null, template: emptyTemplate() });
+  const status = (s: ReturnType<typeof make>) => designStatus(s.getState());
+  // storageKey null skips the browser storage, not the list in the store.
+  const first = (s: ReturnType<typeof make>) => s.getState().template.bands[0].id;
+
+  it('goes untitled, saved, modified and back', () => {
+    const s = make();
+    expect(status(s)).toBe('untitled');
+    s.getState().saveTemplate('A');
+    expect(status(s)).toBe('saved');
+    s.getState().addElement(first(s), box);
+    expect(status(s)).toBe('modified');
+    s.temporal.getState().undo();
+    expect(status(s)).toBe('saved');
+    s.temporal.getState().redo();
+    s.getState().saveTemplate('A');
+    expect(status(s)).toBe('saved');
+  });
+
+  it('does not take a design with a saved name for the saved template', () => {
+    const s = make();
+    s.getState().saveTemplate('e-Fatura');
+    s.getState().setTemplate(invoicePreset(), 'e-Fatura');
+    expect(s.getState().savedAs).toBeNull();
+    expect(status(s)).toBe('named');
+  });
+
+  it('restores the name and the saved template with undo', () => {
+    const s = make();
+    s.getState().saveTemplate('Mine');
+    s.getState().setTemplate(invoicePreset(), 'e-Fatura');
+    s.temporal.getState().undo();
+    expect(s.getState().templateName).toBe('Mine');
+    expect(s.getState().savedAs).toBe('Mine');
+    expect(status(s)).toBe('saved');
+    s.temporal.getState().redo();
+    expect(s.getState().templateName).toBe('e-Fatura');
+  });
+
+  it('forgets a deleted saved template', () => {
+    const s = make();
+    s.getState().saveTemplate('A');
+    s.getState().deleteTemplate('A');
+    expect(s.getState().savedAs).toBeNull();
+    expect(status(s)).toBe('untitled');
+  });
+});
+
+describe('selection after undo and redo', () => {
+  const box = { id: 'x', type: 'box' as const, x: 0, y: 0, width: 5, height: 5 };
+
+  it('drops a band and elements that are gone, and redo still works', () => {
+    const s = createEditorStore({ storageKey: null, template: emptyTemplate() });
+    s.getState().addBand();
+    const added = s.getState().template.bands.at(-1)!.id;
+    s.getState().addElement(added, box);
+    expect(s.getState().selection).toEqual({ bandId: added, ids: ['x'] });
+
+    s.temporal.getState().undo();
+    expect(s.getState().selection).toEqual({ bandId: added, ids: [] });
+    s.temporal.getState().undo();
+    expect(s.getState().selection).toBeNull();
+
+    s.temporal.getState().redo();
+    s.temporal.getState().redo();
+    expect(s.getState().template.bands.at(-1)!.elements).toHaveLength(1);
+  });
+
+  it('keeps the band of what is left and leaves a valid selection untouched', () => {
+    const template = emptyTemplate();
+    template.bands[1].elements.push(box);
+    const gone = { bandId: 'gone', ids: ['x', 'y'] };
+    expect(validSelection(gone, template)).toEqual({ bandId: template.bands[1].id, ids: ['x'] });
+    const valid = { bandId: template.bands[0].id, ids: ['x'] };
+    expect(validSelection(valid, template)).toBe(valid);
+    expect(validSelection({ bandId: 'gone', ids: ['y'] }, template)).toBeNull();
   });
 });

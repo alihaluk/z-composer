@@ -4,7 +4,7 @@ import { AlignCenter, AlignLeft, AlignRight, BringToFront, Copy, SendToBack, Tra
 import { mmToDots } from '../../lib/constants';
 import { displayText } from '../../lib/elementDisplay';
 import { loadGrayBitmap } from '../../lib/imageUtils';
-import { DEFAULT_FONT_MM, DEFAULT_THICKNESS_MM, elementLines, isComposed, textMetrics } from '../../lib/zplTemplate';
+import { DEFAULT_FONT_MM, DEFAULT_THICKNESS_MM, elementLines, isComposed, isGrowing, textMetrics } from '../../lib/zplTemplate';
 import { useEditor, useEditorStore } from '../../store/editorStore';
 import { type Align, type Band, type OverflowMode, type Rotation, type TemplateElement } from '../../types';
 import { Button } from '../ui/Button';
@@ -58,6 +58,8 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
   };
 
   const typeKey = isQr ? 'qr' : el.type;
+  // A band has at most one growing text (docs/OUTPUT_SPEC.md section 9).
+  const growTaken = band.elements.some(other => other.id !== el.id && isGrowing(other));
 
   return (
     <div className="space-y-4">
@@ -148,7 +150,8 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
           {el.overflow === 'wrap' && (
             <>
               <Field label={t('overflow.maxLines')}>{id => <NumberInput id={id} value={el.maxLines ?? 2} min={1} max={20} step={1} onChange={maxLines => update({ maxLines: Math.round(maxLines) })} />}</Field>
-              <Checkbox label={t('overflow.grow')} checked={!!el.grow} onChange={grow => update({ grow: grow || undefined, fontBold: grow ? undefined : el.fontBold })} />
+              <Checkbox label={t('overflow.grow')} checked={!!el.grow} disabled={!el.grow && growTaken} onChange={grow => update({ grow: grow || undefined, fontBold: grow ? undefined : el.fontBold })} />
+              {!el.grow && growTaken && <p className="text-[10px] text-gray-500">{t('overflow.growTaken')}</p>}
               {el.grow && (
                 <>
                   <p className="text-[10px] text-gray-500">{t('overflow.growHint')}</p>
@@ -230,7 +233,7 @@ export function ElementProperties({ band, element: el }: { band: Band; element: 
       </Section>
 
       <Section title={t('properties.zpl')}>
-        <ZplCode zpl={elementLines(el, dpi).join('\n')} className="max-h-32" />
+        <ZplCode zpl={elementLines(el, dpi, band.elements.find(isGrowing)?.id === el.id).join('\n')} className="max-h-32" />
       </Section>
 
       <div className="grid grid-cols-3 gap-2">

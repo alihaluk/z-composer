@@ -101,4 +101,23 @@ test.describe('design check', () => {
     await fill(propertiesPanel(page).getByLabel('X (mm)', { exact: true }), '40');
     await expect(propertiesPanel(page).getByRole('list', { name: 'Tasarım kontrolü' })).toContainText(/Örnek metin sığmıyor: \d+,\d mm genişlik, 32 mm yer var/);
   });
+
+  test('a barcode that cannot be encoded is an error', async ({ page }) => {
+    // More than a QR code can hold.
+    await tool(page, 'QR code').click();
+    await elementsOn(page, 'Header').first().click();
+    await propertiesPanel(page).getByRole('radiogroup', { name: 'Content' }).getByRole('radio', { name: 'Static' }).click();
+    await fill(propertiesPanel(page).getByRole('textbox').first(), 'x'.repeat(5000));
+    await expect(propertiesPanel(page).getByRole('list', { name: 'Design check' })).toContainText('cannot be encoded');
+  });
+
+  test('barcodes that could not be checked are not reported as fine', async ({ page }) => {
+    await page.route('**/barcodes-*.js', route => route.abort());
+    await open(page);
+    await tool(page, 'QR code').click();
+    await deselect(page);
+    await expect(page.getByRole('button', { name: 'Design check: Barcodes not checked' })).toBeVisible();
+    await expect(propertiesPanel(page).getByRole('status')).toContainText('could not be loaded');
+  });
 });
+

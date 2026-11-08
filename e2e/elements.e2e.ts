@@ -192,4 +192,22 @@ test.describe('elements', () => {
     const t = await designWhere(page, d => bandOf(d, 'Header').elements.every(e => e.y > 1));
     expect(bandOf(t, 'Header').elements.map(e => e.y)).toEqual([1.5, 3.5]);
   });
+
+  test('a band takes one growing text', async ({ page }) => {
+    for (let i = 0; i < 2; i++) await tool(page, 'Text').click();
+    await elementsOn(page, 'Header').nth(0).click();
+    await field(page, 'Overflow').selectOption('wrap');
+    await field(page, 'Band grows with the text').check();
+    await elementsOn(page, 'Header').nth(1).click();
+    await field(page, 'Overflow').selectOption('wrap');
+    await expect(field(page, 'Band grows with the text')).toBeDisabled();
+    await expect(propertiesPanel(page).getByText('Another text in this band already grows')).toBeVisible();
+
+    // A copy of the growing text is reported, and only the first one grows in the output.
+    await elementsOn(page, 'Header').nth(0).click();
+    await page.keyboard.press('ControlOrMeta+d');
+    await expect(propertiesPanel(page).getByRole('list', { name: 'Design check' })).toContainText('Another text in this band already grows');
+    expect((await templateZpl(page)).match(/ZC:GROW/g)).toHaveLength(1);
+  });
 });
+

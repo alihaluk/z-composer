@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.10.1 — 2026-11-09
+
+### Fixed
+- Undo and redo restore the template's name with its design. "Update" appears only for the saved template the design was opened from or saved as, once it has changed; before, a ready-made template or an imported file with a saved template's name offered to overwrite it. The top bar shows "Modified".
+- The selection stays valid after undo and redo; it could point to a band that was gone, so pasting lost the copies and the panel ignored the selection.
+- A band has one growing text, as the specification says: the option is disabled when another text grows, the output marks only the first and the design check reports any other. With two, the canvas followed the first and the filler the last.
+- The design check tells measuring, unchecked and fine apart: barcodes whose encoder could not be loaded are no longer reported as "No problems found", data that cannot be encoded is an error, and a failed load can be retried.
+- Keyboard shortcuts act only on the designer in use, so two on a page no longer both delete or undo, a dialog blocks only its own designer, and a click on the host page gives the keyboard back to the host.
+- The top bar wraps in a narrow container instead of running under what is beside it.
+
 ## 1.10.0 — 2026-11-07
 
 ### Changed

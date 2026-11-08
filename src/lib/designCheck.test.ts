@@ -128,3 +128,20 @@ describe('withRootPrefix', () => {
     expect(withRootPrefix(text({ isDynamic: true, dataSource: 'Totals.Grand' }), 'Totals.Grand')).toEqual({ dataSource: '$.Totals.Grand' });
   });
 });
+
+describe('barcodes and growing text', () => {
+  const bc: TemplateElement = { id: 'b', type: 'barcode', barcodeType: 'code128', x: 2, y: 1, width: 40, height: 10, content: 'x' };
+
+  it('reports data that cannot be encoded, and not a barcode still unmeasured', () => {
+    expect(kinds(template([header([bc])]))).toEqual([]);
+    expect(checkDesign(template([header([bc])]), DEFAULT_CATALOG, 'tr-TR', { b: null })).toEqual([
+      expect.objectContaining({ kind: 'barcodeInvalid', severity: 'error', elementId: 'b' }),
+    ]);
+  });
+
+  it('warns about growing texts after the first of a band', () => {
+    const grow = (id: string, y: number) => text({ id, y, overflow: 'wrap', grow: true, maxLines: 3 });
+    const issues = checkDesign(template([header([grow('a', 1), grow('z', 8)])]), DEFAULT_CATALOG, 'tr-TR');
+    expect(issues.map(i => [i.kind, i.elementId])).toEqual([['extraGrow', 'z']]);
+  });
+});

@@ -88,8 +88,11 @@ export function textMetrics(el: TemplateElement, dpi: Dpi): TextMetrics {
 const ifLines = (condition: Condition | undefined, lines: string[]) =>
   condition?.path ? [`^FX ZC:IF ${condition.path} ${condition.op}`, ...lines, '^FX ZC:ENDIF'] : lines;
 
-/** ZPL lines of one element; coordinates are relative to its band. */
-export function elementLines(el: TemplateElement, dpi: Dpi): string[] {
+/** Whether a text is set to grow its band (docs/OUTPUT_SPEC.md section 9). */
+export const isGrowing = (el: TemplateElement) => el.type === 'text' && el.overflow === 'wrap' && !!el.grow;
+
+/** ZPL lines of one element, relative to its band. `mayGrow` is false for growing texts after the band's first: a band has at most one. */
+export function elementLines(el: TemplateElement, dpi: Dpi, mayGrow = true): string[] {
   const d = (mm: number) => mmToDots(mm, dpi);
   const x = d(el.x);
   const y = d(el.y);
@@ -105,7 +108,7 @@ export function elementLines(el: TemplateElement, dpi: Dpi): string[] {
     if (el.overflow === 'wrap') block = `^FB${m.width},${Math.max(1, el.maxLines ?? 2)},${m.lineHeight - m.height},${justify}`;
     else if (justify !== 'L') block = `^FB${m.width},1,0,${justify}`;
     const field = (fx: number) => `^FO${fx},${y}^A0${o},${m.height},${m.height}${block}^FH_^FD${fieldData(el)}^FS`;
-    if (el.overflow === 'wrap' && el.grow) {
+    if (isGrowing(el) && mayGrow) {
       lines.push(`^FX ZC:GROW cpl=${m.charsPerLine} lines=${Math.max(1, el.maxLines ?? 2)} lineHeight=${m.lineHeight}`, field(x));
     } else {
       lines.push(field(x));
@@ -137,8 +140,9 @@ export function elementLines(el: TemplateElement, dpi: Dpi): string[] {
 
 function bandLines(band: Band, offset: number, dpi: Dpi): string[] {
   const height = Math.max(1, mmToDots(band.height, dpi));
+  const growing = band.elements.find(isGrowing);
   const head = `^FX ZC:BAND id=${markerId(band.id)} height=${height}${band.repeat ? ` repeat=${band.repeat}` : ''}`;
-  const lines = [head, `^LH0,${offset}`, ...band.elements.flatMap(el => elementLines(el, dpi)), '^FX ZC:END'];
+  const lines = [head, `^LH0,${offset}`, ...band.elements.flatMap(el => elementLines(el, dpi, el === growing)), '^FX ZC:END'];
   return ifLines(band.condition, lines);
 }
 

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Barcode, Image, Minus, QrCode, Save, Square, Trash, Type, type LucideIcon } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { createElement, type ToolType } from '../lib/tools';
-import { useEditor, useEditorStore } from '../store/editorStore';
+import { useDesignStatus, useEditor, useEditorStore } from '../store/editorStore';
 import { Button } from './ui/Button';
 import { CatalogPanel } from './CatalogPanel';
 
@@ -48,7 +48,8 @@ function ToolItem({ tool, icon: Icon }: { tool: ToolType; icon: LucideIcon }) {
 export function Sidebar({ allowLocalTemplates = true, catalogEditable = true }: { allowLocalTemplates?: boolean; catalogEditable?: boolean }) {
   const { t } = useTranslation();
   const store = useEditorStore();
-  const templateName = useEditor(s => s.templateName);
+  const savedAs = useEditor(s => s.savedAs);
+  const status = useDesignStatus();
   const savedTemplates = useEditor(s => s.savedTemplates);
   const [newName, setNewName] = useState('');
   const [message, setMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null);
@@ -77,12 +78,12 @@ export function Sidebar({ allowLocalTemplates = true, catalogEditable = true }: 
       {allowLocalTemplates && (
         <section className="space-y-2">
           <h3 className="text-xs font-semibold text-gray-500 uppercase">{t('files.savedTemplates')}</h3>
-          {templateName && savedTemplates.some(x => x.name === templateName) && (
+          {status === 'modified' && savedAs && (
             <Button size="sm" className="w-full h-7 text-xs bg-blue-600 hover:bg-blue-700" onClick={() => {
-              const error = s.saveTemplate(templateName);
-              setMessage(error ? { kind: 'error', text: t('files.saveFailed', { reason: error }) } : { kind: 'info', text: t('files.saved', { name: templateName }) });
+              const error = s.saveTemplate(savedAs);
+              setMessage(error ? { kind: 'error', text: t('files.saveFailed', { reason: error }) } : { kind: 'info', text: t('files.saved', { name: savedAs }) });
             }}>
-              {t('files.update', { name: templateName })}
+              {t('files.update', { name: savedAs })}
             </Button>
           )}
           <div className="flex gap-2">
@@ -93,7 +94,7 @@ export function Sidebar({ allowLocalTemplates = true, catalogEditable = true }: 
           <ul className="max-h-32 overflow-y-auto space-y-1">
             {savedTemplates.length === 0 && <li className="text-[10px] text-gray-500">{t('files.none')}</li>}
             {savedTemplates.map(saved => (
-              <li key={saved.name} className={cn('flex items-center text-xs rounded group border', templateName === saved.name ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-transparent')}>
+              <li key={saved.name} className={cn('flex items-center text-xs rounded group border', savedAs === saved.name ? 'bg-blue-50 border-blue-100' : 'bg-gray-50 border-transparent')}>
                 <button type="button" className="flex-1 truncate text-left p-1 hover:text-blue-600" onClick={() => s.loadTemplate(saved.name)}>{saved.name}</button>
                 <button type="button" aria-label={t('files.delete', { name: saved.name })} className="p-1 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 focus:opacity-100"
                   onClick={() => { if (window.confirm(t('files.confirmDelete', { name: saved.name }))) s.deleteTemplate(saved.name); }}>

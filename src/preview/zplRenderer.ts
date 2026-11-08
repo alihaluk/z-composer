@@ -12,7 +12,11 @@ const INK = '#000';
 // Barcode encoders, loaded on demand.
 type Barcodes = typeof import('./barcodes');
 let barcodesPromise: Promise<Barcodes> | null = null;
-const loadBarcodes = () => (barcodesPromise ??= import('./barcodes'));
+// A failed load is not kept, so a later use can try again.
+const loadBarcodes = () => (barcodesPromise ??= import('./barcodes').catch(e => {
+  barcodesPromise = null;
+  throw e;
+}));
 
 // Places content of size w × h (unrotated) so that its rotated bounding box starts at (x, y).
 function withOrientation(ctx: CanvasRenderingContext2D, o: Orientation, x: number, y: number, w: number, h: number, draw: () => void) {

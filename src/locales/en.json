@@ -6,7 +6,8 @@
   },
   "topbar": {
     "label": "Template commands",
-    "untitled": "Untitled template"
+    "untitled": "Untitled template",
+    "modified": "Modified"
   },
   "toolbox": {
     "title": "Toolbox",
@@ -197,7 +198,12 @@
     "emptyContent": "The composed content has no text and no field, so nothing is printed.",
     "noImage": "No image is uploaded and no image field is chosen, so nothing is printed.",
     "count_one": "{{count}} problem",
-    "count_other": "{{count}} problems"
+    "count_other": "{{count}} problems",
+    "extraGrow": "Another text in this band already grows; a band has one, so this one wraps without growing.",
+    "barcodeInvalid": "The sample data cannot be encoded as this barcode, so it would not print correctly.",
+    "measuring": "Checking…",
+    "unchecked": "Barcodes not checked",
+    "uncheckedHint": "The barcode encoder could not be loaded. Check the connection and reload the page."
   },
   "presets": {
     "title": "Ready-made templates",
@@ -281,7 +287,8 @@
     "grow": "Band grows with the text",
     "growHint": "The band grows by one line per extra line; elements below move down. Bold is not available.",
     "charsPerLine": "Characters per line",
-    "charsPerLineHint": "Estimated from the width when empty ({{n}})."
+    "charsPerLineHint": "Estimated from the width when empty ({{n}}).",
+    "growTaken": "Another text in this band already grows; a band can have one."
   },
   "formats": {
     "N0": "grouped, no decimals",

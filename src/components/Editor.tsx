@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { DragOverlay, useDndMonitor, type DragEndEvent, type DragMoveEvent, type DragStartEvent } from '@dnd-kit/core';
 import { useTranslation } from 'react-i18next';
 import { mmToPx, pxToMm } from '../lib/constants';
@@ -34,11 +34,25 @@ const isTyping = () => {
   return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement || (el as HTMLElement | null)?.isContentEditable;
 };
 
-function useKeyboard(store: EditorStore) {
+/** The designer the keyboard belongs to when focus is on no control: the last one used on the page. */
+let activeRoot: Element | null = null;
+
+function useKeyboard(store: EditorStore, inside: RefObject<HTMLElement | null>) {
   useEffect(() => {
+    const root = inside.current?.closest('.zc-root') ?? null;
+    activeRoot ??= root;
+    const onPointer = (e: PointerEvent) => {
+      const target = e.target instanceof Element ? e.target : null;
+      if (root?.contains(target)) activeRoot = root;
+      else if (activeRoot === root) activeRoot = target?.closest('.zc-root') ?? null;
+    };
     const onKey = (e: KeyboardEvent) => {
+      // A control of this designer, or nothing focused while this designer was the last one used.
+      const target = e.target instanceof Element ? e.target : null;
+      const onPage = !target || target === document.body || target === document.documentElement;
+      if (onPage ? activeRoot !== root : !root?.contains(target)) return;
       // Shortcuts act on the canvas; a modal dialog has the keyboard while it is open.
-      if (isTyping() || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+      if (isTyping() || root?.querySelector('[role="dialog"][aria-modal="true"]')) return;
       const s = store.getState();
       const mod = e.metaKey || e.ctrlKey;
       const key = e.key.toLowerCase();
@@ -73,8 +87,13 @@ function useKeyboard(store: EditorStore) {
       s.patchElements(Object.fromEntries(movable.map(el => [el.id, { x: round(Math.max(0, el.x + delta[0])), y: round(Math.max(0, el.y + delta[1])) }])));
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [store]);
+    window.addEventListener('pointerdown', onPointer, true);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('pointerdown', onPointer, true);
+      if (activeRoot === root) activeRoot = null;
+    };
+  }, [store, inside]);
 }
 
 export function Editor({ catalogEditable = true }: { catalogEditable?: boolean }) {
@@ -84,8 +103,8 @@ export function Editor({ catalogEditable = true }: { catalogEditable?: boolean }
   const zoom = useEditor(s => s.zoom);
   const [drag, setDrag] = useState<DragData | null>(null);
   const [drop, setDrop] = useState<Drop | null>(null);
-  useKeyboard(store);
   const scrollRef = useRef<HTMLDivElement>(null);
+  useKeyboard(store, scrollRef);
   const isEmpty = template.bands.every(b => b.elements.length === 0);
   const widthPx = mmToPx(template.printer.widthMm);
 

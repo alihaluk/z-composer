@@ -3,7 +3,7 @@
 import { type Catalog } from './catalog';
 import { dotsPerMm } from './constants';
 import { evaluateCondition, lookup, resolvePlaceholder, wrapText } from './zplFill';
-import { fieldPlaceholder, isComposed, isFieldPart, placeholder, textMetrics } from './zplTemplate';
+import { fieldPlaceholder, isComposed, isFieldPart, isGrowing, placeholder, textMetrics } from './zplTemplate';
 import { type Band, type Dpi, type TemplateElement } from '../types';
 import { type CanvasMode } from '../store/editorStore';
 
@@ -41,7 +41,7 @@ export interface BandGrowth {
 
 /** How much a band grows in sample mode because of its growing text (docs/OUTPUT_SPEC.md section 9). */
 export function sampleGrowth(band: Band, catalog: Catalog, mode: CanvasMode, locale: string, dpi: Dpi): BandGrowth {
-  const el = band.elements.find(e => e.type === 'text' && e.overflow === 'wrap' && e.grow);
+  const el = band.elements.find(isGrowing);
   if (!el || mode !== 'sample' || hiddenInSample(el, band, catalog, mode)) return { growY: 0, extraMm: 0 };
   const m = textMetrics(el, dpi);
   const lines = wrapText(displayText(el, band, catalog, mode, locale), m.charsPerLine, Math.max(1, el.maxLines ?? 2));

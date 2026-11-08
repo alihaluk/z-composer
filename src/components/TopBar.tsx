@@ -6,7 +6,7 @@ import { cn } from '../lib/utils';
 import { bandNames } from '../lib/bandNames';
 import { emptyTemplate, parseTemplate, withFieldsUsed } from '../lib/templateIO';
 import { readJsonFile, saveJson } from '../lib/download';
-import { useEditor, useEditorStore } from '../store/editorStore';
+import { useDesignStatus, useEditor, useEditorStore } from '../store/editorStore';
 import { Button } from './ui/Button';
 import { FileButton } from './ui/FileButton';
 import { PresetPicker } from './PresetPicker';
@@ -21,6 +21,7 @@ export function TopBar({ catalogEditable, showLanguageSwitch, onSave }: { catalo
   const { t, i18n } = useTranslation();
   const store = useEditorStore();
   const templateName = useEditor(s => s.templateName);
+  const status = useDesignStatus();
   const canUndo = useStore(store.temporal, s => s.pastStates.length > 0);
   const canRedo = useStore(store.temporal, s => s.futureStates.length > 0);
   const [message, setMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null);
@@ -42,13 +43,15 @@ export function TopBar({ catalogEditable, showLanguageSwitch, onSave }: { catalo
   };
 
   const action = 'h-8 px-2 gap-1.5 text-xs';
+  // The bar wraps in a narrow container, as when embedded beside something else.
   return (
-    <div className="flex items-center gap-2 border-b bg-white px-3 py-1.5" role="region" aria-label={t('topbar.label')}>
+    <div className="flex flex-wrap items-center gap-2 border-b bg-white px-3 py-1.5" role="region" aria-label={t('topbar.label')}>
       <h2 className="text-sm font-bold text-gray-800 whitespace-nowrap">Z-Composer</h2>
       <span className="text-gray-300" aria-hidden>/</span>
       <span className={cn('min-w-0 max-w-[14rem] truncate text-sm', templateName ? 'text-gray-800' : 'text-gray-500')} title={templateName ?? undefined}>
         {templateName ?? t('topbar.untitled')}
       </span>
+      {status === 'modified' && <span className="text-[11px] text-amber-700 whitespace-nowrap">{t('topbar.modified')}</span>}
       <div className="flex items-center">
         <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!canUndo} onClick={() => store.temporal.getState().undo()} title={t('toolbar.undo')} aria-label={t('toolbar.undo')}><Undo2 size={15} /></Button>
         <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!canRedo} onClick={() => store.temporal.getState().redo()} title={t('toolbar.redo')} aria-label={t('toolbar.redo')}><Redo2 size={15} /></Button>

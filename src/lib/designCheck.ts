@@ -4,14 +4,14 @@ import { ROOT_PREFIX, findField, type Catalog } from './catalog';
 import { templateBindings, type Binding } from './catalogIO';
 import { dotsPerMm, mmToDots } from './constants';
 import { displayText } from './elementDisplay';
-import { isComposed, isFieldPart, textMetrics } from './zplTemplate';
+import { isComposed, isFieldPart, isGrowing, textMetrics } from './zplTemplate';
 import { lookup, wrapText } from './zplFill';
 import { A0_AVERAGE_ADVANCE, a0Width, fieldBlockLines } from '../preview/fontMetrics';
 import { type Band, type Template, type TemplateElement } from '../types';
 
 export type IssueKind =
   | 'outsidePage' | 'outsideBand' | 'textCut' | 'linesCut' | 'barcodeCut'
-  | 'missingField' | 'rootPrefix' | 'noField' | 'emptyContent' | 'noImage';
+  | 'missingField' | 'rootPrefix' | 'noField' | 'emptyContent' | 'noImage' | 'extraGrow' | 'barcodeInvalid';
 
 export interface DesignIssue {
   kind: IssueKind;
@@ -33,7 +33,7 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 
 const SEVERITY: Record<IssueKind, DesignIssue['severity']> = {
   outsidePage: 'error', outsideBand: 'warning', textCut: 'error', linesCut: 'warning', barcodeCut: 'error',
-  missingField: 'error', rootPrefix: 'error', noField: 'warning', emptyContent: 'warning', noImage: 'warning',
+  missingField: 'error', rootPrefix: 'error', noField: 'warning', emptyContent: 'warning', noImage: 'warning', extraGrow: 'warning', barcodeInvalid: 'error',
 };
 
 /** The catalog with its sample's array `repeat` reduced to one item, so a band can be checked against every row. */
@@ -81,7 +81,7 @@ function textIssue(el: TemplateElement, band: Band, template: Template, catalog:
     if (!text) continue;
     let issue: DesignIssue | null = null;
     if (el.overflow === 'wrap') {
-      const lines = el.grow ? wrapText(text, m.charsPerLine, Infinity).length : fieldBlockLines(text, m.width, widthOf).length;
+      const lines = band.elements.find(isGrowing) === el ? wrapText(text, m.charsPerLine, Infinity).length : fieldBlockLines(text, m.width, widthOf).length;
       if (lines > maxLines) issue = { kind: 'linesCut', severity: SEVERITY.linesCut, bandId: band.id, elementId: el.id, value: lines, limit: maxLines, text };
     } else {
       const width = widthOf(text);
@@ -97,9 +97,10 @@ function textIssue(el: TemplateElement, band: Band, template: Template, catalog:
 
 /**
  * Checks a template. `barcodeWidths` gives the printed width in dots of each barcode element with
- * the sample data (measured by the caller, the encoders load asynchronously).
+ * the sample data, null when its data cannot be encoded (measured by the caller, the encoders load
+ * asynchronously; a barcode without an entry is not checked).
  */
-export function checkDesign(template: Template, catalog: Catalog, locale: string, barcodeWidths: Record<string, number> = {}): DesignIssue[] {
+export function checkDesign(template: Template, catalog: Catalog, locale: string, barcodeWidths: Record<string, number | null> = {}): DesignIssue[] {
   const issues: DesignIssue[] = [];
   const { widthMm, dpi } = template.printer;
   const add = (issue: DesignIssue | null) => { if (issue) issues.push(issue); };
@@ -133,8 +134,10 @@ export function checkDesign(template: Template, catalog: Catalog, locale: string
       if (el.type === 'image' && !el.imageKey && !el.bitmap && !el.imageBase64) add({ kind: 'noImage', severity: SEVERITY.noImage, ...at });
 
       if (catalog.sample !== undefined) add(textIssue(el, band, template, catalog, locale));
+      if (isGrowing(el) && band.elements.find(isGrowing) !== el) add({ kind: 'extraGrow', severity: SEVERITY.extraGrow, ...at });
       const barcode = barcodeWidths[el.id];
-      if (el.type === 'barcode' && barcode !== undefined && mmToDots(el.x, dpi) + barcode > mmToDots(widthMm, dpi)) {
+      if (el.type === 'barcode' && barcode === null) add({ kind: 'barcodeInvalid', severity: SEVERITY.barcodeInvalid, ...at });
+      if (el.type === 'barcode' && barcode !== undefined && barcode !== null && mmToDots(el.x, dpi) + barcode > mmToDots(widthMm, dpi)) {
         add({ kind: 'barcodeCut', severity: SEVERITY.barcodeCut, ...at, value: round1(barcode / dotsPerMm(dpi)), limit: round1(widthMm - el.x) });
       }
     }

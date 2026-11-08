@@ -1,9 +1,9 @@
 import { type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 import { withRootPrefix, type DesignIssue } from '../lib/designCheck';
 import { cn } from '../lib/utils';
-import { DesignIssuesContext, useCheckedDesign, useDesignIssues } from '../store/designIssues';
+import { DesignIssuesContext, useBarcodeCheck, useCheckedDesign, useDesignIssues } from '../store/designIssues';
 import { useEditor, useEditorStore } from '../store/editorStore';
 import { Button } from './ui/Button';
 import { Section } from './ui/Field';
@@ -60,11 +60,13 @@ export function DesignCheckSection() {
   const { t } = useTranslation();
   const issues = useDesignIssues();
   const errors = issues.filter(i => i.severity === 'error').length;
-  // With nothing to fix the top bar says so; the panel keeps its room for the settings.
-  if (issues.length === 0) return null;
+  const barcodes = useBarcodeCheck();
+  // With nothing to report the top bar says so; the panel keeps its room for the settings.
+  if (issues.length === 0 && barcodes !== 'failed') return null;
   return (
     <Section title={t('check.title')}>
-      <p className="text-[11px] text-gray-600">{t('check.summary', { errors, warnings: issues.length - errors })}</p>
+      {barcodes === 'failed' && <p className="text-[11px] text-amber-800" role="status">{t('check.uncheckedHint')}</p>}
+      {issues.length > 0 && <p className="text-[11px] text-gray-600">{t('check.summary', { errors, warnings: issues.length - errors })}</p>}
       <ul className="max-h-72 overflow-y-auto space-y-0.5" aria-label={t('check.title')}>
         {issues.map((issue, i) => <IssueRow key={i} issue={issue} locate />)}
       </ul>
@@ -84,20 +86,26 @@ export function OwnIssues({ issues }: { issues: DesignIssue[] }) {
   );
 }
 
-/** The design check's state: the number of findings, or that there are none; it opens the list. */
+/** The design check's state: findings, none, still measuring, or barcodes not checked; it opens the list. */
 export function DesignCheckButton() {
   const { t } = useTranslation();
   const store = useEditorStore();
   const issues = useDesignIssues();
+  const barcodes = useBarcodeCheck();
   const errors = issues.some(i => i.severity === 'error');
-  const state = issues.length === 0 ? 'none' : errors ? 'errors' : 'warnings';
+  const state = errors ? 'errors' : issues.length ? 'warnings' : barcodes === 'failed' ? 'unchecked' : barcodes === 'measuring' ? 'measuring' : 'none';
+  const text = {
+    errors: t('check.count', { count: issues.length }), warnings: t('check.count', { count: issues.length }),
+    unchecked: t('check.unchecked'), measuring: t('check.measuring'), none: t('check.none'),
+  }[state];
+  const Icon = { errors: AlertCircle, warnings: AlertTriangle, unchecked: AlertTriangle, measuring: Loader2, none: CheckCircle2 }[state];
   return (
-    <button type="button" title={t('check.open')} aria-label={`${t('check.open')}: ${issues.length ? t('check.count', { count: issues.length }) : t('check.none')}`}
+    <button type="button" title={barcodes === 'failed' ? t('check.uncheckedHint') : t('check.open')} aria-label={`${t('check.open')}: ${text}`}
       className={cn('flex items-center gap-1 h-8 px-2 rounded text-xs font-semibold whitespace-nowrap hover:bg-gray-100',
-        { none: 'text-green-700', errors: 'text-red-600', warnings: 'text-amber-700' }[state])}
+        { errors: 'text-red-600', warnings: 'text-amber-700', unchecked: 'text-amber-700', measuring: 'text-gray-600', none: 'text-green-700' }[state])}
       onClick={() => store.getState().select(null)}>
-      {state === 'none' ? <CheckCircle2 size={15} aria-hidden /> : state === 'errors' ? <AlertCircle size={15} aria-hidden /> : <AlertTriangle size={15} aria-hidden />}
-      {issues.length ? t('check.count', { count: issues.length }) : <span className="hidden xl:inline">{t('check.none')}</span>}
+      <Icon size={15} aria-hidden className={state === 'measuring' ? 'animate-spin' : undefined} />
+      <span className={issues.length ? undefined : 'hidden xl:inline'}>{text}</span>
     </button>
   );
 }

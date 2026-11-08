@@ -6,7 +6,8 @@
   },
   "topbar": {
     "label": "Şablon komutları",
-    "untitled": "Adsız şablon"
+    "untitled": "Adsız şablon",
+    "modified": "Değiştirildi"
   },
   "toolbox": {
     "title": "Araç Kutusu",
@@ -197,7 +198,12 @@
     "emptyContent": "Birleşik içerikte metin ya da alan yok; hiçbir şey basılmaz.",
     "noImage": "Görsel yüklenmemiş ve görsel alanı seçilmemiş; hiçbir şey basılmaz.",
     "count_one": "{{count}} sorun",
-    "count_other": "{{count}} sorun"
+    "count_other": "{{count}} sorun",
+    "extraGrow": "Bu bantta başka bir metin zaten büyüyor; bir bantta bir tane olur, bu metin büyümeden sarar.",
+    "barcodeInvalid": "Örnek veri bu barkoda kodlanamıyor, doğru basılmaz.",
+    "measuring": "Kontrol ediliyor…",
+    "unchecked": "Barkodlar kontrol edilemedi",
+    "uncheckedHint": "Barkod kodlayıcı yüklenemedi. Bağlantıyı kontrol edip sayfayı yenileyin."
   },
   "presets": {
     "title": "Hazır şablonlar",
@@ -281,7 +287,8 @@
     "grow": "Bant metinle uzasın",
     "growHint": "Satır sayısı kadar bant uzar; altındaki öğeler aşağı kayar. Kalın yazı kullanılamaz.",
     "charsPerLine": "Satır başına karakter",
-    "charsPerLineHint": "Boş bırakılırsa genişlikten tahmin edilir ({{n}})."
+    "charsPerLineHint": "Boş bırakılırsa genişlikten tahmin edilir ({{n}}).",
+    "growTaken": "Bu bantta başka bir metin zaten büyüyor; bir bantta yalnız bir tane olabilir."
   },
   "formats": {
     "N0": "gruplu, ondalıksız",
