@@ -1,0 +1,34 @@
+{
+  "id": "inherited-properties",
+  "section": "5.2",
+  "title": "Reserved segments and inherited properties print nothing",
+  "locale": "tr-TR",
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE spec=1 dpi=203",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL20",
+    "^FX ZC:BAND id=a height=20",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FH_^FD[{{constructor}}][{{__proto__.toString}}][{{A.prototype}}]^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {
+    "A": {}
+  },
+  "expected": [
+    "^XA",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL20",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FH_^FD[][][]^FS",
+    "^LH0,0",
+    "^XZ"
+  ]
+}

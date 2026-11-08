@@ -7,6 +7,11 @@ export interface ZplGraphic {
 }
 
 const MAX_SOURCE_SIZE = 600;
+/** A larger ^GFA would take long to build and exceed what a printer can hold; the image is scaled down to this. */
+const MAX_GRAPHIC_DOTS = 64_000_000;
+
+/** Whether a stored image is embedded: a remote address would make the browser call that server. */
+export const isImageDataUrl = (value: unknown) => typeof value === 'string' && /^data:image\/[a-z0-9.+-]+(;[^,]*)?,/i.test(value);
 
 const toBase64 = (bytes: Uint8Array) => {
   let s = '';
@@ -55,7 +60,8 @@ export function loadGrayBitmap(source: File | string): Promise<{ bitmap: GrayBit
  */
 export function bitmapToZpl(bitmap: GrayBitmap, maxWidth: number, maxHeight: number, threshold = 128): ZplGraphic & { width: number; height: number } {
   const gray = fromBase64(bitmap.data);
-  const scale = Math.min(maxWidth / bitmap.width, maxHeight / bitmap.height);
+  const fit = Math.min(maxWidth / bitmap.width, maxHeight / bitmap.height);
+  const scale = Math.min(fit, Math.sqrt(MAX_GRAPHIC_DOTS / (bitmap.width * bitmap.height)));
   const width = Math.max(1, Math.floor(bitmap.width * scale));
   const height = Math.max(1, Math.floor(bitmap.height * scale));
   const bytesPerRow = Math.ceil(width / 8);

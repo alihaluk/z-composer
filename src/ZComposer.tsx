@@ -6,10 +6,11 @@ import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 import { Editor } from './components/Editor';
 import { DesignIssuesProvider } from './components/DesignCheck';
+import { DesignerErrorBoundary } from './components/ErrorBoundary';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { createI18n, defaultLocale, type Language } from './i18n';
 import { type Catalog } from './lib/catalog';
-import { loadGrayBitmap } from './lib/imageUtils';
+import { isImageDataUrl, loadGrayBitmap } from './lib/imageUtils';
 import { emptyTemplate, withFieldsUsed } from './lib/templateIO';
 import { bandNames } from './lib/bandNames';
 import { generateTemplateZpl } from './lib/zplTemplate';
@@ -52,9 +53,9 @@ function useBitmapRepair(store: EditorStore) {
       const { template, updateElement } = store.getState();
       for (const band of template.bands) {
         for (const el of band.elements) {
-          if (el.type !== 'image' || !el.imageBase64 || el.bitmap || el.imageKey || pending.has(el.id)) continue;
+          if (el.type !== 'image' || !isImageDataUrl(el.imageBase64) || el.bitmap || el.imageKey || pending.has(el.id)) continue;
           pending.add(el.id);
-          loadGrayBitmap(el.imageBase64).then(({ bitmap }) => updateElement(band.id, el.id, { bitmap })).catch(() => undefined);
+          loadGrayBitmap(el.imageBase64!).then(({ bitmap }) => updateElement(band.id, el.id, { bitmap })).catch(() => undefined);
         }
       }
     };
@@ -95,6 +96,7 @@ export function ZComposer({ template, catalog, language, locale, storageKey, cat
       <EditorStoreContext.Provider value={store}>
         <LanguageRoot className={cn('zc-root h-full', className)}>
           {/* One drag context for the whole designer: tools are dragged from the sidebar onto the canvas. */}
+          <DesignerErrorBoundary onReset={() => store.getState().setTemplate(emptyTemplate(bandNames(i18n.t)))}>
           <DndContext sensors={sensors} collisionDetection={pointerWithin}>
             <DesignIssuesProvider>
               <div className="flex h-full min-h-0 flex-col">
@@ -107,6 +109,7 @@ export function ZComposer({ template, catalog, language, locale, storageKey, cat
               </div>
             </DesignIssuesProvider>
           </DndContext>
+          </DesignerErrorBoundary>
         </LanguageRoot>
       </EditorStoreContext.Provider>
     </I18nextProvider>

@@ -2,7 +2,7 @@
 
 Findings from the review at the end of each roadmap step (docs/SCOPE.md). Critical findings are fixed in the step that found them; the rest are tracked here.
 
-Status at version 1.9.2: no finding is open. *deferred* items are planned in docs/SCOPE.md (Later); *accepted* and *won't fix* items are known limitations.
+Status at version 1.10.2: only SEC-7, which is the owner's decision, is open. *deferred* items are planned in docs/SCOPE.md (Later); *accepted* and *won't fix* items are known limitations.
 
 Severity: **critical** (wrong output, data loss, broken core flow) · **major** (feature works incorrectly in a common case) · **minor** (cosmetic, rare, or a known approximation).
 
@@ -82,6 +82,15 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | S-3 | state review | major | fixed | Nothing kept a band to one growing text, so output could break the specification and the canvas and the filler disagreed on the band's height. |
 | S-4 | state review | minor | fixed | The design check could not tell barcodes being measured, not measurable or not loaded from fine ones, and a failed encoder load stayed cached until a reload. |
 | S-5 | state review | major | fixed | Shortcuts listened on the window for all designers and looked for a dialog anywhere on the page: two designers both acted on one key press. |
+| SEC-1 | security | critical | fixed | A JSON Schema with a `__proto__` or `constructor.prototype` property wrote to `Object.prototype` of the whole page (`sampleFromCatalog`), so `({}).isAdmin` could become true in a host application. Those names are now reserved and the writer stays on own properties. |
+| SEC-2 | security | critical | fixed | A template with a bitmap of invalid base64 blanked the designer, also after a reload because the draft kept it. Bitmaps are validated against their size, damaged drafts are ignored, and an error boundary offers to clear what cannot be drawn. |
+| SEC-3 | security | major | fixed | `imageBase64` could be a remote address: opening a template called that server on every reload, against "no data leaves the browser". Only `data:image/` is accepted, the sinks check it too, and the page has a Content Security Policy. |
+| SEC-4 | security | major | fixed | Files could freeze the tab: an image box of 200000 mm and a schema referring to itself several times. Sizes are limited to 1000 mm, graphics to 64 million dots, schemas to 5000 fields, files to 50 MB; circular references are named. |
+| SEC-5 | security | major | fixed | The reference filler never finished on `ZC:GROW cpl=0`, ran out of memory on `cpl=-1`, and took quadratic time on long lines of `{{` or `^FD`. Marker numbers are checked (specification section 4, two conformance cases) and placeholders are found by a linear scan. |
+| SEC-6 | security | major | fixed | The deploy workflow gave `pages: write` and `id-token: write` to the build job, which runs third-party install scripts. Only the deploy job has them now; actions are pinned to commits and checkouts keep no credentials. |
+| SEC-7 | security | minor | owner | Dependabot alerts and updates, secret scanning, push protection and private vulnerability reporting are off, there is no `SECURITY.md`, and repository admins bypass the rules for pull requests and signed commits (pushing directly to `main` is the owner's rule). Repository settings stay the owner's decision. |
+| SEC-8 | security | minor | documented | GitHub Pages cannot send security headers, so framing cannot be blocked; the app has no sessions to attack that way. Designs and sample data are unencrypted in `localStorage`, shared with other project pages of the origin (the integration guide says so). |
+| SEC-9 | security | minor | fixed | `{{constructor}}` printed a function's source (lookup now reads own properties; one conformance case), and a `fmt` could carry raw `^` or `~` into an unfilled template (the characters are refused). |
 | L-1 | emulator | — | verified | The five ready-made templates filled with their samples render in the Labelary Zebra emulator as in the preview (positions, line breaks, QR sizes), and the four karekods decode to the expected GİB JSON. |
 | A-2 | accessibility | minor | fixed | Canvas elements could be reached with Tab but not selected with the keyboard; Enter or Space now selects (Shift adds), and the focused element is outlined. |
 | P-1 | performance | — | verified | A 300-element template imports and renders in about 0.13 s; moving one element or all 300 with the arrow keys shows within two frames (17–29 ms, Chromium, M-series Mac). |

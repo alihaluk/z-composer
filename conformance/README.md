@@ -68,6 +68,8 @@ These are the points where fillers most often differ from the specification:
 - **Dates** are printed with the clock time as written; an offset (`+03:00`, `Z`) is never converted.
 - **`max`** counts Unicode code points, not UTF-16 units: `😀` is one character.
 - **Escaping order**: `_` first, then `^` and `~`. Code 128 `>` and `^FB` backslashes come before that.
+- **Marker numbers** are checked: `cpl=0` or `height=1e308` must be rejected, not looped over or printed.
+- **Inherited properties** are never read: in JavaScript `{{constructor}}` must print nothing, not a function.
 - **Placeholders are replaced once**: a value that contains `{{…}}` is printed as is.
 - **Growing text**: only lines with a `y` greater than the growing element's `y` move; lines on the same `y` stay.
 - **Length**: `^LL` is the sum of the printed band copies, at least 1.

@@ -16,13 +16,21 @@ const smallCatalog: Catalog = {
   sample: { Table: 'A4', Total: 1234.5 },
 };
 
+// Hosts can pass a template without parseTemplate: the designer must survive what it cannot draw.
+const imageTemplate = (element: object) => ({
+  schemaVersion: 2, printer: { widthMm: 72, dpi: 203 },
+  bands: [{ id: 'b', name: 'Header', height: 10, elements: [{ id: 'e', type: 'image', x: 0, y: 0, width: 10, height: 3, ...element }] }],
+}) as Template;
+const brokenTemplate = imageTemplate({ bitmap: { width: 2, height: 2, data: '%%%bad' } });
+const remoteImageTemplate = imageTemplate({ imageBase64: 'https://tracker.invalid/pixel.png' });
+
 const props = (n: number): ZComposerProps => ({
   language: (q.get(`lang${n}`) ?? q.get('lang') ?? undefined) as ZComposerProps['language'],
   locale: q.get('locale') ?? undefined,
   storageKey: q.get('storage') === 'none' ? null : q.get('storage') ?? undefined,
   catalogEditable: q.get('catalog') !== 'locked',
   catalog: q.get('catalogData') === 'small' ? smallCatalog : undefined,
-  template: q.get('template') === 'preset' ? invoicePreset() : undefined,
+  template: q.get('template') === 'preset' ? invoicePreset() : q.get('template') === 'broken' ? brokenTemplate : q.get('template') === 'remote' ? remoteImageTemplate : undefined,
   onChange: t => state.changes.push(t),
   onSave: q.has('save') ? r => state.saved.push(r) : undefined,
 });

@@ -70,6 +70,7 @@ Rules:
 
 - Marker attributes are `key=value` pairs separated by one space. Values never contain spaces. Attribute order is not significant; unknown attributes must be ignored.
 - Unknown marker kinds (`^FX ZC:` followed by another name) and other `^FX` comment lines must be ignored.
+- `int` attributes are whole numbers written in digits. `cpl`, `lines`, and the image `width` and `height` are at least 1; a band `height` and `lineHeight` are at least 0. A filler must reject a template with any other value, or without one of these attributes: `cpl=0` could otherwise keep a line-breaking loop from ever finishing.
 - Bands are not nested. A band appears at the top level or inside a top-level `ZC:IF` block.
 - `ZC:IF` blocks may be nested.
 - Every element belongs to a band.
@@ -85,8 +86,10 @@ placeholder = "{{" path { "|" option } "}}" ;
 path        = [ "$." ] segment { "." segment } ;
 segment     = ( letter | "_" ) { letter | digit | "_" } ;   (* letter: any Unicode letter *)
 option      = "fmt=" format | "max=" int | "inv" ;
-format      = 1*( any character except "|", "}" ) ;
+format      = 1*( any character except "|", "{", "}", "^", "~" ) ;
 ```
+
+The segments `__proto__`, `constructor` and `prototype` are reserved: the designer never writes them, and it refuses templates and catalogs that use them.
 
 Examples: `{{DocNumber}}`, `{{Total|fmt=N2}}`, `{{DocDate|fmt=dd.MM.yyyy}}`, `{{Product.Name|max=28}}`, `{{$.Currency}}`.
 
@@ -97,7 +100,7 @@ Examples: `{{DocNumber}}`, `{{Total|fmt=N2}}`, `{{DocDate|fmt=dd.MM.yyyy}}`, `{{
 
 ### 5.2 Resolving a value
 1. **Context.** Inside a repeating band the path is relative to the current array item. Outside, and for any path that starts with `$.`, it is relative to the document root.
-2. **Lookup.** A missing segment or a `null` value gives an empty string.
+2. **Lookup.** A missing segment or a `null` value gives an empty string. Only properties of the data itself are read, never inherited ones, so a reserved segment gives an empty string.
 3. **Conversion.** Strings are used as is. Numbers use the invariant culture (`1200.5`). Booleans become `true` / `false`. Objects and arrays give an empty string.
 4. **Format.** If `fmt` is given and the value matches its kind, it is formatted (section 6). Otherwise the converted value is used unformatted.
 5. **Truncate.** If `max` is given, the result is cut to its first `max` characters (Unicode code points). No ellipsis is added.
@@ -240,6 +243,7 @@ A repeating band whose array is missing or empty prints nothing and takes no spa
 
 - After filling, `^LL` is the sum of the heights of all printed band copies, and at least 1 when nothing is printed.
 - ZPL accepts `^LL` values up to 32000 dots (about 4 m at 203 dpi). Output longer than the printer's maximum length is outside this specification; a filler may split it into several formats.
+- A filler that accepts templates or data from outside its own system should limit their size and its running time. Long lines must not take much longer than short ones per character.
 
 ## 12. Example
 

@@ -126,5 +126,23 @@ test.describe('embedded designer', () => {
     await page.keyboard.press('Delete');
     await expect(elements(1)).toHaveCount(2);
   });
+
+  test('a template the designer cannot draw shows a message, not a blank page', async ({ page }) => {
+    await page.goto('/?lang=en&template=broken');
+    await expect(page.getByRole('alert')).toContainText('This design cannot be shown');
+    // The host page stays.
+    await expect(page.locator('.host-title')).toBeVisible();
+    await page.getByRole('button', { name: 'Clear the design' }).click();
+    await expect(designer(page).getByRole('heading', { name: 'Toolbox' })).toBeVisible();
+  });
+
+  test('a remote image from the host calls nobody', async ({ page }) => {
+    const urls: string[] = [];
+    page.on('request', r => { if (r.url().includes('tracker.invalid')) urls.push(r.url()); });
+    await openHost(page, 'lang=en&template=remote');
+    await page.waitForTimeout(500);
+    expect(urls).toEqual([]);
+    await expect(designer(page).locator('main img')).toHaveCount(0);
+  });
 });
 

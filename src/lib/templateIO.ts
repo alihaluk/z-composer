@@ -1,6 +1,7 @@
 // Loading, validating and migrating template files.
 import { type Catalog } from './catalog';
 import { fieldsUsed, isValidPath } from './catalogIO';
+import { isImageDataUrl } from './imageUtils';
 import { DPI_OPTIONS, roundMm } from './constants';
 import { type Band, type ElementType, type Template, type TemplateElement } from '../types';
 
@@ -34,8 +35,8 @@ function fail(message: string): never {
   throw new Error(`Invalid template: ${message}`);
 }
 
-/** A format is written inside a placeholder, so it cannot contain `|`, `}` or line breaks. */
-export const isValidFormat = (format: unknown) => typeof format === 'string' && format.length > 0 && !/[|}\r\n]/.test(format);
+/** A format is written inside a placeholder as is, so it cannot contain placeholder syntax, ZPL prefixes or line breaks. */
+export const isValidFormat = (format: unknown) => typeof format === 'string' && format.length > 0 && !/[|{}^~\r\n]/.test(format);
 
 // Paths end up in placeholders and markers (docs/OUTPUT_SPEC.md sections 4 and 5).
 function checkPath(path: unknown, where: string) {
@@ -60,15 +61,32 @@ function checkCondition(condition: unknown, where: string) {
   checkPath(condition.path, `${where} condition`);
 }
 
+/** Far above any paper; keeps sizes from a damaged or hostile file from freezing the designer. */
+const MAX_MM = 1000;
+const MAX_COUNT = 100_000;
+const MAX_BITMAP_SIZE = 8192;
+const inRange = (v: unknown): v is number => isNumber(v) && Math.abs(v) <= MAX_MM;
+
+/** One byte per pixel in base64, so the data must match the size. */
+function isBitmap(v: unknown): boolean {
+  if (!isObject(v) || typeof v.data !== 'string') return false;
+  const { width, height, data } = v;
+  if (!Number.isInteger(width) || !Number.isInteger(height) || (width as number) < 1 || (height as number) < 1) return false;
+  if ((width as number) > MAX_BITMAP_SIZE || (height as number) > MAX_BITMAP_SIZE) return false;
+  const padding = data.endsWith('==') ? 2 : data.endsWith('=') ? 1 : 0;
+  return data.length % 4 === 0 && /^[A-Za-z0-9+/]*={0,2}$/.test(data) && (data.length / 4) * 3 - padding === (width as number) * (height as number);
+}
+
 const OPTION_CHECKS: [keys: string[], ok: (v: unknown) => boolean, expected: string][] = [
-  [['content', 'imageBase64'], v => typeof v === 'string', 'must be text'],
+  [['content'], v => typeof v === 'string', 'must be text'],
+  [['imageBase64'], isImageDataUrl, 'must be an embedded data:image address'],
   [['locked', 'isDynamic', 'invariant', 'fontBold', 'grow', 'showLabel'], v => typeof v === 'boolean', 'must be true or false'],
-  [['fontSize', 'thickness', 'moduleWidth', 'magnification'], v => isNumber(v) && v > 0, 'must be a positive number'],
-  [['maxChars', 'maxLines', 'charsPerLine'], v => Number.isInteger(v) && (v as number) > 0, 'must be a positive whole number'],
+  [['fontSize', 'thickness', 'moduleWidth', 'magnification'], v => inRange(v) && v > 0, `must be a positive number up to ${MAX_MM}`],
+  [['maxChars', 'maxLines', 'charsPerLine'], v => Number.isInteger(v) && (v as number) > 0 && (v as number) <= MAX_COUNT, 'must be a positive whole number'],
   [['threshold'], v => isNumber(v) && v >= 0 && v <= 255, 'must be between 0 and 255'],
   [['rotation'], isNumber, 'must be a number'],
   [['align', 'overflow', 'barcodeType'], v => typeof v === 'string', 'must be text'],
-  [['bitmap'], v => isObject(v) && Number.isInteger(v.width) && (v.width as number) > 0 && Number.isInteger(v.height) && (v.height as number) > 0 && typeof v.data === 'string', 'must have a width, a height and data'],
+  [['bitmap'], isBitmap, 'must have a width, a height and data of that size'],
 ];
 
 /** Values this version knows; a template from a later version may use others. */
@@ -89,11 +107,11 @@ function checkOptions(e: Record<string, unknown>, where: string) {
 
 function validateV2(t: Record<string, unknown>): Template {
   const printer = t.printer;
-  if (!isObject(printer) || !isNumber(printer.widthMm) || printer.widthMm <= 0) fail('printer.widthMm must be a positive number');
+  if (!isObject(printer) || !inRange(printer.widthMm) || printer.widthMm <= 0) fail(`printer.widthMm must be a positive number up to ${MAX_MM}`);
   if (!DPI_OPTIONS.includes(printer.dpi as never)) fail(`printer.dpi must be one of ${DPI_OPTIONS.join(', ')}`);
   if (!Array.isArray(t.bands)) fail('bands must be an array');
   const bands = t.bands.map((b, i): Band => {
-    if (!isObject(b) || typeof b.id !== 'string' || !isNumber(b.height) || b.height <= 0 || !Array.isArray(b.elements)) fail(`band ${i} needs id, a positive height and elements`);
+    if (!isObject(b) || typeof b.id !== 'string' || !inRange(b.height) || b.height <= 0 || !Array.isArray(b.elements)) fail(`band ${i} needs id, a positive height up to ${MAX_MM} and elements`);
     checkPath(b.repeat, `band ${i} repeat`);
     checkCondition(b.condition, `band ${i}`);
     const elements = b.elements.map((raw, j): TemplateElement => {
@@ -102,7 +120,7 @@ function validateV2(t: Record<string, unknown>): Template {
       // A null option is read as a missing one.
       const e = Object.fromEntries(Object.entries(raw).filter(([, v]) => v !== null));
       if (typeof e.id !== 'string' || !ELEMENT_TYPES.includes(e.type as ElementType)) fail(`${where} needs an id and a known type`);
-      for (const key of ['x', 'y', 'width', 'height']) if (!isNumber(e[key])) fail(`${where}: ${key} must be a number`);
+      for (const key of ['x', 'y', 'width', 'height']) if (!inRange(e[key])) fail(`${where}: ${key} must be a number up to ${MAX_MM}`);
       checkPath(e.dataSource, `${where} dataSource`);
       if (e.parts !== undefined) checkParts(e.parts, where);
       checkPath(e.imageKey, `${where} imageKey`);

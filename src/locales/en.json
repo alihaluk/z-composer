@@ -366,5 +366,10 @@
     "title": "Start designing",
     "text": "Click a tool on the left or drag it onto a band, or start from a ready-made template.",
     "preset": "Choose a template"
+  },
+  "errorBoundary": {
+    "title": "This design cannot be shown",
+    "text": "The template contains something the designer cannot draw. Clearing the design starts a new one; a template saved as a file or in the list is not changed.",
+    "reset": "Clear the design"
   }
 }

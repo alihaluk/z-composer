@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.10.2 — 2026-11-09
+
+### Security
+- A JSON Schema could write to `Object.prototype` of the page through `__proto__` or `constructor.prototype` properties. The names `__proto__`, `constructor` and `prototype` are now reserved for fields, and catalog code and the filler read and write own properties only.
+- A template with an invalid bitmap could leave the designer blank even after a reload. Bitmaps are validated, damaged drafts are ignored, and an error boundary replaces a blank page.
+- A template could make the browser call a remote server through `imageBase64`. Only embedded `data:image/` images are accepted, and the standalone page has a Content Security Policy.
+- Files could freeze the tab (huge image boxes, self-referring schemas, very large files). Sizes above 1000 mm, schemas above 5000 fields and files above 50 MB are refused; graphics are limited to 64 million dots.
+- The reference filler rejects invalid marker numbers (`cpl=0` never finished) and takes linear time on long lines. Fillers in other languages: see specification section 4 and conformance cases 22 to 24.
+- Formats can no longer contain `^`, `~` or `{`.
+- The deploy workflow's publishing rights moved to the deploy job; actions are pinned to commits; checkouts keep no credentials.
+
 ## 1.10.1 — 2026-11-09
 
 ### Fixed

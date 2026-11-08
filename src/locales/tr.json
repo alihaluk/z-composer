@@ -366,5 +366,10 @@
     "title": "Tasarıma başlayın",
     "text": "Soldaki araçlara tıklayın ya da bir banda sürükleyin. Ya da hazır bir şablonla başlayın.",
     "preset": "Hazır şablon seç"
+  },
+  "errorBoundary": {
+    "title": "Bu tasarım gösterilemiyor",
+    "text": "Şablonda tasarımcının çizemediği bir şey var. Tasarımı temizlemek yeni bir tasarım başlatır; dosya olarak ya da listede kayıtlı şablonlar değişmez.",
+    "reset": "Tasarımı temizle"
   }
 }

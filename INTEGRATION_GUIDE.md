@@ -100,6 +100,17 @@ const zplTemplate = generateTemplateZpl(template);      // docs/OUTPUT_SPEC.md
 
 `parseTemplate` throws when a template is damaged (a missing band, a setting of the wrong type). A setting value it does not know, such as an alignment added by a later version, is dropped and the element keeps its default.
 
+### Files from outside
+
+Treat templates, catalogs and sample data from users as untrusted:
+
+- Pass a template through `parseTemplate` and a catalog through `parseCatalog`. They refuse invalid fields, remote images (`imageBase64` must be a `data:image/` address), impossible sizes (above 1000 mm) and bitmaps whose data does not match their size. A setting value of a later version is dropped.
+- `<ZComposer>` also survives a template it was given without `parseTemplate`: it draws no remote image, and what it cannot draw shows a message with a button to clear the design instead of taking your page down.
+- Field names `__proto__`, `constructor` and `prototype` are refused or skipped (`docs/OUTPUT_SPEC.md` section 5).
+- `fillTemplate` reads only the data's own properties, so pass plain data, not class instances with getters. It throws on invalid marker numbers. On a server that fills templates from outside, also limit their size and the running time.
+- The standalone page sends a Content Security Policy in a `<meta>` tag. Your host page has its own policy; the designer needs `img-src data:` and, for the barcode chunk, `script-src 'self'`.
+- With `storageKey` set, the design, the catalog and its sample data are kept unencrypted in `localStorage`, readable by every page of the same origin. Use `storageKey={null}` on origins you share, and keep real customer data out of sample data.
+
 ### Ready-made templates
 
 `PRESETS` lists the ready-made templates (`invoice`, `earsiv`, `despatch`, `receipt`, `adisyon`); each has `build()` and the `catalog` it binds to, with sample data. The builders are also exported one by one (`invoicePreset`, `earsivPreset`, `despatchPreset`, `receiptPreset`, `adisyonPreset`).

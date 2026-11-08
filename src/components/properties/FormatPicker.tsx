@@ -40,7 +40,7 @@ export function FormatPicker({ band, path, format, invariant, onChange }: {
                 {fieldType !== 'number' && <option value="custom">{t('properties.formatCustom')}</option>}
               </SelectInput>
               {format && !known && (
-                <TextInput value={format} placeholder={CUSTOM_START} onChange={f => onChange({ format: f.replace(/[|}\r\n]/g, '') || undefined, invariant })} />
+                <TextInput value={format} placeholder={CUSTOM_START} onChange={f => onChange({ format: f.replace(/[|{}^~\r\n]/g, '') || undefined, invariant })} />
               )}
             </div>
           )}

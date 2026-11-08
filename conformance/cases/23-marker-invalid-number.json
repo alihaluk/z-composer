@@ -1,0 +1,24 @@
+{
+  "id": "marker-invalid-number",
+  "section": "4",
+  "title": "A band height that is not a whole number is rejected",
+  "locale": "tr-TR",
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE spec=1 dpi=203",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL20",
+    "^FX ZC:BAND id=a height=1e308",
+    "^LH0,0",
+    "^FO0,0^A0N,20,20^FH_^FD{{A}}^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {
+    "A": "abc"
+  },
+  "error": true
+}

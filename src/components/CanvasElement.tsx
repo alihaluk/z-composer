@@ -10,6 +10,7 @@ import { A0_AVERAGE_ADVANCE, a0Width, fieldBlockLines } from '../preview/fontMet
 import { useEditor, useEditorStore } from '../store/editorStore';
 import { type Band, type Dpi, type TemplateElement } from '../types';
 import { useElementIssues } from '../store/designIssues';
+import { isImageDataUrl } from '../lib/imageUtils';
 
 export const CANVAS_FONT = '"Roboto Condensed", "Arial Narrow", sans-serif';
 const MIN_SIZE_MM = 1;
@@ -157,7 +158,7 @@ export function ElementBody({ element: el, text, dpi, preformatted }: { element:
     );
   }
   if (el.type === 'image') {
-    if (el.imageBase64 && !el.imageKey) return <img src={el.imageBase64} alt="" className="w-full h-full object-contain pointer-events-none" style={{ filter: 'grayscale(1) contrast(4)' }} />;
+    if (isImageDataUrl(el.imageBase64) && !el.imageKey) return <img src={el.imageBase64} alt="" className="w-full h-full object-contain pointer-events-none" style={{ filter: 'grayscale(1) contrast(4)' }} />;
     return (
       <div className="w-full h-full border border-dashed border-slate-400 bg-slate-50 grid place-items-center overflow-hidden">
         <span className="text-[8px] text-slate-500 text-center px-0.5 truncate">{el.imageKey ?? 'IMAGE'}</span>

@@ -1,0 +1,25 @@
+{
+  "id": "marker-invalid-cpl",
+  "section": "4",
+  "title": "A growing element with zero characters per line is rejected",
+  "locale": "tr-TR",
+  "template": [
+    "^XA",
+    "^FX ZC:TEMPLATE spec=1 dpi=203",
+    "^CI28",
+    "^MNN",
+    "^PW576",
+    "^LL20",
+    "^FX ZC:BAND id=a height=20",
+    "^LH0,0",
+    "^FX ZC:GROW cpl=0 lines=2 lineHeight=24",
+    "^FO0,0^A0N,20,20^FB100,2,4,L^FH_^FD{{A}}^FS",
+    "^FX ZC:END",
+    "^LH0,0",
+    "^XZ"
+  ],
+  "data": {
+    "A": "abc"
+  },
+  "error": true
+}

@@ -18,4 +18,10 @@ export async function saveJson(data: unknown, fileName: string, description: str
   saveAs(new Blob([json], { type: 'application/json;charset=utf-8' }), fileName);
 }
 
-export const readJsonFile = async (file: File): Promise<unknown> => JSON.parse(await file.text());
+/** Well above a template with images; a larger file would only freeze the page while it is read. */
+const MAX_JSON_BYTES = 50 * 1024 * 1024;
+
+export const readJsonFile = async (file: File): Promise<unknown> => {
+  if (file.size > MAX_JSON_BYTES) throw new Error(`The file is too large (limit ${MAX_JSON_BYTES / 1024 / 1024} MB)`);
+  return JSON.parse(await file.text());
+};
