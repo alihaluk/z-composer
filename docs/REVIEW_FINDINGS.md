@@ -2,7 +2,7 @@
 
 Findings from the review at the end of each roadmap step (docs/SCOPE.md). Critical findings are fixed in the step that found them; the rest are tracked here.
 
-Status at version 1.10.2: only SEC-7, which is the owner's decision, is open. *deferred* items are planned in docs/SCOPE.md (Later); *accepted* and *won't fix* items are known limitations.
+Status at version 1.10.2: no finding is open. *deferred* items are planned in docs/SCOPE.md (Later); *accepted* and *won't fix* items are known limitations.
 
 Severity: **critical** (wrong output, data loss, broken core flow) · **major** (feature works incorrectly in a common case) · **minor** (cosmetic, rare, or a known approximation).
 
@@ -88,7 +88,7 @@ Severity: **critical** (wrong output, data loss, broken core flow) · **major** 
 | SEC-4 | security | major | fixed | Files could freeze the tab: an image box of 200000 mm and a schema referring to itself several times. Sizes are limited to 1000 mm, graphics to 64 million dots, schemas to 5000 fields, files to 50 MB; circular references are named. |
 | SEC-5 | security | major | fixed | The reference filler never finished on `ZC:GROW cpl=0`, ran out of memory on `cpl=-1`, and took quadratic time on long lines of `{{` or `^FD`. Marker numbers are checked (specification section 4, two conformance cases) and placeholders are found by a linear scan. |
 | SEC-6 | security | major | fixed | The deploy workflow gave `pages: write` and `id-token: write` to the build job, which runs third-party install scripts. Only the deploy job has them now; actions are pinned to commits and checkouts keep no credentials. |
-| SEC-7 | security | minor | owner | Dependabot alerts and updates, secret scanning, push protection and private vulnerability reporting are off, there is no `SECURITY.md`, and repository admins bypass the rules for pull requests and signed commits (pushing directly to `main` is the owner's rule). Repository settings stay the owner's decision. |
+| SEC-7 | security | minor | fixed | Dependabot alerts and updates, secret scanning, push protection and private vulnerability reporting were off, there was no `SECURITY.md`, and repository admins bypass the rules for pull requests and signed commits. (owner, 2026-11-09: Dependabot alerts, secret scanning, push protection and private vulnerability reporting are on and `SECURITY.md` is added. Dependabot updates stay off because they open pull requests, and the admin bypass stays because pushing directly to `main` is the owner's rule) |
 | SEC-8 | security | minor | documented | GitHub Pages cannot send security headers, so framing cannot be blocked; the app has no sessions to attack that way. Designs and sample data are unencrypted in `localStorage`, shared with other project pages of the origin (the integration guide says so). |
 | SEC-9 | security | minor | fixed | `{{constructor}}` printed a function's source (lookup now reads own properties; one conformance case), and a `fmt` could carry raw `^` or `~` into an unfilled template (the characters are refused). |
 | L-1 | emulator | — | verified | The five ready-made templates filled with their samples render in the Labelary Zebra emulator as in the preview (positions, line breaks, QR sizes), and the four karekods decode to the expected GİB JSON. |
